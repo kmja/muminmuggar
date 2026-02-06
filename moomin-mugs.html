@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Moomin Mug Collection</title>
+  <meta name="description" content="Track your Moomin mug collection (local-first).">
+  <style>
+    :root{
+      --bg:#0b0c0f;
+      --card:#12141a;
+      --muted:#8b93a7;
+      --text:#e9ecf5;
+      --border:#242839;
+      --accent:#7aa2ff;
+      --accent2:#9cf2c7;
+      --danger:#ff6b6b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f7fb;
+        --card:#ffffff;
+        --muted:#59627a;
+        --text:#0f172a;
+        --border:#e6e8f0;
+        --accent:#3b82f6;
+        --accent2:#10b981;
+        --danger:#ef4444;
+        --shadow: 0 12px 30px rgba(15,23,42,.08);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 90px}
+    .top{
+      display:flex; gap:12px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .title{display:flex;flex-direction:column;gap:6px}
+    h1{font-size:22px; margin:0; letter-spacing:-.02em}
+    .sub{color:var(--muted); font-size:13px}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    button,.btn{
+      appearance:none; border:1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding:10px 12px; border-radius: 999px;
+      cursor:pointer;
+      box-shadow: none;
+      font-weight:600;
+      font-size:13px;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    button:hover{border-color: color-mix(in srgb, var(--border) 70%, var(--accent))}
+    .primary{
+      background: linear-gradient(135deg, color-mix(in srgb,var(--accent) 92%, #fff 8%), color-mix(in srgb,var(--accent2) 55%, var(--accent) 45%));
+      border-color: transparent;
+      color: #07101f;
+    }
+    .ghost{background:transparent}
+    .danger{border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger)}
+    .pill{
+      padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+      font-size:12px; color: var(--muted); background: color-mix(in srgb, var(--card) 70%, transparent);
+    }
+    .grid{display:grid; gap:12px}
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card.pad{padding:14px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:160px}
+    label{font-size:12px; color: var(--muted)}
+    input, textarea, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size:14px;
+      outline:none;
+    }
+    textarea{min-height:92px; resize:vertical}
+    input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted) 90%, transparent)}
+    .tabs{display:flex; gap:8px; margin: 8px 0 14px}
+    .tabbtn{
+      padding:10px 14px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-weight:700;
+    }
+    .tabbtn.active{background: color-mix(in srgb, var(--card) 85%, transparent); color: var(--text)}
+    .muggrid{display:grid; gap:12px; grid-template-columns: 1fr}
+    @media (min-width: 820px){ .muggrid{grid-template-columns:1fr 1fr} }
+    .mug{
+      padding:14px;
+    }
+    .mughead{
+      display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+    }
+    .mugname{font-weight:800; font-size:15px; margin:0; max-width:70ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .muted{color:var(--muted)}
+    .badges{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+    .badge{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--border); background: transparent; color: var(--muted);
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .badge.owned{border-color: color-mix(in srgb, var(--accent2) 45%, var(--border)); color: color-mix(in srgb, var(--accent2) 75%, var(--text))}
+    .badge.wishlist{border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: color-mix(in srgb, var(--accent) 75%, var(--text))}
+    .badge.sold{opacity:.85}
+    .badge.fav{border-color: color-mix(in srgb, #ffd36a 55%, var(--border)); color:#ffd36a}
+    .mugfoot{display:flex; gap:10px; margin-top:12px; align-items:flex-end; justify-content:space-between}
+    .thumb{
+      width:62px;height:62px;border-radius:16px;border:1px solid var(--border);
+      overflow:hidden; background: color-mix(in srgb, var(--card) 70%, transparent);
+      display:flex;align-items:center;justify-content:center; flex:none;
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .tagchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .chip{font-size:12px;padding:6px 10px;border-radius:999px;background: color-mix(in srgb, var(--card) 80%, transparent);border:1px solid var(--border)}
+    .menu{display:flex; gap:8px}
+    .menu button{padding:8px 10px}
+    .lineclamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .divider{height:1px;background:var(--border);margin:12px 0}
+    /* modal */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.55);
+      display:flex;align-items:flex-end;justify-content:center;
+      padding: 14px;
+      z-index:50;
+    }
+    @media (min-width: 720px){ .overlay{align-items:center} }
+    .modal{
+      width:min(980px, 100%);
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      max-height: 86vh;
+      overflow:auto;
+    }
+    .modal .head{padding:16px 16px 0}
+    .modal h2{margin:0;font-size:16px}
+    .modal .body{padding:14px 16px 16px}
+    .modal .foot{padding:0 16px 16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap}
+    .help{font-size:12px;color:var(--muted)}
+    .err{font-size:12px;color:var(--danger);margin-top:6px}
+    /* mobile floating add */
+    .fab{
+      position:fixed;
+      right:18px; bottom:18px;
+      width:54px;height:54px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow: var(--shadow);
+      z-index:40;
+    }
+    @media(min-width: 720px){ .fab{display:none} }
+    .kpi{display:grid; gap:12px; grid-template-columns:1fr 1fr}
+    @media(min-width: 820px){ .kpi{grid-template-columns:repeat(4,1fr)} }
+    .kpicard{padding:14px}
+    .kpilabel{font-size:12px;color:var(--muted)}
+    .kpivalue{font-size:22px;font-weight:900;margin-top:6px}
+    .mini{font-size:12px;color:var(--muted)}
+    .list{display:grid; gap:8px}
+    .listrow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius: 16px}
+    .right{display:flex; gap:8px; align-items:center}
+    .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React (UMD) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for in-browser JSX (no build step) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const {useEffect, useMemo, useRef, useState} = React;
+
+    const STORAGE_KEY = "moomin_mugs_v2_html";
+
+    const STATUSES = [
+      { value: "owned", label: "Owned" },
+      { value: "wishlist", label: "Wishlist" },
+      { value: "sold", label: "Sold" },
+    ];
+    const CONDITIONS = ["New","Like New","Very Good","Good","Fair","Poor"];
+
+    function uid(){
+      return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,10)}`;
+    }
+    function safeJsonParse(s, fallback){
+      try { const v = JSON.parse(s); return v ?? fallback; } catch { return fallback; }
+    }
+    function toISODate(d){ return d ? String(d).slice(0,10) : ""; }
+    function normalizeText(s){ return (s||"").toString().trim().toLowerCase(); }
+    function tokenizeTags(s){
+      return (s||"").split(/[,#\\n]+/).map(t=>t.trim()).filter(Boolean);
+    }
+    function formatMoney(amount, currency="SEK"){
+      if (amount === "" || amount === null || amount === undefined) return "";
+      const n = Number(amount);
+      if (!Number.isFinite(n)) return "";
+      try{
+        return new Intl.NumberFormat(undefined,{style:"currency",currency,maximumFractionDigits:0}).format(n);
+      } catch { return `${n} ${currency}`; }
+    }
+    function fileToDataUrl(file){
+      return new Promise((resolve,reject)=>{
+        const r = new FileReader();
+        r.onerror = ()=>reject(new Error("Failed to read image"));
+        r.onload = ()=>resolve(String(r.result||""));
+        r.readAsDataURL(file);
+      });
+    }
+
+    const sampleData = [
+      { id: uid(), name:"Moominmamma", series:"Arabia Moomin", year:2019, edition:"Standard", status:"owned",
+        condition:"Like New", location:"Kitchen cabinet", acquiredDate:"2021-06-12", price:249, currency:"SEK",
+        favorite:true, photoUrl:"", notes:"Gift from a friend.", tags:["moominmamma","blue"]
+      },
+      { id: uid(), name:"Snufkin", series:"Arabia Moomin", year:2018, edition:"Standard", status:"wishlist",
+        condition:"New", location:"", acquiredDate:"", price:"", currency:"SEK", favorite:false, photoUrl:"",
+        notes:"Keep an eye on seasonal re-releases.", tags:["snufkin","green"]
+      }
+    ];
+
+    function Badge({children, kind}){
+      return <span className={"badge " + (kind||"")}>{children}</span>;
+    }
+
+    function Modal({open, title, subtitle, children, onClose, footer}){
+      if(!open) return null;
+      return (
+        <div className="overlay" role="dialog" aria-modal="true" onMouseDown={(e)=>{ if(e.target===e.currentTarget) onClose?.(); }}>
+          <div className="modal" onMouseDown={(e)=>e.stopPropagation()}>
+            <div className="head">
+              <div style={{display:"flex", justifyContent:"space-between", gap:12, alignItems:"center"}}>
+                <div>
+                  <h2>{title}</h2>
+                  {subtitle ? <div className="help" style={{marginTop:6}}>{subtitle}</div> : null}
+                </div>
+                <button className="ghost" onClick={onClose} aria-label="Close">✕</button>
+              </div>
+            </div>
+            <div className="body">{children}</div>
+            {footer ? <div className="foot">{footer}</div> : null}
+          </div>
+        </div>
+      );
+    }
+
+    function validateMug(m){
+      const e = {};
+      if(!m.name || !m.name.trim()) e.name = "Name is required.";
+      if(!m.status) e.status = "Status is required.";
+      if(m.year!=="" && m.year!==null && m.year!==undefined){
+        const y = Number(m.year);
+        if(!Number.isInteger(y) || y<1900 || y>2100) e.year = "Year must be 1900–2100.";
+      }
+      if(m.price!=="" && m.price!==null && m.price!==undefined){
+        const p = Number(m.price);
+        if(!Number.isFinite(p) || p<0) e.price = "Price must be a positive number.";
+      }
+      return e;
+    }
+
+    function MugForm({open, onClose, initial, onSave}){
+      const [draft, setDraft] = useState(initial);
+      const [tagInput, setTagInput] = useState((initial?.tags||[]).join(", "));
+      const [errors, setErrors] = useState({});
+      const uploadRef = useRef(null);
+
+      useEffect(()=>{
+        setDraft(initial);
+        setTagInput((initial?.tags||[]).join(", "));
+        setErrors({});
+      }, [initial, open]);
+
+      const update = (patch)=>setDraft(d=>({...d, ...patch}));
+
+      const footer = (
+        <>
+          <button onClick={onClose}>Cancel</button>
+          <button className="primary" onClick={()=>{
+            const next = {
+              ...draft,
+              year: draft.year==="" ? "" : Number(draft.year),
+              price: draft.price==="" ? "" : Number(draft.price),
+              acquiredDate: toISODate(draft.acquiredDate),
+              tags: tokenizeTags(tagInput),
+            };
+            const e = validateMug(next);
+            setErrors(e);
+            if(Object.keys(e).length) return;
+            onSave(next);
+            onClose();
+          }}>Save</button>
+        </>
+      );
+
+      return (
+        <Modal
+          open={open}
+          title={draft?.id ? (initial?.__mode==="edit" ? "Edit mug" : "Add a mug") : "Mug"}
+          subtitle="Fill in as little or as much as you want — you can always edit later."
+          onClose={onClose}
+          footer={footer}
+        >
+          <div className="grid" style={{gridTemplateColumns:"1fr", gap:12}}>
+            <div className="row">
+              <div className="field" style={{flex:2, minWidth:220}}>
+                <label>Name *</label>
+                <input value={draft.name} onChange={e=>update({name:e.target.value})} placeholder="e.g., Moomintroll" />
+                {errors.name ? <div className="err">{errors.name}</div> : null}
+              </div>
+              <div className="field" style={{minWidth:160}}>
+                <label>Status *</label>
+                <select value={draft.status} onChange={e=>update({status:e.target.value})}>
+                  {STATUSES.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+                {errors.status ? <div className="err">{errors.status}</div> : null}
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="field">
+                <label>Series</label>
+                <input value={draft.series} onChange={e=>update({series:e.target.value})} placeholder="e.g., Arabia Moomin" />
+              </div>
+              <div className="field">
+                <label>Edition</label>
+                <input value={draft.edition} onChange={e=>update({edition:e.target.value})} placeholder="Standard / Seasonal / Limited" />
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="field">
+                <label>Year</label>
+                <input inputMode="numeric" value={draft.year} onChange={e=>update({year:e.target.value})} placeholder="e.g., 2019" />
+                {errors.year ? <div className="err">{errors.year}</div> : null}
+              </div>
+              <div className="field">
+                <label>Condition</label>
+                <select value={draft.condition} onChange={e=>update({condition:e.target.value})}>
+                  {CONDITIONS.map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="field">
+                <label>Location</label>
+                <input value={draft.location} onChange={e=>update({location:e.target.value})} placeholder="e.g., Living room shelf" />
+              </div>
+              <div className="field">
+                <label>Acquired date</label>
+                <input type="date" value={toISODate(draft.acquiredDate)} onChange={e=>update({acquiredDate:e.target.value})} />
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="field">
+                <label>Purchase price</label>
+                <input inputMode="decimal" value={draft.price} onChange={e=>update({price:e.target.value})} placeholder="e.g., 249" />
+                {errors.price ? <div className="err">{errors.price}</div> : null}
+              </div>
+              <div className="field">
+                <label>Currency</label>
+                <input value={draft.currency} onChange={e=>update({currency:e.target.value})} placeholder="SEK" />
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="field" style={{minWidth:220}}>
+                <label>Tags</label>
+                <input value={tagInput} onChange={e=>setTagInput(e.target.value)} placeholder="e.g., limited, blue, snufkin" />
+                <div className="help">Separate with commas, #, or new lines.</div>
+              </div>
+              <div className="field" style={{minWidth:180}}>
+                <label>Favorite</label>
+                <div className="row" style={{justifyContent:"space-between", padding:"10px 12px", border:`1px solid var(--border)`, borderRadius:14}}>
+                  <div className="mini">Mark as favorite</div>
+                  <input type="checkbox" checked={!!draft.favorite} onChange={e=>update({favorite:e.target.checked})} />
+                </div>
+              </div>
+            </div>
+
+            <div className="field">
+              <label>Photo</label>
+              <div className="row">
+                <button type="button" onClick={()=>uploadRef.current?.click()}>Upload</button>
+                <button type="button" className={draft.photoUrl ? "danger" : ""} onClick={()=>update({photoUrl:""})} disabled={!draft.photoUrl}>Clear</button>
+                <input className="sr-only" ref={uploadRef} type="file" accept="image/*" onChange={async (e)=>{
+                  const f = e.target.files?.[0];
+                  if(!f) return;
+                  const dataUrl = await fileToDataUrl(f);
+                  update({photoUrl:dataUrl});
+                  e.target.value = "";
+                }} />
+              </div>
+              <input value={draft.photoUrl} onChange={e=>update({photoUrl:e.target.value})} placeholder="Or paste an image URL / data URL" />
+              {draft.photoUrl ? (
+                <div className="card" style={{marginTop:10, overflow:"hidden"}}>
+                  <img src={draft.photoUrl} alt="Mug" style={{width:"100%", height:220, objectFit:"cover", display:"block"}} onError={(e)=>{e.currentTarget.style.display="none"}} />
+                </div>
+              ) : null}
+              <div className="help">Photos are stored locally in your browser (like the rest of the data).</div>
+            </div>
+
+            <div className="field">
+              <label>Notes</label>
+              <textarea value={draft.notes} onChange={e=>update({notes:e.target.value})} placeholder="Anything you want to remember…" />
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    function App(){
+      const [mugs, setMugs] = useState([]);
+      const [tab, setTab] = useState("collection");
+
+      // collection controls
+      const [query, setQuery] = useState("");
+      const [statusFilter, setStatusFilter] = useState("all");
+      const [favoriteOnly, setFavoriteOnly] = useState(false);
+      const [tagFilter, setTagFilter] = useState("");
+      const [sortBy, setSortBy] = useState("updated_desc");
+
+      // modals
+      const [formOpen, setFormOpen] = useState(false);
+      const [formInitial, setFormInitial] = useState(null);
+      const fileInputRef = useRef(null);
+
+      // load/save
+      useEffect(()=>{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = safeJsonParse(raw, null);
+        if(Array.isArray(parsed)) setMugs(parsed);
+        else setMugs([]);
+      }, []);
+      useEffect(()=>{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mugs));
+      }, [mugs]);
+
+      const filtered = useMemo(()=>{
+        const q = normalizeText(query);
+        const tf = normalizeText(tagFilter);
+        let out = mugs.filter(m=>{
+          if(statusFilter !== "all" && m.status !== statusFilter) return false;
+          if(favoriteOnly && !m.favorite) return false;
+          if(tf){
+            const tags = (m.tags||[]).map(t=>normalizeText(t));
+            if(!tags.some(t=>t.includes(tf))) return false;
+          }
+          if(!q) return true;
+          const hay = [
+            m.name,m.series,m.edition,m.status,m.condition,m.location,m.acquiredDate,m.notes,
+            ...(m.tags||[]), m.year
+          ].filter(x=>x!==undefined && x!==null).join(" ");
+          return normalizeText(hay).includes(q);
+        });
+
+        out.sort((a,b)=>{
+          const au = a.updatedAt ? Date.parse(a.updatedAt) : 0;
+          const bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+          if(sortBy==="updated_desc") return bu-au;
+          if(sortBy==="updated_asc") return au-bu;
+          const ay = Number(a.year)||0;
+          const by = Number(b.year)||0;
+          if(sortBy==="year_desc") return by-ay;
+          if(sortBy==="year_asc") return ay-by;
+          const ap = Number(a.price);
+          const bp = Number(b.price);
+          if(sortBy==="price_desc"){
+            if(!Number.isFinite(ap) && !Number.isFinite(bp)) return 0;
+            if(!Number.isFinite(ap)) return 1;
+            if(!Number.isFinite(bp)) return -1;
+            return bp-ap;
+          }
+          if(sortBy==="price_asc"){
+            if(!Number.isFinite(ap) && !Number.isFinite(bp)) return 0;
+            if(!Number.isFinite(ap)) return 1;
+            if(!Number.isFinite(bp)) return -1;
+            return ap-bp;
+          }
+          // name
+          return (normalizeText(a.name)||"").localeCompare(normalizeText(b.name)||"");
+        });
+
+        return out;
+      }, [mugs, query, statusFilter, favoriteOnly, tagFilter, sortBy]);
+
+      const stats = useMemo(()=>{
+        const owned = mugs.filter(m=>m.status==="owned").length;
+        const wishlist = mugs.filter(m=>m.status==="wishlist").length;
+        const sold = mugs.filter(m=>m.status==="sold").length;
+        const favorites = mugs.filter(m=>!!m.favorite).length;
+        const totalSpent = mugs
+          .filter(m=>m.status==="owned")
+          .map(m=>Number(m.price))
+          .filter(n=>Number.isFinite(n))
+          .reduce((a,b)=>a+b,0);
+
+        // top tags
+        const tagCount = new Map();
+        for(const m of mugs){
+          for(const t of (m.tags||[])){
+            const k = normalizeText(t);
+            if(!k) continue;
+            tagCount.set(k, (tagCount.get(k)||0)+1);
+          }
+        }
+        const topTags = [...tagCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10)
+          .map(([tag,count])=>({tag,count}));
+
+        // byYear last 12
+        const byYear = new Map();
+        for(const m of mugs){
+          const y = Number(m.year);
+          if(!Number.isFinite(y)) continue;
+          byYear.set(y, (byYear.get(y)||0)+1);
+        }
+        const byYearData = [...byYear.entries()].sort((a,b)=>a[0]-b[0]).slice(-12)
+          .map(([year,count])=>({year:String(year), count}));
+
+        return {owned,wishlist,sold,favorites,totalSpent,topTags,byYearData};
+      }, [mugs]);
+
+      function openCreate(){
+        setFormInitial({
+          __mode:"create",
+          id: uid(),
+          name:"",
+          series:"Arabia Moomin",
+          year:"",
+          edition:"",
+          status:"owned",
+          condition:"Good",
+          location:"",
+          acquiredDate:"",
+          price:"",
+          currency:"SEK",
+          favorite:false,
+          photoUrl:"",
+          notes:"",
+          tags:[]
+        });
+        setFormOpen(true);
+      }
+      function openEdit(m){
+        setFormInitial({...m, __mode:"edit"});
+        setFormOpen(true);
+      }
+      function upsert(next){
+        setMugs(prev=>{
+          const now = new Date().toISOString();
+          const exists = prev.some(m=>m.id===next.id);
+          if(exists) return prev.map(m=>m.id===next.id ? {...m, ...next, updatedAt: now} : m);
+          return [{...next, createdAt: now, updatedAt: now}, ...prev];
+        });
+      }
+      function del(m){
+        if(!confirm(`Delete "${m.name}"?`)) return;
+        setMugs(prev=>prev.filter(x=>x.id!==m.id));
+      }
+      function toggleFav(m){
+        setMugs(prev=>prev.map(x=>x.id===m.id ? {...x, favorite: !x.favorite, updatedAt:new Date().toISOString()} : x));
+      }
+
+      function exportJson(){
+        const blob = new Blob([JSON.stringify(mugs, null, 2)], {type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `moomin-mugs-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      function importJson(file){
+        if(!file) return;
+        const r = new FileReader();
+        r.onload = ()=>{
+          const parsed = safeJsonParse(r.result, null);
+          if(!Array.isArray(parsed)){ alert("Import failed: JSON must be an array."); return; }
+          const normalized = parsed.map(m=>{
+            const id = m?.id || uid();
+            return {
+              id,
+              name: (m?.name ?? "").toString(),
+              series: (m?.series ?? "").toString(),
+              year: m?.year==="" ? "" : (Number.isFinite(Number(m?.year)) ? Number(m?.year) : ""),
+              edition: (m?.edition ?? "").toString(),
+              status: ["owned","wishlist","sold"].includes(m?.status) ? m.status : "owned",
+              condition: (m?.condition ?? "Good").toString(),
+              location: (m?.location ?? "").toString(),
+              acquiredDate: toISODate(m?.acquiredDate || ""),
+              price: m?.price==="" ? "" : (Number.isFinite(Number(m?.price)) ? Number(m?.price) : ""),
+              currency: (m?.currency ?? "SEK").toString() || "SEK",
+              favorite: !!m?.favorite,
+              photoUrl: (m?.photoUrl ?? "").toString(),
+              notes: (m?.notes ?? "").toString(),
+              tags: Array.isArray(m?.tags) ? m.tags.map(t=>String(t)) : tokenizeTags(m?.tags),
+              createdAt: m?.createdAt || new Date().toISOString(),
+              updatedAt: m?.updatedAt || new Date().toISOString(),
+            };
+          }).filter(m=>!!m.name || !!m.series || m.status);
+
+          setMugs(prev=>{
+            const map = new Map(prev.map(m=>[m.id,m]));
+            for(const m of normalized) map.set(m.id,m);
+            return [...map.values()].sort((a,b)=>{
+              const au = a.updatedAt ? Date.parse(a.updatedAt) : 0;
+              const bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+              return bu-au;
+            });
+          });
+        };
+        r.readAsText(file);
+      }
+      function clearAll(){
+        if(!confirm("Clear all mugs from this browser?")) return;
+        setMugs([]);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      return (
+        <div className="wrap">
+          <div className="top">
+            <div className="title">
+              <h1>Moomin Mug Collection</h1>
+              <div className="sub">Local-first tracker (no build step). Data is stored in your browser.</div>
+            </div>
+            <div className="actions">
+              <button className="primary" onClick={openCreate}>＋ Add mug</button>
+              <button onClick={exportJson}>⬇ Export</button>
+              <button onClick={()=>fileInputRef.current?.click()}>⬆ Import</button>
+              <button className="danger" onClick={clearAll}>🗑 Clear</button>
+              <input ref={fileInputRef} type="file" accept="application/json" className="sr-only"
+                onChange={(e)=>{ const f=e.target.files?.[0]; if(f) importJson(f); e.target.value=""; }} />
+            </div>
+          </div>
+
+          <div className="tabs">
+            <button className={"tabbtn "+(tab==="collection"?"active":"")} onClick={()=>setTab("collection")}>Collection</button>
+            <button className={"tabbtn "+(tab==="stats"?"active":"")} onClick={()=>setTab("stats")}>Stats</button>
+          </div>
+
+          {tab==="collection" ? (
+            <>
+              <div className="card pad">
+                <div className="grid" style={{gridTemplateColumns:"1fr", gap:12}}>
+                  {/* Mobile-friendly controls */}
+                  <div className="row">
+                    <div className="field" style={{flex:2, minWidth:220}}>
+                      <label>Search</label>
+                      <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search name, year, tags, notes…" />
+                    </div>
+                    <div className="field" style={{minWidth:180}}>
+                      <label>Status</label>
+                      <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+                        <option value="all">All</option>
+                        {STATUSES.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="field" style={{minWidth:180}}>
+                      <label>Tag contains</label>
+                      <input value={tagFilter} onChange={e=>setTagFilter(e.target.value)} placeholder="e.g., blue" />
+                    </div>
+                    <div className="field" style={{minWidth:200}}>
+                      <label>Sort</label>
+                      <select value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+                        <option value="updated_desc">Recently updated</option>
+                        <option value="updated_asc">Least recently updated</option>
+                        <option value="year_desc">Year (new → old)</option>
+                        <option value="year_asc">Year (old → new)</option>
+                        <option value="price_desc">Price (high → low)</option>
+                        <option value="price_asc">Price (low → high)</option>
+                        <option value="name">Name (A → Z)</option>
+                      </select>
+                    </div>
+                    <div className="field" style={{minWidth:180}}>
+                      <label>Favorites</label>
+                      <div className="row" style={{justifyContent:"space-between", padding:"10px 12px", border:`1px solid var(--border)`, borderRadius:14}}>
+                        <div className="mini">Favorites only</div>
+                        <input type="checkbox" checked={favoriteOnly} onChange={e=>setFavoriteOnly(e.target.checked)} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row" style={{justifyContent:"space-between"}}>
+                    <div className="row">
+                      <span className="pill">{filtered.length} shown</span>
+                      <span className="pill">{mugs.length} total</span>
+                      {favoriteOnly ? <span className="pill">★ favorites</span> : null}
+                    </div>
+                    <div className="help">Tip: export JSON as backup.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{height:12}} />
+
+              {mugs.length===0 ? (
+                <div className="card pad">
+                  <div style={{display:"flex", justifyContent:"space-between", gap:12, flexWrap:"wrap", alignItems:"center"}}>
+                    <div>
+                      <div style={{fontWeight:900}}>Your collection is empty</div>
+                      <div className="sub" style={{marginTop:6}}>Add your first mug, or load sample data to explore.</div>
+                    </div>
+                    <div className="row">
+                      <button className="primary" onClick={openCreate}>＋ Add a mug</button>
+                      <button onClick={()=>setMugs(sampleData.map(m=>({...m, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()})))}>✨ Load sample</button>
+                    </div>
+                  </div>
+                </div>
+              ) : filtered.length===0 ? (
+                <div className="card pad"><div className="muted">No mugs match your filters.</div></div>
+              ) : (
+                <div className="muggrid">
+                  {filtered.map(m=>(
+                    <div key={m.id} className="card mug">
+                      <div className="mughead">
+                        <div style={{minWidth:0, flex:1}}>
+                          <div className="row" style={{gap:8}}>
+                            <div className="mugname" title={m.name}>{m.name}</div>
+                            <Badge kind={m.status}>{m.status==="owned"?"Owned":m.status==="wishlist"?"Wishlist":"Sold"}</Badge>
+                            {m.favorite ? <Badge kind="fav">★ Favorite</Badge> : null}
+                          </div>
+                          <div className="sub" style={{marginTop:6}}>
+                            {(m.series||"—")}
+                            {m.year ? ` · ${m.year}` : ""}
+                            {m.edition ? ` · ${m.edition}` : ""}
+                          </div>
+
+                          <div className="badges">
+                            {m.location ? <Badge>📍 {m.location}</Badge> : null}
+                            {m.acquiredDate ? <Badge>📅 {m.acquiredDate}</Badge> : null}
+                            {m.price!=="" && m.price!==null && m.price!==undefined ? <Badge>💰 {formatMoney(m.price, m.currency||"SEK")}</Badge> : null}
+                            {m.condition ? <Badge>✓ {m.condition}</Badge> : null}
+                          </div>
+
+                          {m.tags?.length ? (
+                            <div className="tagchips">
+                              {m.tags.slice(0,10).map(t=><span key={t} className="chip">#{t}</span>)}
+                              {m.tags.length>10 ? <span className="chip">+{m.tags.length-10}</span> : null}
+                            </div>
+                          ) : null}
+
+                          {m.notes ? <div className="divider" /> : null}
+                          {m.notes ? <div className="mini lineclamp">{m.notes}</div> : null}
+                        </div>
+
+                        <div className="thumb" title={m.photoUrl ? "Photo" : "No photo"}>
+                          {m.photoUrl ? <img src={m.photoUrl} alt="Mug" onError={(e)=>{e.currentTarget.style.display="none"}} /> : <span className="muted">☕</span>}
+                        </div>
+                      </div>
+
+                      <div className="mugfoot">
+                        <div className="help">Updated: {m.updatedAt ? m.updatedAt.slice(0,10) : "—"}</div>
+                        <div className="menu">
+                          <button onClick={()=>toggleFav(m)}>{m.favorite ? "Unfav" : "Fav"}</button>
+                          <button onClick={()=>openEdit(m)}>Edit</button>
+                          <button className="danger" onClick={()=>del(m)}>Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button className="primary fab" onClick={openCreate} aria-label="Add mug">＋</button>
+
+              <MugForm
+                open={formOpen}
+                onClose={()=>setFormOpen(false)}
+                initial={formInitial || {__mode:"create"}}
+                onSave={upsert}
+              />
+            </>
+          ) : (
+            <>
+              <div className="kpi">
+                <div className="card kpicard">
+                  <div className="kpilabel">Owned</div>
+                  <div className="kpivalue">{stats.owned}</div>
+                </div>
+                <div className="card kpicard">
+                  <div className="kpilabel">Wishlist</div>
+                  <div className="kpivalue">{stats.wishlist}</div>
+                </div>
+                <div className="card kpicard">
+                  <div className="kpilabel">Sold</div>
+                  <div className="kpivalue">{stats.sold}</div>
+                </div>
+                <div className="card kpicard">
+                  <div className="kpilabel">Favorites</div>
+                  <div className="kpivalue">{stats.favorites}</div>
+                </div>
+              </div>
+
+              <div style={{height:12}} />
+
+              <div className="grid" style={{gridTemplateColumns:"1fr", gap:12}}>
+                <div className="card pad">
+                  <div style={{fontWeight:900}}>Total spent (owned)</div>
+                  <div style={{fontSize:26, fontWeight:900, marginTop:6}}>{formatMoney(stats.totalSpent, "SEK")}</div>
+                  <div className="help" style={{marginTop:6}}>Uses price values on mugs marked as Owned.</div>
+                </div>
+
+                <div className="card pad">
+                  <div style={{fontWeight:900}}>Mugs by year (last 12 years)</div>
+                  <div className="help" style={{marginTop:6}}>A simple list (no chart library needed).</div>
+                  <div className="divider" />
+                  {stats.byYearData.length ? (
+                    <div className="list">
+                      {stats.byYearData.map(r=>(
+                        <div key={r.year} className="listrow">
+                          <div style={{fontWeight:800}}>{r.year}</div>
+                          <div className="right">
+                            <span className="pill">{r.count}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">Add years to mugs to see this section.</div>
+                  )}
+                </div>
+
+                <div className="card pad">
+                  <div style={{fontWeight:900}}>Top tags</div>
+                  <div className="divider" />
+                  {stats.topTags.length ? (
+                    <div className="list">
+                      {stats.topTags.map(t=>(
+                        <div key={t.tag} className="listrow">
+                          <div>#{t.tag}</div>
+                          <span className="pill">{t.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">Add tags to see trends.</div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
