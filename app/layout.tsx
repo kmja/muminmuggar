@@ -1,4 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource/jost/300.css";
+import "@fontsource/jost/400.css";
+import "@fontsource/jost/500.css";
+import "@fontsource/jost/600.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4efe4",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
