@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { query, rowToMug } from "@/lib/db";
-import { anyStructuredSource, searchMarketplaces } from "@/lib/marketplaces";
+import { sourcesAvailable, searchMarketplaces } from "@/lib/marketplaces";
 import { sendToAll, pushConfigured } from "@/lib/push";
 import type { Listing } from "@/lib/types";
 
@@ -19,9 +19,9 @@ async function run() {
     checked: 0,
     newListings: 0,
     notified: 0,
-    sources: anyStructuredSource(),
+    sources: sourcesAvailable(),
   };
-  if (!summary.sources) return summary; // nothing structured to poll reliably
+  if (!summary.sources) return summary; // no sources configured (need GEMINI_API_KEY and/or eBay)
 
   const { rows } = await query("SELECT * FROM mugs WHERE status = 'wishlist'");
   const wishlist = rows.map(rowToMug);

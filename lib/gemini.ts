@@ -1,4 +1,4 @@
-import type { AiMug } from "./types";
+import type { AiMug, Listing } from "./types";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
@@ -9,6 +9,9 @@ function apiKey(): string {
   const k = process.env.GEMINI_API_KEY;
   if (!k) throw new Error("GEMINI_API_KEY is not set on the server.");
   return k;
+}
+export function geminiConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY);
 }
 function currency(): string {
   return process.env.DEFAULT_CURRENCY || "SEK";
@@ -180,4 +183,53 @@ export async function groundedDealSearch(q: string): Promise<{ text: string; sou
     `List any live listings with seller/retailer, price, and a direct link. If nothing concrete, say so. Keep it concise.`;
   const { text, grounding } = await generate({ useSearch: true, parts: [{ text: prompt }] });
   return { text, sources: grounding };
+}
+
+/**
+ * Search a single site (marketplace or retailer) for live listings of a mug,
+ * via Google-Search grounding restricted to that domain. Returns normalized
+ * Listing objects (the notifier + UI consume these directly).
+ *
+ * These sites have no public listing API, so this is the reliable serverless
+ * path that avoids scraping. Coverage depends on what Google has indexed —
+ * strong for Tradera/Blocket/Cervera/Arabia, weak for login-gated Facebook
+ * Marketplace.
+ */
+export async function searchSiteListings(query: string, domain: string, sourceName: string): Promise<Listing[]> {
+  const prompt =
+    `Search ${domain} for current, live for-sale listings of this exact item: "${query}". ` +
+    `Only include real product/listing pages hosted on ${domain}. ` +
+    `Respond with ONLY a JSON array (no prose) of up to 6 objects with this shape: ` +
+    `{"title": string, "price": number|null, "currency": string|null, "url": string}. ` +
+    `"url" must be a direct link on ${domain}. If there are none, respond with [].`;
+  const { text, grounding } = await generate({ useSearch: true, parts: [{ text: prompt }] });
+
+  let listings: Listing[] = [];
+  const parsed = parseJson<Array<{ title?: string; price?: number | null; currency?: string | null; url?: string }>>(text);
+  if (Array.isArray(parsed)) {
+    listings = parsed
+      .filter((x) => x && typeof x.url === "string")
+      .map((x) => ({
+        source: sourceName,
+        title: String(x.title || sourceName),
+        price: typeof x.price === "number" ? x.price : null,
+        currency: x.currency || null,
+        url: String(x.url),
+        imageUrl: null,
+        condition: null,
+      }));
+  }
+  // Fallback: derive listings straight from grounding metadata.
+  if (!listings.length && grounding.length) {
+    listings = grounding.slice(0, 6).map((g) => ({
+      source: sourceName,
+      title: g.title || sourceName,
+      price: null,
+      currency: null,
+      url: g.uri,
+      imageUrl: null,
+      condition: null,
+    }));
+  }
+  return listings.filter((l) => /^https?:\/\//.test(l.url));
 }

@@ -14,6 +14,21 @@ sale**.
   and sends a web-push notification when new listings appear. Each wishlist
   card also has an on-demand "Deals" search.
 
+### Marketplace & retailer sources
+
+| Source | How it's searched |
+| --- | --- |
+| eBay | Browse API (structured — real price/image), when credentials are set |
+| Tradera, Blocket, Facebook Marketplace | Gemini Google-Search grounding, restricted per domain |
+| Arabia, Cervera (retailers) | Gemini Google-Search grounding, restricted per domain |
+
+None of the Swedish sites expose a public listing API, so those are searched
+via Gemini web search rather than scraping (which their terms forbid).
+Coverage depends on what Google has indexed — good for Tradera / Blocket /
+Cervera / Arabia, thin for login-gated Facebook Marketplace. Add or remove
+sources in `lib/marketplaces.ts` (`SITE_SOURCES`); the notifier and UI pick
+them up automatically.
+
 ## Stack
 
 Next.js (App Router) · Postgres · Gemini (vision + grounded search) ·
@@ -48,10 +63,10 @@ public/  sw.js · manifest.json · icon.svg
 3. **Environment** — copy `.env.example` to `.env.local` and fill in:
    - `GEMINI_API_KEY` — from https://aistudio.google.com/apikey (required for
      identification, value estimates, and gap finder).
-   - `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` — from
-     https://developer.ebay.com (enables reliable, structured deal alerts).
-     Without them, deal search falls back to Gemini web search only, and the
-     hourly notifier has nothing structured to poll.
+   - `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` — optional, from
+     https://developer.ebay.com. Adds eBay as a structured source (real
+     price/image). Not required: with `GEMINI_API_KEY` set, the notifier
+     already polls Tradera, Blocket, Facebook Marketplace, Arabia and Cervera.
    - VAPID keys for push:
      ```bash
      npm run gen-vapid   # prints VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY

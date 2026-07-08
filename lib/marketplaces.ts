@@ -1,5 +1,22 @@
 import type { Listing, Mug } from "./types";
 import { ebayConfigured, searchEbay } from "./ebay";
+import { geminiConfigured, searchSiteListings } from "./gemini";
+
+/** Secondhand marketplaces searched for wishlisted mugs. */
+export const MARKETPLACES = [
+  { name: "Tradera", domain: "tradera.com" },
+  { name: "Blocket", domain: "blocket.se" },
+  { name: "Facebook Marketplace", domain: "facebook.com/marketplace" },
+];
+
+/** Retailers searched for wishlisted mugs. */
+export const RETAILERS = [
+  { name: "Arabia", domain: "arabia.com" },
+  { name: "Cervera", domain: "cervera.se" },
+];
+
+/** Sites searched via Gemini Google-Search grounding (no public API available). */
+export const SITE_SOURCES = [...MARKETPLACES, ...RETAILERS];
 
 /** Build a focused search query for a wishlisted mug. */
 export function mugQuery(mug: Pick<Mug, "name" | "series" | "year">): string {
@@ -7,13 +24,16 @@ export function mugQuery(mug: Pick<Mug, "name" | "series" | "year">): string {
 }
 
 /**
- * Structured marketplace search used by the scheduled notifier.
- * eBay is the reliable, structured backbone (real listings with IDs/URLs to dedupe).
- * Additional structured sources can be added here behind the same Listing shape.
+ * Aggregate marketplace search used by the on-demand "Deals" view and the
+ * scheduled notifier. eBay is a structured source (real price/image);
+ * the Swedish marketplaces + retailers are searched per-domain via Gemini
+ * grounding. All results are normalized to the same Listing shape and
+ * de-duplicated by URL.
  */
 export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "year">): Promise<Listing[]> {
   const q = mugQuery(mug);
   const results: Listing[] = [];
+
   if (ebayConfigured()) {
     try {
       results.push(...(await searchEbay(q)));
@@ -21,11 +41,24 @@ export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "yea
       console.error("eBay search error:", e);
     }
   }
-  // De-dupe by URL.
+
+  if (geminiConfigured()) {
+    const perSite = await Promise.all(
+      SITE_SOURCES.map((s) =>
+        searchSiteListings(q, s.domain, s.name).catch((e) => {
+          console.error(`${s.name} search error:`, e);
+          return [] as Listing[];
+        }),
+      ),
+    );
+    for (const list of perSite) results.push(...list);
+  }
+
   const seen = new Set<string>();
   return results.filter((l) => (seen.has(l.url) ? false : (seen.add(l.url), true)));
 }
 
-export function anyStructuredSource(): boolean {
-  return ebayConfigured();
+/** True if we have at least one source to poll for the notifier. */
+export function sourcesAvailable(): boolean {
+  return ebayConfigured() || geminiConfigured();
 }
