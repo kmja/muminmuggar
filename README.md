@@ -93,6 +93,31 @@ public/  sw.js · manifest.json · icon.svg
 To notify on other marketplaces, add a source in `lib/marketplaces.ts`
 (implement the `Listing` shape) — the cron and the UI pick it up automatically.
 
+## Clearing eBay's "Non Compliant" status
+
+Every production eBay app must expose a **Marketplace Account Deletion/Closure
+notification endpoint**, or it shows as *Non Compliant* and Browse calls can be
+throttled. This app ships that endpoint at **`/api/ebay/deletion`** — it stores
+no eBay user data, so it just answers eBay's ownership challenge and `200`s any
+deletion notice.
+
+To make the app compliant:
+
+1. **Deploy** so you have a public HTTPS URL (e.g.
+   `https://muminmuggar.vercel.app`).
+2. Pick a **verification token** — 32–80 chars, `[A-Za-z0-9_-]` — and set it as
+   `EBAY_VERIFICATION_TOKEN` in your Vercel env, then redeploy.
+3. In eBay Developer Portal → **Alerts & Notifications** →
+   *Marketplace Account Deletion*:
+   - **Endpoint:** `https://<your-domain>/api/ebay/deletion`
+   - **Verification token:** the same value as `EBAY_VERIFICATION_TOKEN`
+   - Click **Save**. eBay immediately calls the endpoint's challenge; if it
+     validates, the status flips to Compliant.
+4. **Send Test Notification** should return success.
+
+(If you register the endpoint at a path other than the default, also set
+`EBAY_DELETION_ENDPOINT` to that exact URL so the challenge hash matches.)
+
 ## Notes
 
 - Push notifications require HTTPS (works on Vercel; on localhost use
