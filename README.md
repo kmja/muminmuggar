@@ -18,16 +18,19 @@ sale**.
 
 | Source | How it's searched |
 | --- | --- |
-| eBay | Browse API (structured — real price/image), when credentials are set |
-| Tradera, Blocket, Facebook Marketplace | Gemini Google-Search grounding, restricted per domain |
+| Tradera | Official v3 SOAP `SearchService` (structured — real price/image/id), when `TRADERA_APP_ID`/`TRADERA_APP_KEY` are set |
+| eBay | Browse API (structured — real price/image), when `EBAY_CLIENT_ID`/`SECRET` are set |
+| Blocket, Facebook Marketplace | Gemini Google-Search grounding, restricted per domain |
 | Arabia, Cervera (retailers) | Gemini Google-Search grounding, restricted per domain |
 
-None of the Swedish sites expose a public listing API, so those are searched
-via Gemini web search rather than scraping (which their terms forbid).
-Coverage depends on what Google has indexed — good for Tradera / Blocket /
-Cervera / Arabia, thin for login-gated Facebook Marketplace. Add or remove
-sources in `lib/marketplaces.ts` (`SITE_SOURCES`); the notifier and UI pick
-them up automatically.
+Tradera and eBay use their official APIs (structured, reliable). The remaining
+sites have no public listing API, so they're searched via Gemini web search
+rather than scraping (which their terms forbid). Grounded coverage depends on
+what Google has indexed — good for Blocket / Cervera / Arabia, thin for
+login-gated Facebook Marketplace. Add or remove grounded sites in
+`lib/marketplaces.ts` (`SITE_SOURCES`), or add another structured API source
+alongside `lib/tradera.ts` / `lib/ebay.ts`; the notifier and UI pick them up
+automatically.
 
 ## Stack
 

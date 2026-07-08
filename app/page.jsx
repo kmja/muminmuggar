@@ -657,7 +657,7 @@ export default function App() {
           <div className="note">The app checks marketplaces for your wishlisted mugs every hour. Enable notifications on this device to get a push when new listings appear — even when the app is closed.</div>
           <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? "✓ Notifications enabled" : "🔔 Enable notifications"}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
-          <div className="help">Searches Tradera, Blocket, Facebook Marketplace, Arabia, Cervera (via Gemini web search) and eBay (when configured). Facebook Marketplace is login-gated, so its coverage is thin. Identification and value estimates also use Gemini. All keys live on the server.</div>
+          <div className="help">Searches Tradera and eBay via their official APIs (when configured), plus Blocket, Facebook Marketplace, Arabia and Cervera via Gemini web search. Facebook Marketplace is login-gated, so its coverage is thin. Identification and value estimates also use Gemini. All keys live on the server.</div>
         </div>
       </Modal>
     </div>

@@ -1,10 +1,13 @@
 import type { Listing, Mug } from "./types";
 import { ebayConfigured, searchEbay } from "./ebay";
+import { traderaConfigured, searchTradera } from "./tradera";
 import { geminiConfigured, searchSiteListings } from "./gemini";
 
-/** Secondhand marketplaces searched for wishlisted mugs. */
+/**
+ * Secondhand marketplaces searched via Gemini grounding (no public API).
+ * Tradera and eBay are handled by their official APIs instead — see below.
+ */
 export const MARKETPLACES = [
-  { name: "Tradera", domain: "tradera.com" },
   { name: "Blocket", domain: "blocket.se" },
   { name: "Facebook Marketplace", domain: "facebook.com/marketplace" },
 ];
@@ -42,6 +45,14 @@ export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "yea
     }
   }
 
+  if (traderaConfigured()) {
+    try {
+      results.push(...(await searchTradera(q)));
+    } catch (e) {
+      console.error("Tradera search error:", e);
+    }
+  }
+
   if (geminiConfigured()) {
     const perSite = await Promise.all(
       SITE_SOURCES.map((s) =>
@@ -60,5 +71,5 @@ export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "yea
 
 /** True if we have at least one source to poll for the notifier. */
 export function sourcesAvailable(): boolean {
-  return ebayConfigured() || geminiConfigured();
+  return ebayConfigured() || traderaConfigured() || geminiConfigured();
 }
