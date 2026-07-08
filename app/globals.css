@@ -1,43 +1,43 @@
 :root{
-  --bg:#0b0c0f; --bg2:#0f1117; --card:#12141a; --muted:#8b93a7; --text:#e9ecf5;
-  --border:#242839; --accent:#7aa2ff; --accent2:#9cf2c7; --gold:#ffd36a; --danger:#ff6b6b;
-  --shadow: 0 10px 30px rgba(0,0,0,.35); --radius: 18px;
+  --bg:#f4efe4; --bg2:#efe7d6; --card:#fffdf8; --muted:#6f6a60; --text:#20201c;
+  --border:#e7dfce; --accent:#5b8aa6; --accent-ink:#3f6d88; --accent2:#c9736a; --gold:#cf9a3a; --danger:#c0564b;
+  --shadow: 0 10px 26px rgba(60,50,30,.08); --radius: 20px;
 }
-@media (prefers-color-scheme: light){
+@media (prefers-color-scheme: dark){
   :root{
-    --bg:#f5f6fb; --bg2:#eef0f8; --card:#ffffff; --muted:#59627a; --text:#0f172a;
-    --border:#e6e8f0; --accent:#3b6bf6; --accent2:#10b981; --gold:#d99a10; --danger:#ef4444;
-    --shadow: 0 12px 30px rgba(15,23,42,.08);
+    --bg:#1e1c18; --bg2:#26231d; --card:#26231d; --muted:#a49d8f; --text:#f2ece0;
+    --border:#39352c; --accent:#7fb0cc; --accent-ink:#9cc6dd; --accent2:#e0917f; --gold:#e0b45a; --danger:#e07a6e;
+    --shadow: 0 14px 34px rgba(0,0,0,.4);
   }
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  font-family: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Quicksand, Nunito, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   background:
-    radial-gradient(1100px 500px at 100% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent),
-    radial-gradient(900px 500px at -10% 0%, color-mix(in srgb, var(--accent2) 12%, transparent), transparent),
+    radial-gradient(1200px 620px at 50% -22%, color-mix(in srgb, var(--accent) 10%, transparent), transparent),
     var(--bg);
-  color: var(--text); -webkit-tap-highlight-color: transparent;
+  color: var(--text); -webkit-tap-highlight-color: transparent; letter-spacing:.1px;
 }
-a{color:var(--accent)}
+a{color:var(--accent-ink)}
 .wrap{max-width:1120px;margin:0 auto;padding:16px 16px 108px}
-.top{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:14px}
+.top{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
-.logo{width:44px;height:44px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px;
-  background: linear-gradient(135deg, color-mix(in srgb,var(--accent) 60%, #fff 8%), color-mix(in srgb,var(--accent2) 55%, var(--accent) 45%));box-shadow: var(--shadow)}
+.logo{width:46px;height:46px;border-radius:16px;flex:none;display:flex;align-items:center;justify-content:center;
+  color:var(--accent-ink); background: var(--card); border:1.5px solid var(--border); box-shadow: var(--shadow)}
 .title{display:flex;flex-direction:column;gap:2px;min-width:0}
-h1{font-size:19px; margin:0; letter-spacing:-.02em}
+h1{font-size:20px; margin:0; letter-spacing:-.01em; font-weight:800}
 .sub{color:var(--muted); font-size:12px}
 .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-button,.btn{appearance:none; border:1px solid var(--border); background: var(--card); color: var(--text);
-  padding:10px 13px; border-radius: 999px; cursor:pointer; font-weight:600; font-size:13px;
-  display:inline-flex; align-items:center; gap:8px; line-height:1; transition: border-color .15s, transform .05s}
-button:hover{border-color: color-mix(in srgb, var(--border) 55%, var(--accent))}
+button,.btn{appearance:none; border:1.5px solid var(--border); background: var(--card); color: var(--text);
+  padding:10px 14px; border-radius: 999px; cursor:pointer; font-weight:700; font-size:13px;
+  display:inline-flex; align-items:center; gap:8px; line-height:1; transition: border-color .15s, background .15s, transform .05s}
+button:hover{border-color: color-mix(in srgb, var(--border) 45%, var(--accent))}
 button:active{transform: translateY(1px)}
 button:disabled{opacity:.5; cursor:not-allowed}
-.primary{background: linear-gradient(135deg, color-mix(in srgb,var(--accent) 92%, #fff 8%), color-mix(in srgb,var(--accent2) 55%, var(--accent) 45%));border-color: transparent; color: #07101f}
+.primary{background: var(--accent); border-color: transparent; color:#fff}
+.primary:hover{background: var(--accent-ink); border-color: transparent}
 .ghost{background:transparent}
 .danger{border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger)}
 .icon{padding:10px; width:40px; height:40px; justify-content:center}
@@ -54,7 +54,7 @@ textarea{min-height:80px; resize:vertical}
 input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted) 90%, transparent)}
 .tabs{display:flex; gap:6px; margin: 6px 0 14px; overflow-x:auto; padding-bottom:2px}
 .tabbtn{padding:10px 14px; border-radius: 999px; border:1px solid var(--border); background: transparent; color: var(--muted); font-weight:700; white-space:nowrap}
-.tabbtn.active{background: color-mix(in srgb, var(--card) 85%, transparent); color: var(--text); border-color: color-mix(in srgb, var(--border) 40%, var(--accent))}
+.tabbtn.active{background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 40%, var(--border))}
 .muggrid{display:grid; gap:12px; grid-template-columns: 1fr}
 @media (min-width: 620px){ .muggrid{grid-template-columns:1fr 1fr} }
 @media (min-width: 980px){ .muggrid{grid-template-columns:1fr 1fr 1fr} }
@@ -115,8 +115,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .bn .ic{font-size:20px; line-height:1}
 .bn.active{color:var(--text)}
 .bn-scan{margin-top:-26px; width:58px; height:58px; border-radius:999px; justify-content:center; gap:0;
-  background: linear-gradient(135deg, color-mix(in srgb,var(--accent) 92%, #fff 8%), color-mix(in srgb,var(--accent2) 55%, var(--accent) 45%));
-  color:#07101f; border:4px solid var(--bg); box-shadow: var(--shadow)}
+  background: var(--accent); color:#fff; border:4px solid var(--bg); box-shadow: var(--shadow)}
 .bn-scan .ic{font-size:26px}
 .kpi{display:grid; gap:12px; grid-template-columns:1fr 1fr}
 @media(min-width: 820px){ .kpi{grid-template-columns:repeat(4,1fr)} }

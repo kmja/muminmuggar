@@ -101,6 +101,15 @@ function Confidence({ v }) {
   const col = pct >= 75 ? "var(--accent2)" : pct >= 45 ? "var(--gold)" : "var(--danger)";
   return <span className="conf" title="Gemini confidence"><span style={{ width: 8, height: 8, borderRadius: 99, background: col, display: "inline-block" }} /><b>{pct}%</b> sure</span>;
 }
+function MugMark({ size = 26 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M13 17h20v13a9 9 0 0 1-9 9h-2a9 9 0 0 1-9-9z" />
+      <path d="M33 20h3.5a4.5 4.5 0 0 1 0 9H33" />
+      <path d="M18 8.5c0 2-1.8 2-1.8 3.8M24 8.5c0 2-1.8 2-1.8 3.8M30 8.5c0 2-1.8 2-1.8 3.8" opacity="0.55" />
+    </svg>
+  );
+}
 
 /* ------------------------------ MugForm ------------------------------- */
 function validateMug(m) {
@@ -394,7 +403,7 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   return (
     <div className="card mug">
       <div className="mugphoto">
-        {m.photoUrl ? <img src={m.photoUrl} alt={m.name} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph">☕</span>}
+        {m.photoUrl ? <img src={m.photoUrl} alt={m.name} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <div className="abschip">
           <Badge kind={m.status}>{m.status === "owned" ? "Owned" : m.status === "wishlist" ? "Wishlist" : "Sold"}</Badge>
           {m.favorite ? <Badge kind="fav">★</Badge> : null}
@@ -558,7 +567,7 @@ export default function App() {
     <div className="wrap">
       <div className="top">
         <div className="brand">
-          <div className="logo">☕</div>
+          <div className="logo"><MugMark size={26} /></div>
           <div className="title"><h1>Moomin Mug Collection</h1><div className="sub">Photograph, identify & track — with deal alerts.</div></div>
         </div>
         <div className="actions hide-mobile">
