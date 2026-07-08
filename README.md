@@ -87,7 +87,12 @@ public/  sw.js · manifest.json · icon.svg
 2. Add all env vars from `.env.example` in the project settings. Set
    `CRON_SECRET` to any random string — Vercel Cron sends it automatically so
    only the scheduler can trigger the notifier.
-3. `vercel.json` already schedules `GET /api/cron/check-wishlist` hourly.
+3. `vercel.json` schedules `GET /api/cron/check-wishlist` once a day (07:00
+   UTC). Vercel's **Hobby plan only allows daily crons** — a more frequent
+   schedule makes the deployment fail. For hourly checks, either upgrade to
+   Pro, or keep the daily Vercel cron and additionally ping the endpoint from
+   a free external scheduler (GitHub Actions / cron-job.org) hitting
+   `https://<domain>/api/cron/check-wishlist` with `Authorization: Bearer $CRON_SECRET`.
 4. Open the app, add a wishlist mug, and hit **🔔 Enable notifications**.
 
 To notify on other marketplaces, add a source in `lib/marketplaces.ts`

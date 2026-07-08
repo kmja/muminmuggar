@@ -351,7 +351,7 @@ function DealsModal({ open, onClose, mug }) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} wide title={mug ? `Find “${mug.name}”` : "Find deals"} subtitle="Searches marketplaces now; the hourly checker notifies you of new listings automatically." footer={<button className="primary" onClick={run} disabled={busy}>{busy ? <span className="spin" /> : "Search again"}</button>}>
+    <Modal open={open} onClose={onClose} wide title={mug ? `Find “${mug.name}”` : "Find deals"} subtitle="Searches marketplaces now; the daily checker notifies you of new listings automatically." footer={<button className="primary" onClick={run} disabled={busy}>{busy ? <span className="spin" /> : "Search again"}</button>}>
       {busy && !listings.length ? <div className="drop"><span className="spin" /><div style={{ marginTop: 8 }}>Searching marketplaces…</div></div> : null}
       {error ? <div className="err">{error}</div> : null}
 
@@ -382,7 +382,7 @@ function DealsModal({ open, onClose, mug }) {
         </div>
       ) : null}
 
-      {!busy && !listings.length && !web?.sources?.length ? <div className="help">No listings found right now. The hourly checker keeps looking and will notify you.</div> : null}
+      {!busy && !listings.length && !web?.sources?.length ? <div className="help">No listings found right now. The daily checker keeps looking and will notify you.</div> : null}
     </Modal>
   );
 }
@@ -664,7 +664,7 @@ export default function App() {
 
       <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title="Notifications" subtitle="Get pinged when a wishlisted mug shows up for sale.">
         <div className="grid" style={{ gap: 12 }}>
-          <div className="note">The app checks marketplaces for your wishlisted mugs every hour. Enable notifications on this device to get a push when new listings appear — even when the app is closed.</div>
+          <div className="note">The app checks marketplaces for your wishlisted mugs once a day. Enable notifications on this device to get a push when new listings appear — even when the app is closed.</div>
           <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? "✓ Notifications enabled" : "🔔 Enable notifications"}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
           <div className="help">Searches Tradera and eBay via their official APIs (when configured), plus Blocket, Facebook Marketplace, Arabia and Cervera via Gemini web search. Facebook Marketplace is login-gated, so its coverage is thin. Identification and value estimates also use Gemini. All keys live on the server.</div>
