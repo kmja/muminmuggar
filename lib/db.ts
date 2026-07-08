@@ -58,8 +58,12 @@ let schemaReady: Promise<unknown> | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) throw new Error("DATABASE_URL is not set");
+    const connectionString =
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL ||
+      process.env.POSTGRES_URL_NON_POOLING;
+    if (!connectionString) throw new Error("No database URL set (DATABASE_URL / POSTGRES_URL).");
     const local = /localhost|127\.0\.0\.1/.test(connectionString);
     pool = new Pool({
       connectionString,
