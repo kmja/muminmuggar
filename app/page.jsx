@@ -189,7 +189,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
   const camRef = useRef(null), fileRef = useRef(null);
   useEffect(() => { if (open) { setBusy(false); setError(""); setItems([]); setPhotoUrl(""); } }, [open]);
 
-  const run = async (file, shelf) => {
+  const run = async (file) => {
     setError("");
     if (!file) return;
     setBusy(true); setItems([]);
@@ -197,42 +197,40 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
       const raw = await fileToDataUrl(file);
       const small = await downscaleImage(raw, 1400, 0.85);
       setPhotoUrl(small);
-      if (shelf) {
-        const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
-        if (!drafts.length) setError("No mugs detected. Try a clearer, closer photo.");
-        setItems(drafts.map((d) => ({ draft: { ...d, photoUrl: "" }, checked: d.isMoominMug !== false, position: d.position || "" })));
-      } else {
-        const { draft } = await api("/api/identify", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
-        if (draft.isMoominMug === false) setError("That doesn't look like a Moomin mug — you can still add it manually.");
-        setItems([{ draft, checked: true }]);
+      // Always detect every mug in the photo — one or many.
+      const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
+      if (!drafts.length) { setError("No mugs detected. Try a clearer, closer photo."); return; }
+      if (drafts.length === 1) {
+        // A single mug: attach the photo and open the full review form.
+        onAddOne({ ...drafts[0], photoUrl: small });
+        onClose();
+        return;
       }
+      setItems(drafts.map((d) => ({ draft: { ...d, photoUrl: "" }, checked: d.isMoominMug !== false, position: d.position || "" })));
     } catch (err) { setError(err.message || String(err)); }
     finally { setBusy(false); }
   };
 
-  const single = items.length === 1 && !items[0].position;
   const patchItem = (i, patch) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, draft: { ...it.draft, ...patch } } : it)));
+  const chosen = items.filter((it) => it.checked).length;
   const footer = items.length ? (
     <>
       <button onClick={() => { setItems([]); setPhotoUrl(""); }}>Rescan</button>
-      {single
-        ? <button className="primary" onClick={() => { onAddOne(items[0].draft); onClose(); }}>Review &amp; add</button>
-        : <button className="primary" onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => it.draft)); onClose(); }}>Add {items.filter((it) => it.checked).length} selected</button>}
+      <button className="primary" disabled={!chosen} onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => it.draft)); onClose(); }}>Add {chosen} mug{chosen === 1 ? "" : "s"}</button>
     </>
   ) : null;
 
   return (
-    <Modal open={open} onClose={onClose} wide title="Scan a mug" subtitle="Snap one mug to auto-fill it, or a whole shelf to batch-add. Powered by Gemini vision." footer={footer}>
+    <Modal open={open} onClose={onClose} wide title="Scan mugs" subtitle="Photograph one mug or a whole shelf — we'll find every mug in the photo." footer={footer}>
       {!items.length && !busy ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="row">
             <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => camRef.current?.click()}>📷 Take photo</button>
             <button style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => fileRef.current?.click()}>🖼 Choose image</button>
           </div>
-          <div className="switch"><span className="mini"><b>Shelf mode</b> — detect several mugs in one photo</span><label className="mini" style={{ display: "flex", gap: 6, alignItems: "center" }}><input id="shelfmode" type="checkbox" style={{ width: "auto" }} /> batch</label></div>
-          <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f, document.getElementById("shelfmode")?.checked); e.target.value = ""; }} />
-          <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f, document.getElementById("shelfmode")?.checked); e.target.value = ""; }} />
-          <div className="help">Tip: good light and a straight-on angle help a lot.</div>
+          <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
+          <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
+          <div className="help">Tip: good light and a straight-on angle help. Point at a whole shelf to add many at once.</div>
         </div>
       ) : null}
 
@@ -246,7 +244,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
             const dups = findDuplicates(it.draft, mugs || []);
             return (
               <div className="scanrow" key={i}>
-                {!single ? <input type="checkbox" checked={it.checked} onChange={(e) => setItems((list) => list.map((x, idx) => (idx === i ? { ...x, checked: e.target.checked } : x)))} style={{ width: "auto", marginTop: 4 }} /> : null}
+                <input type="checkbox" checked={it.checked} onChange={(e) => setItems((list) => list.map((x, idx) => (idx === i ? { ...x, checked: e.target.checked } : x)))} style={{ width: "auto", marginTop: 4 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="row" style={{ justifyContent: "space-between" }}>
                     <input value={it.draft.name} onChange={(e) => patchItem(i, { name: e.target.value })} style={{ fontWeight: 800, maxWidth: 220 }} />
@@ -268,7 +266,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
               </div>
             );
           })}
-          {!single ? <div className="help">Untick anything you don't want, edit inline, then add.</div> : null}
+          <div className="help">Found {items.length} mugs. Untick any you don't want, edit inline, then add.</div>
         </div>
       ) : null}
     </Modal>
