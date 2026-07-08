@@ -94,6 +94,30 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .note.good{border-color: color-mix(in srgb, var(--accent2) 45%, var(--border)); color: color-mix(in srgb, var(--accent2) 82%, var(--text))}
 .fab{position:fixed;right:16px;bottom:16px;width:58px;height:58px;border-radius:999px;display:flex;align-items:center;justify-content:center;box-shadow: var(--shadow);z-index:40; font-size:22px}
 @media(min-width: 720px){ .fab{display:none} }
+
+/* responsive utilities */
+.only-mobile{display:none}
+@media (max-width: 719px){
+  .hide-mobile{display:none !important}
+  .only-mobile{display:inline-flex}
+  .filterfields{display:none}
+  .filterfields.open{display:flex}
+}
+
+/* mobile bottom navigation with a raised camera button */
+.bottomnav{position:fixed; left:0; right:0; bottom:0; display:none; align-items:center; justify-content:space-around;
+  background: color-mix(in srgb, var(--card) 90%, transparent); backdrop-filter: blur(12px);
+  border-top:1px solid var(--border); padding:8px 6px calc(8px + env(safe-area-inset-bottom)); z-index:45}
+@media (max-width: 719px){ .bottomnav{display:flex} }
+.bn{background:none; border:none; box-shadow:none; display:flex; flex-direction:column; align-items:center; gap:3px;
+  color:var(--muted); font-size:10px; font-weight:700; padding:4px 8px; min-width:52px}
+.bn:hover{border-color:transparent}
+.bn .ic{font-size:20px; line-height:1}
+.bn.active{color:var(--text)}
+.bn-scan{margin-top:-26px; width:58px; height:58px; border-radius:999px; justify-content:center; gap:0;
+  background: linear-gradient(135deg, color-mix(in srgb,var(--accent) 92%, #fff 8%), color-mix(in srgb,var(--accent2) 55%, var(--accent) 45%));
+  color:#07101f; border:4px solid var(--bg); box-shadow: var(--shadow)}
+.bn-scan .ic{font-size:26px}
 .kpi{display:grid; gap:12px; grid-template-columns:1fr 1fr}
 @media(min-width: 820px){ .kpi{grid-template-columns:repeat(4,1fr)} }
 .kpicard{padding:14px}

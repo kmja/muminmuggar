@@ -435,6 +435,7 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [sortBy, setSortBy] = useState("updated_desc");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [formInitial, setFormInitial] = useState(null);
   const [formMode, setFormMode] = useState("create");
@@ -562,7 +563,7 @@ export default function App() {
           <div className="logo">☕</div>
           <div className="title"><h1>Moomin Mug Collection</h1><div className="sub">Photograph, identify & track — with deal alerts.</div></div>
         </div>
-        <div className="actions">
+        <div className="actions hide-mobile">
           <button className="primary" onClick={() => setScanOpen(true)}>📷 Scan</button>
           <button onClick={() => setGapOpen(true)}>✨ Gaps</button>
           <button className={"ghost icon"} title="Notifications & about" onClick={() => setAboutOpen(true)}>🔔</button>
@@ -571,13 +572,16 @@ export default function App() {
 
       {loadError ? <div className="note warn" style={{ marginBottom: 12 }}>Couldn't load your collection: {loadError}. Is the database configured? See the README.</div> : null}
 
-      <div className="tabs">{TABS.map((t) => <button key={t.k} className={"tabbtn " + (tab === t.k ? "active" : "")} onClick={() => setTab(t.k)}>{t.label}</button>)}</div>
+      <div className="tabs hide-mobile">{TABS.map((t) => <button key={t.k} className={"tabbtn " + (tab === t.k ? "active" : "")} onClick={() => setTab(t.k)}>{t.label}</button>)}</div>
 
       {tab !== "stats" ? (
         <>
           <div className="card pad" style={{ marginBottom: 12 }}>
-            <div className="row">
-              <div className="field" style={{ flex: 2, minWidth: 200 }}><label>Search</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, series, tags, notes…" /></div>
+            <div className="row" style={{ alignItems: "flex-end" }}>
+              <div className="field" style={{ flex: 2, minWidth: 180 }}><label>Search</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, series, tags…" /></div>
+              <button type="button" className="only-mobile" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen}>{filtersOpen ? "▲ Filters" : "▾ Filters"}</button>
+            </div>
+            <div className={"row filterfields" + (filtersOpen ? " open" : "")} style={{ marginTop: 10 }}>
               {tab === "collection" ? (
                 <div className="field" style={{ minWidth: 150 }}><label>Status</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">All</option>{STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
               ) : null}
@@ -594,7 +598,7 @@ export default function App() {
             </div>
             <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}>
               <div className="row"><span className="pill">{viewMugs.length} shown</span><span className="pill">{mugs.length} total</span></div>
-              <button onClick={openCreate}>＋ Add manually</button>
+              <div className="row"><button onClick={() => setGapOpen(true)}>✨ Gaps</button><button onClick={openCreate}>＋ Add</button></div>
             </div>
           </div>
 
@@ -645,7 +649,13 @@ export default function App() {
         </>
       )}
 
-      <button className="primary fab" onClick={() => setScanOpen(true)} aria-label="Scan">📷</button>
+      <nav className="bottomnav">
+        <button className={"bn " + (tab === "collection" ? "active" : "")} onClick={() => setTab("collection")}><span className="ic">🗄️</span>Collection</button>
+        <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><span className="ic">♡</span>Wishlist</button>
+        <button className="bn bn-scan" onClick={() => setScanOpen(true)} aria-label="Scan a mug"><span className="ic">📷</span></button>
+        <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><span className="ic">📊</span>Stats</button>
+        <button className="bn" onClick={() => setAboutOpen(true)}><span className="ic">🔔</span>Alerts</button>
+      </nav>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mode={formMode} mugs={mugs} onSave={saveMug} saving={saving} />
       <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} />
