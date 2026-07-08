@@ -5,7 +5,16 @@ export const metadata: Metadata = {
   title: "Moomin Mug Collection",
   description: "Photograph your Moomin mugs, auto-identify them, track your collection, and get notified when wishlisted mugs appear for sale.",
   manifest: "/manifest.json",
-  icons: { icon: "/icon.svg" },
+  applicationName: "Moomin Mugs",
+  appleWebApp: { capable: true, title: "Moomin Mugs", statusBarStyle: "default" },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {

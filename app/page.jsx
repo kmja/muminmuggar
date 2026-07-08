@@ -465,6 +465,8 @@ export default function App() {
     load();
     const params = new URLSearchParams(window.location.search);
     if (params.get("tab") === "wishlist") setTab("wishlist");
+    // Register the service worker so the app is an installable PWA.
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
 
   const saveMug = async (next) => {
