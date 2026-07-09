@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, rowToMug } from "@/lib/db";
 import { sourcesAvailable, searchMarketplaces } from "@/lib/marketplaces";
+import { syncCatalogOnce } from "@/lib/catalog";
 import { sendToAll, pushConfigured } from "@/lib/push";
 import type { Listing } from "@/lib/types";
 
@@ -15,6 +16,9 @@ function authorized(req: Request): boolean {
 }
 
 async function run() {
+  // Keep the stored product-image catalog fresh (non-fatal if it fails).
+  try { await syncCatalogOnce(); } catch (e) { console.error("catalog sync:", e); }
+
   const summary: { checked: number; newListings: number; notified: number; sources: boolean } = {
     checked: 0,
     newListings: 0,

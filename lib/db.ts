@@ -51,6 +51,20 @@ CREATE TABLE IF NOT EXISTS listings (
 );
 
 CREATE INDEX IF NOT EXISTS listings_mug_idx ON listings (mug_id);
+
+CREATE TABLE IF NOT EXISTS catalog_mugs (
+  id         TEXT PRIMARY KEY,
+  title      TEXT NOT NULL,
+  series     TEXT,
+  year       INTEGER,
+  image_url  TEXT NOT NULL,
+  source     TEXT,
+  source_url TEXT,
+  norm       TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS catalog_norm_idx ON catalog_mugs (norm);
 `;
 
 let pool: Pool | null = null;
