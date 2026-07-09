@@ -26,13 +26,21 @@ export function fold(s: unknown): string {
     .trim();
 }
 
-/** Shopify stores to sync from (comma-separated domains via env, else the official shop). */
+/** Shopify stores to sync from (comma-separated domains via env, else known Moomin shops). */
 function stores(): string[] {
-  return (process.env.CATALOG_STORES || "shop.moomin.com")
+  return (process.env.CATALOG_STORES || "shop.moomin.com,www.moominarabia.com")
     .split(",")
     .map((s) => s.trim().replace(/^https?:\/\//, "").replace(/\/$/, ""))
     .filter(Boolean);
 }
+
+// A realistic browser User-Agent so the retailer CDN/Cloudflare serves the feed.
+const BROWSER_HEADERS = {
+  "user-agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+  accept: "application/json,text/plain,*/*",
+  "accept-language": "en-US,en;q=0.9",
+};
 
 const isMug = (title: string, type: string, tags: string) =>
   /\bmugg?s?\b|\bmuki\b|\bbecher\b|\bmok\b/i.test(`${title} ${type} ${tags}`);
@@ -45,30 +53,40 @@ interface ShopifyProduct {
   images?: { src?: string }[];
 }
 
-let syncing: Promise<number> | null = null;
+export interface SyncResult {
+  upserted: number;
+  stores: { domain: string; mugs: number; products: number; status?: number; error?: string }[];
+}
+
+let syncing: Promise<SyncResult> | null = null;
 let cache: { rows: CatalogRow[]; at: number } | null = null;
 
 /** Fetch + upsert the official catalog. Idempotent; safe to call repeatedly. */
-export async function syncCatalog(): Promise<number> {
-  let upserted = 0;
+export async function syncCatalog(): Promise<SyncResult> {
+  const result: SyncResult = { upserted: 0, stores: [] };
   for (const domain of stores()) {
+    const stat = { domain, mugs: 0, products: 0, status: undefined as number | undefined, error: undefined as string | undefined };
+    result.stores.push(stat);
     for (let page = 1; page <= 12; page++) {
       let products: ShopifyProduct[] = [];
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 9000);
         const res = await fetch(`https://${domain}/products.json?limit=250&page=${page}`, {
-          headers: { accept: "application/json", "user-agent": "MoominMugs/1.0" },
+          headers: BROWSER_HEADERS,
           signal: controller.signal,
         }).finally(() => clearTimeout(timer));
-        if (!res.ok) break;
+        stat.status = res.status;
+        if (!res.ok) { stat.error = `HTTP ${res.status}`; break; }
         const data = await res.json();
         products = Array.isArray(data?.products) ? data.products : [];
       } catch (e) {
+        stat.error = (e as Error).message;
         console.error(`catalog sync ${domain} p${page}:`, e);
         break;
       }
       if (!products.length) break;
+      stat.products += products.length;
 
       for (const p of products) {
         const title = String(p.title || "").trim();
@@ -89,17 +107,18 @@ export async function syncCatalog(): Promise<number> {
              source_url = EXCLUDED.source_url, norm = EXCLUDED.norm, updated_at = now()`,
           [id, title, null, year, image, domain, sourceUrl, norm],
         );
-        upserted++;
+        result.upserted++;
+        stat.mugs++;
       }
       if (products.length < 250) break; // last page
     }
   }
   cache = null; // invalidate
-  return upserted;
+  return result;
 }
 
 /** Run at most one sync at a time. */
-export function syncCatalogOnce(): Promise<number> {
+export function syncCatalogOnce(): Promise<SyncResult> {
   if (!syncing) syncing = syncCatalog().finally(() => { syncing = null; });
   return syncing;
 }

@@ -591,6 +591,8 @@ export default function App() {
   const [dealsMug, setDealsMug] = useState(null);
   const [notifState, setNotifState] = useState("idle"); // idle | on | error | unsupported
   const [notifMsg, setNotifMsg] = useState("");
+  const [catalogBusy, setCatalogBusy] = useState(false);
+  const [catalogMsg, setCatalogMsg] = useState("");
 
   const load = async () => {
     setLoading(true); setLoadError("");
@@ -667,6 +669,19 @@ export default function App() {
     setMugs((prev) => prev.map((x) => (x.id === m.id ? { ...x, favorite: optimistic } : x)));
     try { await api(`/api/mugs/${m.id}`, { method: "PATCH", body: JSON.stringify({ favorite: optimistic }) }); }
     catch { setMugs((prev) => prev.map((x) => (x.id === m.id ? { ...x, favorite: !optimistic } : x))); }
+  };
+
+  const fillCatalog = async () => {
+    setCatalogBusy(true); setCatalogMsg("");
+    try {
+      const r = await api("/api/catalog", { method: "POST" });
+      if (r.count) { setCatalogMsg(t("catalog_done", { count: r.count })); reload(); }
+      else {
+        const detail = (r.stores || []).map((s) => `${s.domain}: ${s.error || s.mugs + " mugs"}`).join("; ") || "—";
+        setCatalogMsg(t("catalog_none", { detail }));
+      }
+    } catch (e) { setCatalogMsg(e.message || String(e)); }
+    finally { setCatalogBusy(false); }
   };
 
   const openCreate = () => { setFormInitial(blankMug()); setFormMode("create"); setFormOpen(true); };
@@ -852,6 +867,10 @@ export default function App() {
           <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
           <div className="help">{t("about_help")}</div>
+          <div className="divider" />
+          <div className="note">{t("catalog_about")}</div>
+          <button onClick={fillCatalog} disabled={catalogBusy}>{catalogBusy ? <><span className="spin" /> {t("catalog_filling")}</> : t("catalog_fill")}</button>
+          {catalogMsg ? <div className="note good">{catalogMsg}</div> : null}
         </div>
       </Modal>
     </div>

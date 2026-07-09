@@ -17,8 +17,8 @@ export async function GET() {
 /** (Re)populate the stored catalog from the official shop's product feed. */
 export async function POST() {
   try {
-    const upserted = await syncCatalogOnce();
-    return NextResponse.json({ upserted, count: await catalogCount() });
+    const result = await syncCatalogOnce();
+    return NextResponse.json({ ...result, count: await catalogCount() });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
