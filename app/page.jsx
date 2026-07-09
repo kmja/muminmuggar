@@ -115,6 +115,25 @@ function MugMark({ size = 26 }) {
     </svg>
   );
 }
+function ThemeToggle({ theme, setTheme }) {
+  const t = useT();
+  // `theme` is "light" | "dark" | "system"; resolve what's actually showing.
+  const [systemDark, setSystemDark] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => setSystemDark(mq.matches);
+    sync();
+    mq.addEventListener?.("change", sync);
+    return () => mq.removeEventListener?.("change", sync);
+  }, []);
+  const isDark = theme === "dark" || (theme === "system" && systemDark);
+  return (
+    <button type="button" className="ghost icon" aria-label={isDark ? t("theme_light") : t("theme_dark")} title={isDark ? t("theme_light") : t("theme_dark")}
+      onClick={() => setTheme(isDark ? "light" : "dark")}>
+      <span style={{ fontSize: 17, lineHeight: 1 }}>{isDark ? "☀️" : "🌙"}</span>
+    </button>
+  );
+}
 function LangPicker({ lang, setLang }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -527,6 +546,7 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
 /* -------------------------------- App --------------------------------- */
 export default function App() {
   const [lang, setLang] = useState("sv");
+  const [theme, setTheme] = useState("system"); // system | light | dark
   const t = useMemo(() => makeT(lang), [lang]);
 
   const [mugs, setMugs] = useState([]);
@@ -562,6 +582,8 @@ export default function App() {
     if (params.get("tab") === "wishlist") setTab("wishlist");
     // Restore the saved language preference (Swedish by default).
     try { const saved = localStorage.getItem("lang"); if (saved === "sv" || saved === "en") setLang(saved); } catch { /* ignore */ }
+    // Restore the saved theme preference (follows the system by default).
+    try { const th = localStorage.getItem("theme"); if (th === "light" || th === "dark") setTheme(th); } catch { /* ignore */ }
     // Register the service worker so the app is an installable PWA.
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
@@ -569,6 +591,13 @@ export default function App() {
     try { localStorage.setItem("lang", lang); } catch { /* ignore */ }
     if (typeof document !== "undefined") document.documentElement.lang = lang;
   }, [lang]);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (theme === "system") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", theme);
+    try { if (theme === "system") localStorage.removeItem("theme"); else localStorage.setItem("theme", theme); } catch { /* ignore */ }
+  }, [theme]);
 
   const saveMug = async (next) => {
     setSaving(true);
@@ -675,6 +704,7 @@ export default function App() {
           <div className="title"><h1>{t("app_title")}</h1><div className="sub">{t("app_tagline")}</div></div>
         </div>
         <div className="actions">
+          <ThemeToggle theme={theme} setTheme={setTheme} />
           <LangPicker lang={lang} setLang={setLang} />
           <button className="primary hide-mobile" onClick={() => setScanOpen(true)}>{t("scan")}</button>
           <button className="hide-mobile" onClick={() => setGapOpen(true)}>{t("gaps_btn")}</button>

@@ -4,13 +4,21 @@
   --accent2:#a06a9a; --gold:#b8862f; --danger:#b3453b; --foot:#f4f0e8;
   --shadow: 0 1px 2px rgba(27,27,27,.05); --radius: 6px;
 }
+/* Dark palette: follows the system when no explicit choice is made… */
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#161219; --bg2:#1f1826; --card:#1d1723; --muted:#a89fb4; --text:#f3eef8;
     --ink:#f3eef8; --border:#33293f; --accent:#b79ad6; --accent-ink:#c8b1e3; --lilac:#271e33;
     --accent2:#cd9bc6; --gold:#dcb45a; --danger:#e07a6e; --foot:#1f1826;
     --shadow: 0 1px 3px rgba(0,0,0,.4);
   }
+}
+/* …and an explicit dark choice wins even on a light system. */
+:root[data-theme="dark"]{
+  --bg:#161219; --bg2:#1f1826; --card:#1d1723; --muted:#a89fb4; --text:#f3eef8;
+  --ink:#f3eef8; --border:#33293f; --accent:#b79ad6; --accent-ink:#c8b1e3; --lilac:#271e33;
+  --accent2:#cd9bc6; --gold:#dcb45a; --danger:#e07a6e; --foot:#1f1826;
+  --shadow: 0 1px 3px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
