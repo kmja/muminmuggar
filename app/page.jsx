@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { LANGS, makeT } from "../lib/i18n";
+
+/* ------------------------------- i18n --------------------------------- */
+const I18nContext = createContext(makeT("sv"));
+const useT = () => useContext(I18nContext);
+// Condition values are stored in English; fall back to the raw value if unknown.
+const condLabel = (t, c) => { if (!c) return c; const k = "cond_" + c; const v = t(k); return v === k ? c : v; };
 
 /* ----------------------------- constants ----------------------------- */
-const STATUSES = [
-  { value: "owned", label: "Owned" },
-  { value: "wishlist", label: "Wishlist" },
-  { value: "sold", label: "Sold" },
-];
+const STATUS_VALUES = ["owned", "wishlist", "sold"];
 const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
 
 /* ----------------------------- helpers -------------------------------- */
@@ -79,6 +82,7 @@ function blankMug() {
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
 function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
+  const t = useT();
   if (!open) return null;
   return (
     <div className="overlay" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
@@ -86,7 +90,7 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
         <div className="head">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
-            <button className="ghost icon" onClick={onClose} aria-label="Close">✕</button>
+            <button className="ghost icon" onClick={onClose} aria-label={t("close")}>✕</button>
           </div>
         </div>
         <div className="body">{children}</div>
@@ -96,10 +100,11 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
   );
 }
 function Confidence({ v }) {
+  const t = useT();
   if (v == null) return null;
   const pct = Math.round(Number(v) * 100);
   const col = pct >= 75 ? "var(--accent2)" : pct >= 45 ? "var(--gold)" : "var(--danger)";
-  return <span className="conf" title="Gemini confidence"><span style={{ width: 8, height: 8, borderRadius: 99, background: col, display: "inline-block" }} /><b>{pct}%</b> sure</span>;
+  return <span className="conf" title={t("conf_title")}><span style={{ width: 8, height: 8, borderRadius: 99, background: col, display: "inline-block" }} /><b>{pct}%</b> {t("conf_sure")}</span>;
 }
 function MugMark({ size = 26 }) {
   return (
@@ -110,16 +115,46 @@ function MugMark({ size = 26 }) {
     </svg>
   );
 }
+function LangPicker({ lang, setLang }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const cur = LANGS.find((l) => l.code === lang) || LANGS[0];
+  return (
+    <div className="langpick" ref={ref}>
+      <button type="button" className="ghost icon" aria-label={t("language")} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <span style={{ fontSize: 19, lineHeight: 1 }}>{cur.flag}</span>
+      </button>
+      {open ? (
+        <div className="langmenu" role="listbox">
+          {LANGS.map((l) => (
+            <button key={l.code} type="button" role="option" aria-selected={l.code === lang}
+              className={"langitem" + (l.code === lang ? " active" : "")}
+              onClick={() => { setLang(l.code); setOpen(false); }}>
+              <span style={{ fontSize: 18 }}>{l.flag}</span><span>{l.label}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 /* ------------------------------ MugForm ------------------------------- */
-function validateMug(m) {
+function validateMug(m, t) {
   const e = {};
-  if (!m.name || !m.name.trim()) e.name = "A name/character is required.";
-  if (m.year !== "" && m.year != null) { const y = Number(m.year); if (!Number.isInteger(y) || y < 1900 || y > 2100) e.year = "Year must be 1900–2100."; }
-  if (m.price !== "" && m.price != null) { const p = Number(m.price); if (!Number.isFinite(p) || p < 0) e.price = "Price must be positive."; }
+  if (!m.name || !m.name.trim()) e.name = t("err_name");
+  if (m.year !== "" && m.year != null) { const y = Number(m.year); if (!Number.isInteger(y) || y < 1900 || y > 2100) e.year = t("err_year"); }
+  if (m.price !== "" && m.price != null) { const p = Number(m.price); if (!Number.isFinite(p) || p < 0) e.price = t("err_price"); }
   return e;
 }
 function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
+  const t = useT();
   const [d, setD] = useState(initial);
   const [tagInput, setTagInput] = useState((initial?.tags || []).join(", "));
   const [errors, setErrors] = useState({});
@@ -131,59 +166,59 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 
   const footer = (
     <>
-      <button onClick={onClose}>Cancel</button>
+      <button onClick={onClose}>{t("cancel")}</button>
       <button className="primary" disabled={saving} onClick={() => {
         const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: tokenizeTags(tagInput) };
-        const e = validateMug(next); setErrors(e); if (Object.keys(e).length) return;
+        const e = validateMug(next, t); setErrors(e); if (Object.keys(e).length) return;
         onSave(next);
-      }}>{saving ? <span className="spin" /> : "Save mug"}</button>
+      }}>{saving ? <span className="spin" /> : t("save_mug")}</button>
     </>
   );
 
   return (
-    <Modal open={open} title={mode === "edit" ? "Edit mug" : "Add mug"} subtitle="Fill in as little or as much as you like." onClose={onClose} footer={footer}>
+    <Modal open={open} title={mode === "edit" ? t("form_edit_title") : t("form_add_title")} subtitle={t("form_subtitle")} onClose={onClose} footer={footer}>
       <div className="grid" style={{ gap: 12 }}>
         {d.photoUrl ? <div className="card" style={{ overflow: "hidden" }}><img src={d.photoUrl} alt="Mug" style={{ width: "100%", maxHeight: 240, objectFit: "cover", display: "block" }} /></div> : null}
-        {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">Auto-identified — please double-check.</span></div> : null}
-        {dups.length ? <div className="note warn">⚠︎ You may already own this: {dups.map((x) => x.name + (x.year ? ` (${x.year})` : "")).join(", ")}. Save anyway if it's a second one.</div> : null}
+        {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
+        {dups.length ? <div className="note warn">{t("form_dup_warn", { list: dups.map((x) => x.name + (x.year ? ` (${x.year})` : "")).join(", ") })}</div> : null}
 
         <div className="row">
-          <div className="field" style={{ flex: 2, minWidth: 200 }}><label>Name / character *</label><input value={d.name} onChange={(e) => up({ name: e.target.value })} placeholder="e.g. Moominmamma" />{errors.name ? <div className="err">{errors.name}</div> : null}</div>
-          <div className="field" style={{ minWidth: 150 }}><label>Status *</label><select value={d.status} onChange={(e) => up({ status: e.target.value })}>{STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+          <div className="field" style={{ flex: 2, minWidth: 200 }}><label>{t("form_name")}</label><input value={d.name} onChange={(e) => up({ name: e.target.value })} placeholder={t("form_name_ph")} />{errors.name ? <div className="err">{errors.name}</div> : null}</div>
+          <div className="field" style={{ minWidth: 150 }}><label>{t("form_status")}</label><select value={d.status} onChange={(e) => up({ status: e.target.value })}>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
         </div>
         <div className="row">
-          <div className="field"><label>Series</label><input value={d.series || ""} onChange={(e) => up({ series: e.target.value })} placeholder="e.g. Arabia Moomin" /></div>
-          <div className="field"><label>Edition</label><input value={d.edition || ""} onChange={(e) => up({ edition: e.target.value })} placeholder="Standard / Seasonal / Limited" /></div>
+          <div className="field"><label>{t("form_series")}</label><input value={d.series || ""} onChange={(e) => up({ series: e.target.value })} placeholder={t("form_series_ph")} /></div>
+          <div className="field"><label>{t("form_edition")}</label><input value={d.edition || ""} onChange={(e) => up({ edition: e.target.value })} placeholder={t("form_edition_ph")} /></div>
         </div>
         <div className="row">
-          <div className="field"><label>Year</label><input inputMode="numeric" value={d.year ?? ""} onChange={(e) => up({ year: e.target.value })} placeholder="e.g. 2019" />{errors.year ? <div className="err">{errors.year}</div> : null}</div>
-          <div className="field"><label>Condition</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+          <div className="field"><label>{t("form_year")}</label><input inputMode="numeric" value={d.year ?? ""} onChange={(e) => up({ year: e.target.value })} placeholder={t("form_year_ph")} />{errors.year ? <div className="err">{errors.year}</div> : null}</div>
+          <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
         </div>
-        <div className="field"><label>Condition notes</label><input value={d.conditionNotes || ""} onChange={(e) => up({ conditionNotes: e.target.value })} placeholder="Chips, crazing, gilding wear…" /></div>
+        <div className="field"><label>{t("form_condition_notes")}</label><input value={d.conditionNotes || ""} onChange={(e) => up({ conditionNotes: e.target.value })} placeholder={t("form_condition_notes_ph")} /></div>
         <div className="row">
-          <div className="field"><label>Location</label><input value={d.location || ""} onChange={(e) => up({ location: e.target.value })} placeholder="e.g. Living-room shelf" /></div>
-          <div className="field"><label>Acquired date</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
-        </div>
-        <div className="row">
-          <div className="field"><label>Paid</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder="e.g. 249" />{errors.price ? <div className="err">{errors.price}</div> : null}</div>
-          <div className="field"><label>Currency</label><input value={d.currency || ""} onChange={(e) => up({ currency: e.target.value })} placeholder="SEK" /></div>
+          <div className="field"><label>{t("form_location")}</label><input value={d.location || ""} onChange={(e) => up({ location: e.target.value })} placeholder={t("form_location_ph")} /></div>
+          <div className="field"><label>{t("form_acquired")}</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
         </div>
         <div className="row">
-          <div className="field"><label>Est. value (low)</label><input inputMode="decimal" value={d.estValueLow ?? ""} onChange={(e) => up({ estValueLow: e.target.value === "" ? null : Number(e.target.value) })} placeholder="—" /></div>
-          <div className="field"><label>Est. value (high)</label><input inputMode="decimal" value={d.estValueHigh ?? ""} onChange={(e) => up({ estValueHigh: e.target.value === "" ? null : Number(e.target.value) })} placeholder="—" /></div>
-          <div className="field" style={{ maxWidth: 120 }}><label>Val. currency</label><input value={d.estValueCurrency || ""} onChange={(e) => up({ estValueCurrency: e.target.value })} placeholder="SEK" /></div>
+          <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} />{errors.price ? <div className="err">{errors.price}</div> : null}</div>
+          <div className="field"><label>{t("form_currency")}</label><input value={d.currency || ""} onChange={(e) => up({ currency: e.target.value })} placeholder="SEK" /></div>
         </div>
-        <div className="field"><label>Tags</label><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="limited, blue, snufkin" /></div>
-        <div className="switch"><span className="mini">Mark as favorite ★</span><input type="checkbox" checked={!!d.favorite} onChange={(e) => up({ favorite: e.target.checked })} style={{ width: "auto" }} /></div>
+        <div className="row">
+          <div className="field"><label>{t("form_est_low")}</label><input inputMode="decimal" value={d.estValueLow ?? ""} onChange={(e) => up({ estValueLow: e.target.value === "" ? null : Number(e.target.value) })} placeholder="—" /></div>
+          <div className="field"><label>{t("form_est_high")}</label><input inputMode="decimal" value={d.estValueHigh ?? ""} onChange={(e) => up({ estValueHigh: e.target.value === "" ? null : Number(e.target.value) })} placeholder="—" /></div>
+          <div className="field" style={{ maxWidth: 120 }}><label>{t("form_val_currency")}</label><input value={d.estValueCurrency || ""} onChange={(e) => up({ estValueCurrency: e.target.value })} placeholder="SEK" /></div>
+        </div>
+        <div className="field"><label>{t("form_tags")}</label><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder={t("form_tags_ph")} /></div>
+        <div className="switch"><span className="mini">{t("form_favorite")}</span><input type="checkbox" checked={!!d.favorite} onChange={(e) => up({ favorite: e.target.checked })} style={{ width: "auto" }} /></div>
         <div className="field">
-          <label>Photo</label>
+          <label>{t("form_photo")}</label>
           <div className="row">
-            <button type="button" onClick={() => uploadRef.current?.click()}>Upload / replace</button>
-            <button type="button" className={d.photoUrl ? "danger" : ""} disabled={!d.photoUrl} onClick={() => up({ photoUrl: "" })}>Clear</button>
+            <button type="button" onClick={() => uploadRef.current?.click()}>{t("form_upload")}</button>
+            <button type="button" className={d.photoUrl ? "danger" : ""} disabled={!d.photoUrl} onClick={() => up({ photoUrl: "" })}>{t("form_clear")}</button>
             <input className="sr-only" ref={uploadRef} type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const raw = await fileToDataUrl(f); up({ photoUrl: await downscaleImage(raw) }); e.target.value = ""; }} />
           </div>
         </div>
-        <div className="field"><label>Notes</label><textarea value={d.notes || ""} onChange={(e) => up({ notes: e.target.value })} placeholder="Anything worth remembering…" /></div>
+        <div className="field"><label>{t("form_notes")}</label><textarea value={d.notes || ""} onChange={(e) => up({ notes: e.target.value })} placeholder={t("form_notes_ph")} /></div>
       </div>
     </Modal>
   );
@@ -191,6 +226,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 
 /* ------------------------------ ScanModal ----------------------------- */
 function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
@@ -208,7 +244,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
       setPhotoUrl(small);
       // Always detect every mug in the photo — one or many.
       const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
-      if (!drafts.length) { setError("No mugs detected. Try a clearer, closer photo."); return; }
+      if (!drafts.length) { setError(t("scan_no_mugs")); return; }
       if (drafts.length === 1) {
         // A single mug: attach the photo and open the full review form.
         onAddOne({ ...drafts[0], photoUrl: small });
@@ -224,26 +260,26 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
   const chosen = items.filter((it) => it.checked).length;
   const footer = items.length ? (
     <>
-      <button onClick={() => { setItems([]); setPhotoUrl(""); }}>Rescan</button>
-      <button className="primary" disabled={!chosen} onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => it.draft)); onClose(); }}>Add {chosen} mug{chosen === 1 ? "" : "s"}</button>
+      <button onClick={() => { setItems([]); setPhotoUrl(""); }}>{t("scan_rescan")}</button>
+      <button className="primary" disabled={!chosen} onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => it.draft)); onClose(); }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
     </>
   ) : null;
 
   return (
-    <Modal open={open} onClose={onClose} wide title="Scan mugs" subtitle="Photograph one mug or a whole shelf — we'll find every mug in the photo." footer={footer}>
+    <Modal open={open} onClose={onClose} wide title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
       {!items.length && !busy ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="row">
-            <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => camRef.current?.click()}>📷 Take photo</button>
-            <button style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => fileRef.current?.click()}>🖼 Choose image</button>
+            <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => camRef.current?.click()}>{t("scan_take_photo")}</button>
+            <button style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => fileRef.current?.click()}>{t("scan_choose_image")}</button>
           </div>
           <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
           <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
-          <div className="help">Tip: good light and a straight-on angle help. Point at a whole shelf to add many at once.</div>
+          <div className="help">{t("scan_tip")}</div>
         </div>
       ) : null}
 
-      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>Looking at your photo…</div></div> : null}
+      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>{t("scan_looking")}</div></div> : null}
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
 
       {items.length && !busy ? (
@@ -260,22 +296,22 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
                     <Confidence v={it.draft.aiConfidence} />
                   </div>
                   <div className="row" style={{ marginTop: 8 }}>
-                    <input value={it.draft.series || ""} onChange={(e) => patchItem(i, { series: e.target.value })} placeholder="Series" style={{ flex: 2, minWidth: 120 }} />
-                    <input value={it.draft.year ?? ""} onChange={(e) => patchItem(i, { year: e.target.value })} placeholder="Year" style={{ maxWidth: 90 }} />
-                    <input value={it.draft.edition || ""} onChange={(e) => patchItem(i, { edition: e.target.value })} placeholder="Edition" style={{ flex: 1, minWidth: 100 }} />
+                    <input value={it.draft.series || ""} onChange={(e) => patchItem(i, { series: e.target.value })} placeholder={t("ph_series")} style={{ flex: 2, minWidth: 120 }} />
+                    <input value={it.draft.year ?? ""} onChange={(e) => patchItem(i, { year: e.target.value })} placeholder={t("ph_year")} style={{ maxWidth: 90 }} />
+                    <input value={it.draft.edition || ""} onChange={(e) => patchItem(i, { edition: e.target.value })} placeholder={t("ph_edition")} style={{ flex: 1, minWidth: 100 }} />
                   </div>
                   <div className="badges" style={{ marginTop: 8 }}>
                     {it.position ? <Badge>📍 {it.position}</Badge> : null}
-                    {it.draft.condition ? <Badge>✓ {it.draft.condition}</Badge> : null}
+                    {it.draft.condition ? <Badge>✓ {condLabel(t, it.draft.condition)}</Badge> : null}
                     {(it.draft.estValueLow != null || it.draft.estValueHigh != null) ? <Badge>💰 {formatMoney(it.draft.estValueLow ?? it.draft.estValueHigh, it.draft.estValueCurrency)}</Badge> : null}
-                    {dups.length ? <Badge kind="fav">⚠︎ possible duplicate</Badge> : null}
+                    {dups.length ? <Badge kind="fav">{t("scan_possible_dup")}</Badge> : null}
                   </div>
                   {it.draft.conditionNotes ? <div className="mini" style={{ marginTop: 6 }}>{it.draft.conditionNotes}</div> : null}
                 </div>
               </div>
             );
           })}
-          <div className="help">Found {items.length} mugs. Untick any you don't want, edit inline, then add.</div>
+          <div className="help">{t("scan_found", { n: items.length })}</div>
         </div>
       ) : null}
     </Modal>
@@ -284,6 +320,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
 
 /* ------------------------------ GapFinder ----------------------------- */
 function GapFinder({ open, onClose, mugs, onAddWishlist }) {
+  const t = useT();
   const [series, setSeries] = useState("Arabia Moomin");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -295,7 +332,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
     setError(""); setBusy(true); setRows(null);
     try {
       const { catalog } = await api("/api/gaps", { method: "POST", body: JSON.stringify({ series: series.trim() }) });
-      if (!catalog.length) setError("No results — try a more specific series name.");
+      if (!catalog.length) setError(t("gap_no_results"));
       setRows(catalog.map((c) => ({ ...c, owned: ownedNames.has(normalizeText(c.character)) })));
     } catch (err) { setError(err.message || String(err)); }
     finally { setBusy(false); }
@@ -304,31 +341,31 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const missing = (rows || []).filter((r) => !r.owned);
   const footer = rows ? (
     <>
-      <button onClick={() => setRows(null)}>New search</button>
+      <button onClick={() => setRows(null)}>{t("gap_new_search")}</button>
       <button className="primary" disabled={!missing.length} onClick={() => {
         const drafts = missing.map((r) => ({ ...blankMug(), name: r.character, series, edition: r.edition || "", year: r.year != null ? r.year : "", status: "wishlist", notes: r.notes || "" }));
         onAddWishlist(drafts); onClose();
-      }}>Wishlist {missing.length} missing</button>
+      }}>{t("gap_wishlist_missing", { n: missing.length })}</button>
     </>
   ) : null;
 
   return (
-    <Modal open={open} onClose={onClose} wide title="Find gaps in a series" subtitle="See which mugs from a series you're missing, and wishlist them in one tap." footer={footer}>
+    <Modal open={open} onClose={onClose} wide title={t("gap_title")} subtitle={t("gap_subtitle")} footer={footer}>
       <div className="row">
-        <div className="field" style={{ flex: 1 }}><label>Series / line</label><input value={series} onChange={(e) => setSeries(e.target.value)} placeholder="e.g. Arabia Moomin, Moomin seasonal winter" /></div>
-        <button className="primary" onClick={run} disabled={busy} style={{ alignSelf: "flex-end" }}>{busy ? <span className="spin" /> : "Search"}</button>
+        <div className="field" style={{ flex: 1 }}><label>{t("gap_series_label")}</label><input value={series} onChange={(e) => setSeries(e.target.value)} placeholder={t("gap_series_ph")} /></div>
+        <button className="primary" onClick={run} disabled={busy} style={{ alignSelf: "flex-end" }}>{busy ? <span className="spin" /> : t("gap_search")}</button>
       </div>
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
       {rows ? (
         <div className="grid" style={{ gap: 8, marginTop: 12 }}>
-          <div className="help">{rows.filter((r) => r.owned).length} owned · {missing.length} missing (of {rows.length}). AI catalog may be incomplete — treat as a guide.</div>
+          <div className="help">{t("gap_summary", { owned: rows.filter((r) => r.owned).length, missing: missing.length, total: rows.length })}</div>
           {rows.map((r, i) => (
             <div className="listrow" key={i} style={{ opacity: r.owned ? 0.6 : 1 }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 700 }}>{r.owned ? "✓ " : ""}{r.character}{r.year ? <span className="muted"> · {r.year}</span> : null}</div>
                 {r.edition || r.notes ? <div className="mini">{[r.edition, r.notes].filter(Boolean).join(" — ")}</div> : null}
               </div>
-              <Badge kind={r.owned ? "owned" : "wishlist"}>{r.owned ? "Owned" : "Missing"}</Badge>
+              <Badge kind={r.owned ? "owned" : "wishlist"}>{r.owned ? t("gap_owned") : t("gap_missing")}</Badge>
             </div>
           ))}
         </div>
@@ -339,6 +376,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
 
 /* ------------------------------ DealsModal ---------------------------- */
 function DealsModal({ open, onClose, mug }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [listings, setListings] = useState([]);
@@ -358,13 +396,13 @@ function DealsModal({ open, onClose, mug }) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} wide title={mug ? `Find “${mug.name}”` : "Find deals"} subtitle="Searches marketplaces now; the daily checker notifies you of new listings automatically." footer={<button className="primary" onClick={run} disabled={busy}>{busy ? <span className="spin" /> : "Search again"}</button>}>
-      {busy && !listings.length ? <div className="drop"><span className="spin" /><div style={{ marginTop: 8 }}>Searching marketplaces…</div></div> : null}
+    <Modal open={open} onClose={onClose} wide title={mug ? t("deals_find_title", { name: mug.name }) : t("deals_find_default")} subtitle={t("deals_subtitle")} footer={<button className="primary" onClick={run} disabled={busy}>{busy ? <span className="spin" /> : t("deals_search_again")}</button>}>
+      {busy && !listings.length ? <div className="drop"><span className="spin" /><div style={{ marginTop: 8 }}>{t("deals_searching")}</div></div> : null}
       {error ? <div className="err">{error}</div> : null}
 
       {listings.length ? (
         <div className="grid" style={{ gap: 8 }}>
-          <div className="help">{listings.length} live listing{listings.length === 1 ? "" : "s"} (structured sources)</div>
+          <div className="help">{t("deals_live_count", { n: listings.length, noun: listings.length === 1 ? t("listing_one") : t("listing_other") })}</div>
           {listings.map((l, i) => (
             <a className="srcitem" key={i} href={l.url} target="_blank" rel="noopener noreferrer">
               {l.imageUrl ? <img src={l.imageUrl} alt="" /> : null}
@@ -382,20 +420,21 @@ function DealsModal({ open, onClose, mug }) {
           {web.text ? <div className="note" style={{ whiteSpace: "pre-wrap" }}>{web.text}</div> : null}
           {web.sources?.length ? (
             <div className="grid" style={{ gap: 8 }}>
-              <div className="help">Web sources</div>
+              <div className="help">{t("deals_web_sources")}</div>
               {web.sources.map((s, i) => <a className="srcitem" key={i} href={s.uri} target="_blank" rel="noopener noreferrer"><span className="link">{s.title}</span></a>)}
             </div>
           ) : null}
         </div>
       ) : null}
 
-      {!busy && !listings.length && !web?.sources?.length ? <div className="help">No listings found right now. The daily checker keeps looking and will notify you.</div> : null}
+      {!busy && !listings.length && !web?.sources?.length ? <div className="help">{t("deals_none")}</div> : null}
     </Modal>
   );
 }
 
 /* ------------------------------- MugCard ------------------------------ */
 function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
+  const t = useT();
   const val = (m.estValueLow != null || m.estValueHigh != null)
     ? `${formatMoney(m.estValueLow ?? m.estValueHigh, m.estValueCurrency || "SEK")}${m.estValueLow != null && m.estValueHigh != null ? "–" + formatMoney(m.estValueHigh, m.estValueCurrency || "SEK") : ""}`
     : "";
@@ -405,27 +444,27 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
       <div className="mugphoto">
         {m.photoUrl ? <img src={m.photoUrl} alt={m.name} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <div className="abschip">
-          <Badge kind={m.status}>{m.status === "owned" ? "Owned" : m.status === "wishlist" ? "Wishlist" : "Sold"}</Badge>
+          <Badge kind={m.status}>{t("status_" + m.status)}</Badge>
           {m.favorite ? <Badge kind="fav">★</Badge> : null}
         </div>
       </div>
       <div className="mugbody">
-        <div className="mugname" title={m.name}>{m.name || "Untitled"}</div>
+        <div className="mugname" title={m.name}>{m.name || t("card_untitled")}</div>
         <div className="sub">{[m.series || "—", m.year, m.edition].filter(Boolean).join(" · ")}</div>
         <div className="badges">
-          {m.condition ? <Badge>✓ {m.condition}</Badge> : null}
+          {m.condition ? <Badge>✓ {condLabel(t, m.condition)}</Badge> : null}
           {m.price !== "" && m.price != null ? <Badge>💰 {formatMoney(m.price, m.currency || "SEK")}</Badge> : null}
-          {val ? <Badge title="Estimated market value">≈ {val}</Badge> : null}
+          {val ? <Badge title={t("card_est_title")}>≈ {val}</Badge> : null}
           {m.location ? <Badge>📍 {m.location}</Badge> : null}
-          {m.status === "wishlist" && dealCount ? <Badge kind="deal">🔔 {dealCount} found</Badge> : null}
+          {m.status === "wishlist" && dealCount ? <Badge kind="deal">{t("card_found", { n: dealCount })}</Badge> : null}
         </div>
         {m.tags?.length ? <div className="badges">{m.tags.slice(0, 6).map((t) => <span key={t} className="chip">#{t}</span>)}</div> : null}
         {m.conditionNotes ? <div className="mini lineclamp">{m.conditionNotes}</div> : null}
         {m.notes ? <div className="mini lineclamp">{m.notes}</div> : null}
         <div className="mugfoot">
-          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}>🔎 Deals</button> : <button onClick={() => onFav(m)}>{m.favorite ? "★" : "☆"} Fav</button>}
-          <button onClick={() => onEdit(m)}>Edit</button>
-          <button className="danger" onClick={() => onDelete(m)}>Delete</button>
+          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}>{t("card_deals")}</button> : <button onClick={() => onFav(m)}>{m.favorite ? "★" : "☆"} {t("card_fav")}</button>}
+          <button onClick={() => onEdit(m)}>{t("card_edit")}</button>
+          <button className="danger" onClick={() => onDelete(m)}>{t("card_delete")}</button>
         </div>
       </div>
     </div>
@@ -434,6 +473,9 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
 
 /* -------------------------------- App --------------------------------- */
 export default function App() {
+  const [lang, setLang] = useState("sv");
+  const t = useMemo(() => makeT(lang), [lang]);
+
   const [mugs, setMugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -465,9 +507,15 @@ export default function App() {
     load();
     const params = new URLSearchParams(window.location.search);
     if (params.get("tab") === "wishlist") setTab("wishlist");
+    // Restore the saved language preference (Swedish by default).
+    try { const saved = localStorage.getItem("lang"); if (saved === "sv" || saved === "en") setLang(saved); } catch { /* ignore */ }
     // Register the service worker so the app is an installable PWA.
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
+  useEffect(() => {
+    try { localStorage.setItem("lang", lang); } catch { /* ignore */ }
+    if (typeof document !== "undefined") document.documentElement.lang = lang;
+  }, [lang]);
 
   const saveMug = async (next) => {
     setSaving(true);
@@ -480,7 +528,7 @@ export default function App() {
         setMugs((prev) => [mug, ...prev]);
       }
       setFormOpen(false);
-    } catch (e) { alert("Save failed: " + (e.message || e)); }
+    } catch (e) { alert(t("save_failed", { msg: e.message || e })); }
     finally { setSaving(false); }
   };
   const addMany = async (drafts) => {
@@ -488,12 +536,12 @@ export default function App() {
       const created = [];
       for (const d of drafts) { const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(d) }); created.push(mug); }
       setMugs((prev) => [...created, ...prev]);
-    } catch (e) { alert("Add failed: " + (e.message || e)); }
+    } catch (e) { alert(t("add_failed", { msg: e.message || e })); }
   };
   const del = async (m) => {
-    if (!confirm(`Delete "${m.name}"?`)) return;
+    if (!confirm(t("confirm_delete", { name: m.name }))) return;
     try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); setMugs((prev) => prev.filter((x) => x.id !== m.id)); }
-    catch (e) { alert("Delete failed: " + (e.message || e)); }
+    catch (e) { alert(t("delete_failed", { msg: e.message || e })); }
   };
   const fav = async (m) => {
     const optimistic = !m.favorite;
@@ -509,16 +557,16 @@ export default function App() {
   const enableNotifications = async () => {
     setNotifMsg("");
     try {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) { setNotifState("unsupported"); setNotifMsg("This browser doesn't support push notifications."); return; }
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) { setNotifState("unsupported"); setNotifMsg(t("notif_unsupported")); return; }
       const { publicKey } = await api("/api/push/vapid");
-      if (!publicKey) { setNotifState("error"); setNotifMsg("Server has no VAPID key configured yet."); return; }
+      if (!publicKey) { setNotifState("error"); setNotifMsg(t("notif_no_vapid")); return; }
       const reg = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
       const perm = await Notification.requestPermission();
-      if (perm !== "granted") { setNotifState("error"); setNotifMsg("Notification permission was denied."); return; }
+      if (perm !== "granted") { setNotifState("error"); setNotifMsg(t("notif_denied")); return; }
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
       await api("/api/push/subscribe", { method: "POST", body: JSON.stringify(sub) });
-      setNotifState("on"); setNotifMsg("Notifications enabled on this device. 🎉");
+      setNotifState("on"); setNotifMsg(t("notif_enabled_msg"));
     } catch (e) { setNotifState("error"); setNotifMsg(e.message || String(e)); }
   };
 
@@ -560,125 +608,133 @@ export default function App() {
   }, [mugs]);
 
   const TABS = [
-    { k: "collection", label: "Collection" },
-    { k: "wishlist", label: `Wishlist${stats.wishlist ? ` (${stats.wishlist})` : ""}` },
-    { k: "stats", label: "Stats" },
+    { k: "collection", label: t("tab_collection") },
+    { k: "wishlist", label: `${t("tab_wishlist")}${stats.wishlist ? ` (${stats.wishlist})` : ""}` },
+    { k: "stats", label: t("tab_stats") },
   ];
 
   return (
+    <I18nContext.Provider value={t}>
     <div className="wrap">
       <div className="top">
         <div className="brand">
           <div className="logo"><MugMark size={26} /></div>
-          <div className="title"><h1>Moomin Mug Collection</h1><div className="sub">Photograph, identify & track — with deal alerts.</div></div>
+          <div className="title"><h1>{t("app_title")}</h1><div className="sub">{t("app_tagline")}</div></div>
         </div>
-        <div className="actions hide-mobile">
-          <button className="primary" onClick={() => setScanOpen(true)}>📷 Scan</button>
-          <button onClick={() => setGapOpen(true)}>✨ Gaps</button>
-          <button className={"ghost icon"} title="Notifications & about" onClick={() => setAboutOpen(true)}>🔔</button>
+        <div className="actions">
+          <LangPicker lang={lang} setLang={setLang} />
+          <button className="primary hide-mobile" onClick={() => setScanOpen(true)}>{t("scan")}</button>
+          <button className="hide-mobile" onClick={() => setGapOpen(true)}>{t("gaps_btn")}</button>
+          <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}>🔔</button>
         </div>
       </div>
 
-      {loadError ? <div className="note warn" style={{ marginBottom: 12 }}>Couldn't load your collection: {loadError}. Is the database configured? See the README.</div> : null}
+      {loadError ? <div className="note warn" style={{ marginBottom: 12 }}>{t("load_error", { msg: loadError })}</div> : null}
 
-      <div className="tabs hide-mobile">{TABS.map((t) => <button key={t.k} className={"tabbtn " + (tab === t.k ? "active" : "")} onClick={() => setTab(t.k)}>{t.label}</button>)}</div>
+      <div className="tabs hide-mobile">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
       {tab !== "stats" ? (
         <>
           <div className="card pad" style={{ marginBottom: 12 }}>
             <div className="row" style={{ alignItems: "flex-end" }}>
-              <div className="field" style={{ flex: 2, minWidth: 180 }}><label>Search</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, series, tags…" /></div>
-              <button type="button" className="only-mobile" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen}>{filtersOpen ? "▲ Filters" : "▾ Filters"}</button>
+              <div className="field" style={{ flex: 2, minWidth: 180 }}><label>{t("search")}</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} /></div>
+              <button type="button" className="only-mobile" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen}>{filtersOpen ? "▲ " : "▾ "}{t("filters")}</button>
             </div>
             <div className={"row filterfields" + (filtersOpen ? " open" : "")} style={{ marginTop: 10 }}>
               {tab === "collection" ? (
-                <div className="field" style={{ minWidth: 150 }}><label>Status</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">All</option>{STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+                <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
               ) : null}
-              <div className="field" style={{ minWidth: 170 }}><label>Sort</label>
+              <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="updated_desc">Recently updated</option>
-                  <option value="year_desc">Year (new → old)</option>
-                  <option value="year_asc">Year (old → new)</option>
-                  <option value="value_desc">Value (high → low)</option>
-                  <option value="name">Name (A → Z)</option>
+                  <option value="updated_desc">{t("sort_updated")}</option>
+                  <option value="year_desc">{t("sort_year_desc")}</option>
+                  <option value="year_asc">{t("sort_year_asc")}</option>
+                  <option value="value_desc">{t("sort_value_desc")}</option>
+                  <option value="name">{t("sort_name")}</option>
                 </select>
               </div>
-              <div className="field" style={{ maxWidth: 150 }}><label>Favorites</label><div className="switch"><span className="mini">★ only</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
+              <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
             </div>
             <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}>
-              <div className="row"><span className="pill">{viewMugs.length} shown</span><span className="pill">{mugs.length} total</span></div>
-              <div className="row"><button onClick={() => setGapOpen(true)}>✨ Gaps</button><button onClick={openCreate}>＋ Add</button></div>
+              <div className="row"><span className="pill">{t("shown", { n: viewMugs.length })}</span><span className="pill">{t("total", { n: mugs.length })}</span></div>
+              <div className="row"><button onClick={() => setGapOpen(true)}>{t("gaps_btn")}</button><button onClick={openCreate}>{t("add")}</button></div>
             </div>
           </div>
 
           {loading ? (
-            <div className="card pad"><span className="spin" /> Loading…</div>
+            <div className="card pad"><span className="spin" /> {t("loading")}</div>
           ) : mugs.length === 0 ? (
             <div className="card pad" style={{ textAlign: "center" }}>
               <div style={{ fontSize: 40 }}>📷</div>
-              <div style={{ fontWeight: 900, marginTop: 8 }}>Start your collection</div>
-              <div className="sub" style={{ marginTop: 6 }}>Snap a mug and let Gemini fill in the details, or add one by hand.</div>
+              <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("empty_title")}</div>
+              <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
               <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                <button className="primary" onClick={() => setScanOpen(true)}>📷 Scan a mug</button>
-                <button onClick={openCreate}>＋ Add manually</button>
+                <button className="primary" onClick={() => setScanOpen(true)}>{t("empty_scan")}</button>
+                <button onClick={openCreate}>{t("empty_add_manual")}</button>
               </div>
             </div>
           ) : viewMugs.length === 0 ? (
-            <div className="card pad"><div className="muted">No mugs match your filters.</div></div>
+            <div className="card pad"><div className="muted">{t("no_match")}</div></div>
           ) : (
             <div className="muggrid">{viewMugs.map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
           )}
 
-          {tab === "wishlist" ? <div className="help" style={{ marginTop: 12 }}>Tip: use ✨ Gaps to fill your wishlist from a series, then enable 🔔 notifications to get pinged when one appears for sale.</div> : null}
+          {tab === "wishlist" ? <div className="help" style={{ marginTop: 12 }}>{t("wishlist_tip")}</div> : null}
         </>
       ) : (
         <>
           <div className="kpi">
-            <div className="card kpicard"><div className="kpilabel">Owned</div><div className="kpivalue">{stats.owned}</div></div>
-            <div className="card kpicard"><div className="kpilabel">Wishlist</div><div className="kpivalue">{stats.wishlist}</div></div>
-            <div className="card kpicard"><div className="kpilabel">Favorites</div><div className="kpivalue">{stats.favorites}</div></div>
-            <div className="card kpicard"><div className="kpilabel">Sold</div><div className="kpivalue">{stats.sold}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue">{stats.owned}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue">{stats.wishlist}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue">{stats.favorites}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue">{stats.sold}</div></div>
           </div>
           <div className="grid" style={{ gap: 12, marginTop: 12 }}>
             <div className="row" style={{ gap: 12 }}>
-              <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div style={{ fontWeight: 800 }}>Total paid (owned)</div><div style={{ fontSize: 24, fontWeight: 900, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
-              <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div style={{ fontWeight: 800 }}>Est. collection value</div><div style={{ fontSize: 24, fontWeight: 900, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>Sum of high estimates on owned mugs.</div></div>
+              <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div style={{ fontSize: 26, fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
+              <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div style={{ fontSize: 26, fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
             </div>
             <div className="card pad">
-              <div style={{ fontWeight: 800 }}>Mugs by year</div><div className="divider" />
+              <div style={{ fontWeight: 500 }}>{t("stats_by_year")}</div><div className="divider" />
               {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r) => (
                 <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%` }} /></div><span className="pill">{r.count}</span></div>
-              ))}</div> : <div className="muted">Add years to your mugs to see this.</div>}
+              ))}</div> : <div className="muted">{t("stats_by_year_empty")}</div>}
             </div>
             <div className="card pad">
-              <div style={{ fontWeight: 800 }}>Top characters</div><div className="divider" />
-              {stats.topChars.length ? <div className="list">{stats.topChars.map((t) => <div key={t.name} className="listrow"><div>{t.name}</div><span className="pill">{t.count}</span></div>)}</div> : <div className="muted">Add mugs to see trends.</div>}
+              <div style={{ fontWeight: 500 }}>{t("stats_top_chars")}</div><div className="divider" />
+              {stats.topChars.length ? <div className="list">{stats.topChars.map((tc) => <div key={tc.name} className="listrow"><div>{tc.name}</div><span className="pill">{tc.count}</span></div>)}</div> : <div className="muted">{t("stats_top_chars_empty")}</div>}
             </div>
           </div>
         </>
       )}
 
       <nav className="bottomnav">
-        <button className={"bn " + (tab === "collection" ? "active" : "")} onClick={() => setTab("collection")}><span className="ic">🗄️</span>Collection</button>
-        <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><span className="ic">♡</span>Wishlist</button>
-        <button className="bn bn-scan" onClick={() => setScanOpen(true)} aria-label="Scan a mug"><span className="ic">📷</span></button>
-        <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><span className="ic">📊</span>Stats</button>
-        <button className="bn" onClick={() => setAboutOpen(true)}><span className="ic">🔔</span>Alerts</button>
+        <button className={"bn " + (tab === "collection" ? "active" : "")} onClick={() => setTab("collection")}><span className="ic">🗄️</span>{t("nav_collection")}</button>
+        <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><span className="ic">♡</span>{t("nav_wishlist")}</button>
+        <button className="bn bn-scan" onClick={() => setScanOpen(true)} aria-label={t("nav_scan_aria")}><span className="ic">📷</span></button>
+        <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><span className="ic">📊</span>{t("nav_stats")}</button>
+        <button className="bn" onClick={() => setAboutOpen(true)}><span className="ic">🔔</span>{t("nav_alerts")}</button>
       </nav>
+
+      <footer className="sitefoot">
+        <svg className="wave" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0,26 C180,48 360,6 720,20 C1080,34 1260,48 1440,18 L1440,48 L0,48 Z" /></svg>
+        <div className="footinner"><span className="footmark"><MugMark size={20} /></span><span>{t("app_title")}</span></div>
+      </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mode={formMode} mugs={mugs} onSave={saveMug} saving={saving} />
       <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
 
-      <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title="Notifications" subtitle="Get pinged when a wishlisted mug shows up for sale.">
+      <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title={t("about_title")} subtitle={t("about_subtitle")}>
         <div className="grid" style={{ gap: 12 }}>
-          <div className="note">The app checks marketplaces for your wishlisted mugs once a day. Enable notifications on this device to get a push when new listings appear — even when the app is closed.</div>
-          <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? "✓ Notifications enabled" : "🔔 Enable notifications"}</button>
+          <div className="note">{t("about_body")}</div>
+          <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
-          <div className="help">Searches Tradera and eBay via their official APIs (when configured), plus Blocket, Facebook Marketplace, Arabia and Cervera via Gemini web search. Facebook Marketplace is login-gated, so its coverage is thin. Identification and value estimates also use Gemini. All keys live on the server.</div>
+          <div className="help">{t("about_help")}</div>
         </div>
       </Modal>
     </div>
+    </I18nContext.Provider>
   );
 }
