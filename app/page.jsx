@@ -281,6 +281,25 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
     else stopCam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, items.length, busy]);
+  // Once we have a batch checklist, look up a reference image for each mug so
+  // the user can visually verify the match (and it becomes the saved photo).
+  useEffect(() => {
+    if (!items.length) return;
+    let cancelled = false;
+    (async () => {
+      for (let i = 0; i < items.length; i++) {
+        const d = items[i]?.draft;
+        if (!d || !d.name || items[i].img !== undefined) continue;
+        try {
+          const { imageUrl } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ name: d.name, series: d.series, year: d.year }) });
+          if (cancelled) return;
+          setItems((list) => list.map((it, idx) => (idx === i ? { ...it, img: imageUrl || null } : it)));
+        } catch { if (!cancelled) setItems((list) => list.map((it, idx) => (idx === i ? { ...it, img: null } : it))); }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
 
   const process = async (small) => {
     setBusy(true); setItems([]); setPhotoUrl(small);
@@ -321,7 +340,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
   const footer = items.length ? (
     <>
       <button onClick={() => { setItems([]); setPhotoUrl(""); }}>{t("scan_rescan")}</button>
-      <button className="primary" disabled={!chosen} onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => it.draft)); onClose(); }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
+      <button className="primary" disabled={!chosen} onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => ({ ...it.draft, photoUrl: it.draft.photoUrl || it.img || "" }))); onClose(); }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
     </>
   ) : null;
 
@@ -362,6 +381,9 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
             return (
               <div className="scanrow" key={i}>
                 <input type="checkbox" checked={it.checked} onChange={(e) => setItems((list) => list.map((x, idx) => (idx === i ? { ...x, checked: e.target.checked } : x)))} style={{ width: "auto", marginTop: 4 }} />
+                <div className="scanthumb">
+                  {it.img ? <img src={it.img} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : (it.img === undefined ? <span className="spin" /> : <MugMark size={22} />)}
+                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="row" style={{ justifyContent: "space-between" }}>
                     <input value={it.draft.name} onChange={(e) => patchItem(i, { name: e.target.value })} style={{ fontWeight: 800, maxWidth: 220 }} />
@@ -572,9 +594,22 @@ export default function App() {
 
   const load = async () => {
     setLoading(true); setLoadError("");
-    try { const { mugs } = await api("/api/mugs"); setMugs(mugs); }
+    try { const { mugs } = await api("/api/mugs"); setMugs(mugs); ensureImages(mugs); }
     catch (e) { setLoadError(e.message || String(e)); }
     finally { setLoading(false); }
+  };
+  // Silent re-sync from the server (no loading flash) — used after adds.
+  const reload = async () => { try { const { mugs } = await api("/api/mugs"); setMugs(mugs); ensureImages(mugs); } catch { /* ignore */ } };
+  // Backfill product images for mugs that don't have a photo yet, one at a
+  // time so we're gentle on the search sources. Saved server-side (quietly).
+  const ensureImages = async (list) => {
+    const targets = (list || []).filter((m) => m && m.id && m.name && !m.photoUrl);
+    for (const m of targets) {
+      try {
+        const { imageUrl } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ id: m.id, name: m.name, series: m.series, year: m.year }) });
+        if (imageUrl) setMugs((prev) => prev.map((x) => (x.id === m.id && !x.photoUrl ? { ...x, photoUrl: imageUrl } : x)));
+      } catch { /* ignore — the card keeps its placeholder */ }
+    }
   };
   useEffect(() => {
     load();
@@ -608,6 +643,7 @@ export default function App() {
       } else {
         const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(next) });
         setMugs((prev) => [mug, ...prev]);
+        if (!mug.photoUrl) ensureImages([mug]);
       }
       setFormOpen(false);
     } catch (e) { alert(t("save_failed", { msg: e.message || e })); }
@@ -618,6 +654,7 @@ export default function App() {
       const created = [];
       for (const d of drafts) { const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(d) }); created.push(mug); }
       setMugs((prev) => [...created, ...prev]);
+      ensureImages(created);
     } catch (e) { alert(t("add_failed", { msg: e.message || e })); }
   };
   const del = async (m) => {

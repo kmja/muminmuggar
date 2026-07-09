@@ -120,3 +120,8 @@ export async function updateMug(id: string, patch: Record<string, unknown>): Pro
 export async function deleteMug(id: string): Promise<void> {
   await query("DELETE FROM mugs WHERE id = $1", [id]);
 }
+
+/** Set a mug's photo without touching updated_at (keeps collection order stable during image backfill). */
+export async function setMugPhoto(id: string, url: string): Promise<void> {
+  await query("UPDATE mugs SET photo_url = $1 WHERE id = $2 AND (photo_url IS NULL OR photo_url = '')", [url, id]);
+}
