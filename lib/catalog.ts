@@ -1,5 +1,6 @@
 import { query } from "./db";
 import type { Mug } from "./types";
+import seed from "./catalog-seed.json";
 
 /**
  * A stored catalog of official Moomin product images. We populate it once from
@@ -61,9 +62,35 @@ export interface SyncResult {
 let syncing: Promise<SyncResult> | null = null;
 let cache: { rows: CatalogRow[]; at: number } | null = null;
 
+/** Load the bundled seed of official product images (self-hosted under /mugs). */
+export async function loadSeed(): Promise<number> {
+  let n = 0;
+  for (const s of seed as { name: string; year: number | null; capacity: string; image: string; norm: string }[]) {
+    await query(
+      `INSERT INTO catalog_mugs (id, title, series, year, image_url, source, source_url, norm, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now())
+       ON CONFLICT (id) DO UPDATE SET
+         title = EXCLUDED.title, year = EXCLUDED.year, image_url = EXCLUDED.image_url, norm = EXCLUDED.norm, updated_at = now()`,
+      [`seed:${s.image}`, s.name, s.capacity || null, s.year, s.image, "moomin.com", null, s.norm],
+    );
+    n++;
+  }
+  cache = null;
+  return n;
+}
+
 /** Fetch + upsert the official catalog. Idempotent; safe to call repeatedly. */
 export async function syncCatalog(): Promise<SyncResult> {
   const result: SyncResult = { upserted: 0, stores: [] };
+
+  // The bundled seed of self-hosted official images is the primary source.
+  try {
+    const seeded = await loadSeed();
+    result.upserted += seeded;
+    result.stores.push({ domain: "bundled-seed", mugs: seeded, products: seeded });
+  } catch (e) {
+    result.stores.push({ domain: "bundled-seed", mugs: 0, products: 0, error: (e as Error).message });
+  }
   for (const domain of stores()) {
     const stat = { domain, mugs: 0, products: 0, status: undefined as number | undefined, error: undefined as string | undefined };
     result.stores.push(stat);
@@ -123,6 +150,13 @@ export function syncCatalogOnce(): Promise<SyncResult> {
   return syncing;
 }
 
+let seeding: Promise<number> | null = null;
+/** Load the bundled seed at most once at a time (fast, no network). */
+export function loadSeedOnce(): Promise<number> {
+  if (!seeding) seeding = loadSeed().finally(() => { seeding = null; });
+  return seeding;
+}
+
 export async function catalogCount(): Promise<number> {
   const { rows } = await query<{ n: string }>("SELECT count(*)::text AS n FROM catalog_mugs");
   return Number(rows[0]?.n || 0);
@@ -138,19 +172,22 @@ async function cachedRows(): Promise<CatalogRow[]> {
   return mapped;
 }
 
+const STOP = new Set(["and", "the", "with", "of", "on", "in", "a", "mug", "moomin"]);
+const words = (s: string) => ` ${s} `;
+
 function score(mug: Pick<Mug, "name" | "series" | "year">, row: CatalogRow): number {
-  const name = fold(mug.name);
-  if (!name) return 0;
-  const nameTokens = name.split(" ").filter((t) => t.length > 2);
-  const hasName = row.norm.includes(name) || (nameTokens.length > 0 && nameTokens.every((t) => row.norm.includes(t)));
-  if (!hasName) return 0;
-  let s = 10;
+  const toks = fold(mug.name).split(" ").filter((t) => t && !STOP.has(t));
+  if (!toks.length) return 0;
+  const nw = words(row.norm);
+  // Every name token must appear as a whole word (so "ABC F" ≠ "ABC L").
+  if (!toks.every((t) => nw.includes(words(t)))) return 0;
+  let s = 10 + toks.length; // more matched tokens = a more specific hit
   if (mug.year && row.year) s += Number(mug.year) === Number(row.year) ? 6 : -3;
   if (mug.series) {
-    const st = fold(mug.series).split(" ").filter((t) => t.length > 2);
-    s += st.filter((t) => row.norm.includes(t)).length;
+    const st = fold(mug.series).split(" ").filter((t) => t && !STOP.has(t));
+    s += st.filter((t) => nw.includes(words(t))).length;
   }
-  s -= row.norm.length / 300; // prefer the most specific (shortest) matching title
+  s -= row.norm.length / 300; // tie-break toward the most specific (shortest) title
   return s;
 }
 
@@ -158,11 +195,11 @@ function score(mug: Pick<Mug, "name" | "series" | "year">, row: CatalogRow): num
 export async function catalogImage(mug: Pick<Mug, "name" | "series" | "year">): Promise<string | null> {
   let rows = await cachedRows();
   if (!rows.length) {
-    try { await syncCatalogOnce(); } catch { /* ignore */ }
+    try { await loadSeedOnce(); } catch { /* ignore */ }
     rows = await cachedRows();
   }
   let best: CatalogRow | null = null;
-  let bestScore = 9.5; // require a real name match
+  let bestScore = 10.5; // require a real name match
   for (const r of rows) {
     const sc = score(mug, r);
     if (sc > bestScore) { bestScore = sc; best = r; }

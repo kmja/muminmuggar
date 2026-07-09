@@ -1,0 +1,1227 @@
+[
+ {
+  "name": "Together",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/together.jpg",
+  "norm": "together 0 3l"
+ },
+ {
+  "name": "Moominmamma marmelade",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominmamma-marmelade.jpg",
+  "norm": "moominmamma marmelade 0 3l"
+ },
+ {
+  "name": "Snow Moonlight",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snow-moonlight.jpg",
+  "norm": "snow moonlight 0 3l"
+ },
+ {
+  "name": "Moomins Day 2021",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomins-day-2021.jpg",
+  "norm": "moomins day 2021 0 3l"
+ },
+ {
+  "name": "04 Yellow",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/04-yellow.jpg",
+  "norm": "04 yellow 0 3l"
+ },
+ {
+  "name": "04 Blue",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/04-blue.jpg",
+  "norm": "04 blue 0 3l"
+ },
+ {
+  "name": "Little My and meadow",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/little-my-and-meadow.jpg",
+  "norm": "little my and meadow 0 3l"
+ },
+ {
+  "name": "Stinky in action 1",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/stinky-in-action-1.jpg",
+  "norm": "stinky in action 1 0 3l"
+ },
+ {
+  "name": "Fishing",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/fishing.jpg",
+  "norm": "fishing 0 3l"
+ },
+ {
+  "name": "Green",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/green-04.jpg",
+  "norm": "green 0 4l"
+ },
+ {
+  "name": "Rose",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/rose-04.jpg",
+  "norm": "rose 0 4l"
+ },
+ {
+  "name": "Winter wonders",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/winter-wonders.jpg",
+  "norm": "winter wonders 0 3l"
+ },
+ {
+  "name": "ABC Snufkin 1",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/abc-snufkin-1.jpg",
+  "norm": "abc snufkin 1 0 3l"
+ },
+ {
+  "name": "ABC Moomintroll",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/abc-moomintroll.jpg",
+  "norm": "abc moomintroll 0 3l"
+ },
+ {
+  "name": "ABC L",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-l-04.jpg",
+  "norm": "abc l 0 4l"
+ },
+ {
+  "name": "ABC O",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-o-04.jpg",
+  "norm": "abc o 0 4l"
+ },
+ {
+  "name": "ABC V",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-v-04.jpg",
+  "norm": "abc v 0 4l"
+ },
+ {
+  "name": "ABC E",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-e-04.jpg",
+  "norm": "abc e 0 4l"
+ },
+ {
+  "name": "ABC M",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-m-04.jpg",
+  "norm": "abc m 0 4l"
+ },
+ {
+  "name": "ABC H",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-h-04.jpg",
+  "norm": "abc h 0 4l"
+ },
+ {
+  "name": "Moominpappa grey",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominpappa-grey.jpg",
+  "norm": "moominpappa grey 0 3l"
+ },
+ {
+  "name": "Hemulen yellow",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/hemulen-yellow.jpg",
+  "norm": "hemulen yellow 0 3l"
+ },
+ {
+  "name": "ABC F",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-f-04.jpg",
+  "norm": "abc f 0 4l"
+ },
+ {
+  "name": "ABC A",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-a-04.jpg",
+  "norm": "abc a 0 4l"
+ },
+ {
+  "name": "ABC I",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-i-04.jpg",
+  "norm": "abc i 0 4l"
+ },
+ {
+  "name": "ABC Y",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-y-04.jpg",
+  "norm": "abc y 0 4l"
+ },
+ {
+  "name": "ABC N",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-n-04.jpg",
+  "norm": "abc n 0 4l"
+ },
+ {
+  "name": "ABC D",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-d-04.jpg",
+  "norm": "abc d 0 4l"
+ },
+ {
+  "name": "ABC R",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-r-04.jpg",
+  "norm": "abc r 0 4l"
+ },
+ {
+  "name": "ABC S",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-s-04.jpg",
+  "norm": "abc s 0 4l"
+ },
+ {
+  "name": "Muskrat beige",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/muskrat-beige.jpg",
+  "norm": "muskrat beige 0 3l"
+ },
+ {
+  "name": "Sniff blue",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sniff-blue.jpg",
+  "norm": "sniff blue 0 3l"
+ },
+ {
+  "name": "Berry Season",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/berry-season.jpg",
+  "norm": "berry season 0 3l"
+ },
+ {
+  "name": "Peace",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/peace-04.jpg",
+  "norm": "peace 0 4l"
+ },
+ {
+  "name": "Love",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/love-04.jpg",
+  "norm": "love 0 4l"
+ },
+ {
+  "name": "ABC C",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-c-04.jpg",
+  "norm": "abc c 0 4l"
+ },
+ {
+  "name": "ABC P",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-p-04.jpg",
+  "norm": "abc p 0 4l"
+ },
+ {
+  "name": "ABC J",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-j-04.jpg",
+  "norm": "abc j 0 4l"
+ },
+ {
+  "name": "ABC T",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-t-04.jpg",
+  "norm": "abc t 0 4l"
+ },
+ {
+  "name": "ABC K",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-k-04.jpg",
+  "norm": "abc k 0 4l"
+ },
+ {
+  "name": "ABC W",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-w-04.jpg",
+  "norm": "abc w 0 4l"
+ },
+ {
+  "name": "Love Blue",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/love-blue.jpg",
+  "norm": "love blue 0 3l"
+ },
+ {
+  "name": "ABC Q",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-q-04.jpg",
+  "norm": "abc q 0 4l"
+ },
+ {
+  "name": "ABC U",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-u-04.jpg",
+  "norm": "abc u 0 4l"
+ },
+ {
+  "name": "ABC X",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-x-04.jpg",
+  "norm": "abc x 0 4l"
+ },
+ {
+  "name": "ABC Z",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-z-04.jpg",
+  "norm": "abc z 0 4l"
+ },
+ {
+  "name": "Home handpainted",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/home-handpainted.jpg",
+  "norm": "home handpainted 0 3l"
+ },
+ {
+  "name": "Moomins Day 2025",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomins-day-2025.jpg",
+  "norm": "moomins day 2025 0 3l"
+ },
+ {
+  "name": "Home at last",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/home-at-last.jpg",
+  "norm": "home at last 0 3l"
+ },
+ {
+  "name": "Love 30 anniversary A",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/love-30-anniversary-a.jpg",
+  "norm": "love 30 anniversary a 0 3l"
+ },
+ {
+  "name": "LovingCare A",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/lovingcare-a.jpg",
+  "norm": "lovingcare a 0 3l"
+ },
+ {
+  "name": "Sweethearts",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sweethearts.jpg",
+  "norm": "sweethearts 0 3l"
+ },
+ {
+  "name": "Summer dance",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/summer-dance.jpg",
+  "norm": "summer dance 0 3l"
+ },
+ {
+  "name": "Holiday rush",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/holiday-rush.jpg",
+  "norm": "holiday rush 0 3l"
+ },
+ {
+  "name": "Moomins Day 2026",
+  "year": 2026,
+  "capacity": "0.3L",
+  "image": "/mugs/moomins-day-2026.jpg",
+  "norm": "moomins day 2026 0 3l"
+ },
+ {
+  "name": "Rebel Club",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/rebel-club-04.jpg",
+  "norm": "rebel club 0 4l"
+ },
+ {
+  "name": "Boss Lady",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/boss-lady-04.jpg",
+  "norm": "boss lady 0 4l"
+ },
+ {
+  "name": "Party Queue",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/party-queue-04.jpg",
+  "norm": "party queue 0 4l"
+ },
+ {
+  "name": "Talk it all Out",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/talk-it-all-out-04.jpg",
+  "norm": "talk it all out 0 4l"
+ },
+ {
+  "name": "Moomin Arabia Beach day",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-arabia-beach-day.jpg",
+  "norm": "moomin arabia beach day 0 3l"
+ },
+ {
+  "name": "Moomin Arabia Beams",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-arabia-beams.jpg",
+  "norm": "moomin arabia beams 0 3l"
+ },
+ {
+  "name": "Moomin Arabia Fall25",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-arabia-fall25.jpg",
+  "norm": "moomin arabia fall25 0 3l"
+ },
+ {
+  "name": "Moomin Arabia Fall25",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-arabia-fall25-2.jpg",
+  "norm": "moomin arabia fall25 0 3l"
+ },
+ {
+  "name": "Family mug 0.4",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/family-mug-0-4-04.jpg",
+  "norm": "family mug 0 4 0 4l"
+ },
+ {
+  "name": "Fillyjonk Arabia 6411801009279",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/fillyjonk-arabia-6411801009279.jpg",
+  "norm": "fillyjonk arabia 6411801009279 0 3l"
+ },
+ {
+  "name": "Garden party",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/garden-party.jpg",
+  "norm": "garden party 0 3l"
+ },
+ {
+  "name": "Little My Sliding 0.4",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/little-my-sliding-0-4-04.jpg",
+  "norm": "little my sliding 0 4 0 4l"
+ },
+ {
+  "name": "Moomin Collection mug Christmas 2004 2005",
+  "year": 2004,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-collection-mug-christmas-2004-2005.jpg",
+  "norm": "moomin collection mug christmas 2004 2005 0 3l"
+ },
+ {
+  "name": "Moomin Finnair Journey mug",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-finnair-journey-mug.jpg",
+  "norm": "moomin finnair journey mug 0 3l"
+ },
+ {
+  "name": "Moominpappa dark blue",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominpappa-dark-blue.jpg",
+  "norm": "moominpappa dark blue 0 3l"
+ },
+ {
+  "name": "Adventure",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/adventure.jpg",
+  "norm": "adventure 0 3l"
+ },
+ {
+  "name": "Adventure move",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/adventure-move.jpg",
+  "norm": "adventure move 0 3l"
+ },
+ {
+  "name": "Ancestor black",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/ancestor-black.jpg",
+  "norm": "ancestor black 0 3l"
+ },
+ {
+  "name": "Christmas greetings",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/christmas-greetings.jpg",
+  "norm": "christmas greetings 0 3l"
+ },
+ {
+  "name": "Christmas surprise",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/christmas-surprise.jpg",
+  "norm": "christmas surprise 0 3l"
+ },
+ {
+  "name": "Dark blue",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/dark-blue.jpg",
+  "norm": "dark blue 0 3l"
+ },
+ {
+  "name": "Dark green",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/dark-green.jpg",
+  "norm": "dark green 0 3l"
+ },
+ {
+  "name": "Dark rose",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/dark-rose.jpg",
+  "norm": "dark rose 0 3l"
+ },
+ {
+  "name": "Dark yellow",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/dark-yellow.jpg",
+  "norm": "dark yellow 0 3l"
+ },
+ {
+  "name": "Dive",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/dive.jpg",
+  "norm": "dive 0 3l"
+ },
+ {
+  "name": "Dolphin dive 1 edited",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/dolphin-dive-1-edited.jpg",
+  "norm": "dolphin dive 1 edited 0 3l"
+ },
+ {
+  "name": "Drawing",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/drawing.jpg",
+  "norm": "drawing 0 3l"
+ },
+ {
+  "name": "Family",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/family.jpg",
+  "norm": "family 0 3l"
+ },
+ {
+  "name": "Fazer special mug",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/fazer-special-mug.jpg",
+  "norm": "fazer special mug 0 3l"
+ },
+ {
+  "name": "Fillyjonk",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/fillyjonk.jpg",
+  "norm": "fillyjonk 0 3l"
+ },
+ {
+  "name": "Fuzzy",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/fuzzy.jpg",
+  "norm": "fuzzy 0 3l"
+ },
+ {
+  "name": "Groke",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/groke.jpg",
+  "norm": "groke 0 3l"
+ },
+ {
+  "name": "Hattifnatteners",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/hattifnatteners.jpg",
+  "norm": "hattifnatteners 0 3l"
+ },
+ {
+  "name": "Hemulen",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/hemulen.jpg",
+  "norm": "hemulen 0 3l"
+ },
+ {
+  "name": "Hibernation",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/hibernation.jpg",
+  "norm": "hibernation 0 3l"
+ },
+ {
+  "name": "Hurray",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/hurray.jpg",
+  "norm": "hurray 0 3l"
+ },
+ {
+  "name": "Inspector",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/inspector.jpg",
+  "norm": "inspector 0 3l"
+ },
+ {
+  "name": "Keep Waters Clean",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/keep-waters-clean.jpg",
+  "norm": "keep waters clean 0 3l"
+ },
+ {
+  "name": "Little My",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/little-my.jpg",
+  "norm": "little my 0 3l"
+ },
+ {
+  "name": "Little My Red",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/little-my-red.jpg",
+  "norm": "little my red 0 3l"
+ },
+ {
+  "name": "Little My sliding",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/little-my-sliding.jpg",
+  "norm": "little my sliding 0 3l"
+ },
+ {
+  "name": "Midsummer",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/midsummer.jpg",
+  "norm": "midsummer 0 3l"
+ },
+ {
+  "name": "Millenium",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/millenium.jpg",
+  "norm": "millenium 0 3l"
+ },
+ {
+  "name": "Moment on the shore",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moment-on-the-shore.jpg",
+  "norm": "moment on the shore 0 3l"
+ },
+ {
+  "name": "Moomin house",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-house.jpg",
+  "norm": "moomin house 0 3l"
+ },
+ {
+  "name": "Moominmamma and berries",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominmamma-and-berries.jpg",
+  "norm": "moominmamma and berries 0 3l"
+ },
+ {
+  "name": "Moominmamma apricot",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominmamma-apricot.jpg",
+  "norm": "moominmamma apricot 0 3l"
+ },
+ {
+  "name": "Moominpappa thinking",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominpappa-thinking.jpg",
+  "norm": "moominpappa thinking 0 3l"
+ },
+ {
+  "name": "Moomintroll daydreaming",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomintroll-daydreaming.jpg",
+  "norm": "moomintroll daydreaming 0 3l"
+ },
+ {
+  "name": "Moomintroll on ice",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomintroll-on-ice.jpg",
+  "norm": "moomintroll on ice 0 3l"
+ },
+ {
+  "name": "Moomintroll turquoise",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomintroll-turquoise.jpg",
+  "norm": "moomintroll turquoise 0 3l"
+ },
+ {
+  "name": "Muddler",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/muddler.jpg",
+  "norm": "muddler 0 3l"
+ },
+ {
+  "name": "Mymble",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/mymble.jpg",
+  "norm": "mymble 0 3l"
+ },
+ {
+  "name": "Night sail",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/night-sail.jpg",
+  "norm": "night sail 0 3l"
+ },
+ {
+  "name": "Office",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/office.jpg",
+  "norm": "office 0 3l"
+ },
+ {
+  "name": "On the beach",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/on-the-beach.jpg",
+  "norm": "on the beach 0 3l"
+ },
+ {
+  "name": "Our coast",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/our-coast.jpg",
+  "norm": "our coast 0 3l"
+ },
+ {
+  "name": "Peace",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/peace.jpg",
+  "norm": "peace 0 3l"
+ },
+ {
+  "name": "Primadonnas horse",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/primadonnas-horse.jpg",
+  "norm": "primadonnas horse 0 3l"
+ },
+ {
+  "name": "Rosa",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/rosa.jpg",
+  "norm": "rosa 0 3l"
+ },
+ {
+  "name": "Rose garden",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/rose-garden.jpg",
+  "norm": "rose garden 0 3l"
+ },
+ {
+  "name": "Sailing with Nibling and Tooticky",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sailing-with-nibling-and-tooticky.jpg",
+  "norm": "sailing with nibling and tooticky 0 3l"
+ },
+ {
+  "name": "Siesta",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/siesta.jpg",
+  "norm": "siesta 0 3l"
+ },
+ {
+  "name": "Skiing competition",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/skiing-competition.jpg",
+  "norm": "skiing competition 0 3l"
+ },
+ {
+  "name": "Skiing with Mr. Brisk",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/skiing-with-mr-brisk.jpg",
+  "norm": "skiing with mr brisk 0 3l"
+ },
+ {
+  "name": "Sniff brown",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sniff-brown.jpg",
+  "norm": "sniff brown 0 3l"
+ },
+ {
+  "name": "Sniff turquoise",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sniff-turquoise.jpg",
+  "norm": "sniff turquoise 0 3l"
+ },
+ {
+  "name": "Snorkmaiden",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snorkmaiden.jpg",
+  "norm": "snorkmaiden 0 3l"
+ },
+ {
+  "name": "Snorkmaiden and poet",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snorkmaiden-and-poet.jpg",
+  "norm": "snorkmaiden and poet 0 3l"
+ },
+ {
+  "name": "Snorkmaiden pink",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snorkmaiden-pink.jpg",
+  "norm": "snorkmaiden pink 0 3l"
+ },
+ {
+  "name": "Snow horse",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snow-horse.jpg",
+  "norm": "snow horse 0 3l"
+ },
+ {
+  "name": "Snowlantern",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snowlantern.jpg",
+  "norm": "snowlantern 0 3l"
+ },
+ {
+  "name": "Snufkin",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snufkin.jpg",
+  "norm": "snufkin 0 3l"
+ },
+ {
+  "name": "Snufkin green",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snufkin-green.jpg",
+  "norm": "snufkin green 0 3l"
+ },
+ {
+  "name": "Soap bubbles",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/soap-bubbles.jpg",
+  "norm": "soap bubbles 0 3l"
+ },
+ {
+  "name": "Stinky",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/stinky.jpg",
+  "norm": "stinky 0 3l"
+ },
+ {
+  "name": "Stockmann",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/stockmann.jpg",
+  "norm": "stockmann 0 3l"
+ },
+ {
+  "name": "Thingumy and Bob",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/thingumy-and-bob.jpg",
+  "norm": "thingumy and bob 0 3l"
+ },
+ {
+  "name": "Tooticky",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/tooticky.jpg",
+  "norm": "tooticky 0 3l"
+ },
+ {
+  "name": "Tooticky violet",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/tooticky-violet.jpg",
+  "norm": "tooticky violet 0 3l"
+ },
+ {
+  "name": "Toves jubilee",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/toves-jubilee.jpg",
+  "norm": "toves jubilee 0 3l"
+ },
+ {
+  "name": "Under the tree",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/under-the-tree.jpg",
+  "norm": "under the tree 0 3l"
+ },
+ {
+  "name": "Winter bonfire",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/winter-bonfire.jpg",
+  "norm": "winter bonfire 0 3l"
+ },
+ {
+  "name": "Winter forest",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/winter-forest.jpg",
+  "norm": "winter forest 0 3l"
+ },
+ {
+  "name": "Winter games",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/winter-games.jpg",
+  "norm": "winter games 0 3l"
+ },
+ {
+  "name": "Winternight",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/winternight.jpg",
+  "norm": "winternight 0 3l"
+ },
+ {
+  "name": "Yellow",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/yellow.jpg",
+  "norm": "yellow 0 3l"
+ },
+ {
+  "name": "blue",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/blue.jpg",
+  "norm": "blue 0 3l"
+ },
+ {
+  "name": "Mymbles mother",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/mymbles-mother.jpg",
+  "norm": "mymbles mother 0 3l"
+ },
+ {
+  "name": "Crown snow load",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/crown-snow-load.jpg",
+  "norm": "crown snow load 0 3l"
+ },
+ {
+  "name": "Friendship",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/friendship.jpg",
+  "norm": "friendship 0 3l"
+ },
+ {
+  "name": "Going on vacation",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/going-on-vacation.jpg",
+  "norm": "going on vacation 0 3l"
+ },
+ {
+  "name": "Golden tale",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/golden-tale.jpg",
+  "norm": "golden tale 0 3l"
+ },
+ {
+  "name": "Hobgoblin purple",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/hobgoblin-purple.jpg",
+  "norm": "hobgoblin purple 0 3l"
+ },
+ {
+  "name": "Last Dragon",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/last-dragon.jpg",
+  "norm": "last dragon 0 3l"
+ },
+ {
+  "name": "Light snowfall",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/light-snowfall.jpg",
+  "norm": "light snowfall 0 3l"
+ },
+ {
+  "name": "Moomins day 2018",
+  "year": 2018,
+  "capacity": "0.3L",
+  "image": "/mugs/moomins-day-2018.jpg",
+  "norm": "moomins day 2018 0 3l"
+ },
+ {
+  "name": "Moomintroll grassgreen",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomintroll-grassgreen.jpg",
+  "norm": "moomintroll grassgreen 0 3l"
+ },
+ {
+  "name": "Moominvalley 2017",
+  "year": 2017,
+  "capacity": "0.3L",
+  "image": "/mugs/moominvalley-2017.jpg",
+  "norm": "moominvalley 2017 0 3l"
+ },
+ {
+  "name": "Moominvalley 5 Midwinter",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominvalley-5-midwinter.jpg",
+  "norm": "moominvalley 5 midwinter 0 3l"
+ },
+ {
+  "name": "Moominvalley Park Japan",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominvalley-park-japan.jpg",
+  "norm": "moominvalley park japan 0 3l"
+ },
+ {
+  "name": "Night with the Groke",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/night-with-the-groke.jpg",
+  "norm": "night with the groke 0 3l"
+ },
+ {
+  "name": "Ninny powder",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/ninny-powder.jpg",
+  "norm": "ninny powder 0 3l"
+ },
+ {
+  "name": "Relaxing",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/relaxing.jpg",
+  "norm": "relaxing 0 3l"
+ },
+ {
+  "name": "Sleep well",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sleep-well.jpg",
+  "norm": "sleep well 0 3l"
+ },
+ {
+  "name": "Snorkmaiden lila",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snorkmaiden-lila.jpg",
+  "norm": "snorkmaiden lila 0 3l"
+ },
+ {
+  "name": "Snow blizzard",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/snow-blizzard.jpg",
+  "norm": "snow blizzard 0 3l"
+ },
+ {
+  "name": "Spring winter",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/spring-winter.jpg",
+  "norm": "spring winter 0 3l"
+ },
+ {
+  "name": "Summer Theater",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/summer-theater.jpg",
+  "norm": "summer theater 0 3l"
+ },
+ {
+  "name": "Thingumy and Bob green",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/thingumy-and-bob-green.jpg",
+  "norm": "thingumy and bob green 0 3l"
+ },
+ {
+  "name": "True to its origins",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/true-to-its-origins.jpg",
+  "norm": "true to its origins 0 3l"
+ },
+ {
+  "name": "Moomin Norway mug",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomin-norway-mug.jpg",
+  "norm": "moomin norway mug 0 3l"
+ },
+ {
+  "name": "Moominmammas mural",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moominmammas-mural.jpg",
+  "norm": "moominmammas mural 0 3l"
+ },
+ {
+  "name": "The Fire spirit",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/the-fire-spirit.jpg",
+  "norm": "the fire spirit 0 3l"
+ },
+ {
+  "name": "Harp",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/harp-04.jpg",
+  "norm": "harp 0 4l"
+ },
+ {
+  "name": "Eveningswim1",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/eveningswim1.jpg",
+  "norm": "eveningswim1 0 3l"
+ },
+ {
+  "name": "Moomins day mug",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/moomins-day-mug.jpg",
+  "norm": "moomins day mug 0 3l"
+ },
+ {
+  "name": "Moomintroll on ice 0.4",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/moomintroll-on-ice-0-4-04.jpg",
+  "norm": "moomintroll on ice 0 4 0 4l"
+ },
+ {
+  "name": "Sliding winter mug",
+  "year": null,
+  "capacity": "0.3L",
+  "image": "/mugs/sliding-winter-mug.jpg",
+  "norm": "sliding winter mug 0 3l"
+ },
+ {
+  "name": "Snorkmaiden 0.4",
+  "year": null,
+  "capacity": "0.4L",
+  "image": "/mugs/snorkmaiden-0-4-04.jpg",
+  "norm": "snorkmaiden 0 4 0 4l"
+ }
+]
