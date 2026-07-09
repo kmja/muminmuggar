@@ -413,14 +413,31 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
 }
 
 /* ------------------------------ GapFinder ----------------------------- */
+const foldC = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/['’`]/g, "").replace(/\bmumin/g, "moomin").replace(/[^a-z0-9]+/g, " ").trim();
+
 function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const t = useT();
   const [series, setSeries] = useState("Arabia Moomin");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [rows, setRows] = useState(null);
-  useEffect(() => { if (open) { setBusy(false); setError(""); setRows(null); } }, [open]);
+  const [cat, setCat] = useState(null);       // full catalogue (array) or null
+  const [catBusy, setCatBusy] = useState(false);
+  const [onlyMissing, setOnlyMissing] = useState(true);
+  const [catQuery, setCatQuery] = useState("");
+  useEffect(() => { if (open) { setBusy(false); setError(""); setRows(null); setCat(null); setCatQuery(""); } }, [open]);
   const ownedNames = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => normalizeText(m.name))), [mugs]);
+  const ownedFolded = useMemo(() => mugs.filter((m) => m.status !== "wishlist").map((m) => foldC(m.name)).filter(Boolean), [mugs]);
+
+  const isOwned = (nameEn) => {
+    const en = foldC(nameEn); const et = en.split(" ").filter((x) => x.length > 2);
+    if (!et.length) return false;
+    return ownedFolded.some((mn) => {
+      const mt = mn.split(" ").filter((x) => x.length > 2);
+      const nn = ` ${mn} `, ne = ` ${en} `;
+      return et.every((x) => nn.includes(` ${x} `)) || (mt.length > 0 && mt.every((x) => ne.includes(` ${x} `)));
+    });
+  };
 
   const run = async () => {
     setError(""); setBusy(true); setRows(null);
@@ -432,8 +449,27 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
     finally { setBusy(false); }
   };
 
+  const loadCatalogue = async () => {
+    setError(""); setCatBusy(true);
+    try {
+      const { catalog } = await api("/api/catalog/list");
+      setCat(catalog.map((e) => ({ ...e, owned: isOwned(e.nameEn) })));
+    } catch (err) { setError(err.message || String(err)); }
+    finally { setCatBusy(false); }
+  };
+
+  const draftFrom = (e) => ({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status: "wishlist", photoUrl: e.image || "", estValueLow: e.estLow ?? null, estValueHigh: e.estHigh ?? null, estValueCurrency: e.estCur || "EUR" });
+
   const missing = (rows || []).filter((r) => !r.owned);
-  const footer = rows ? (
+  const catMissing = (cat || []).filter((e) => !e.owned);
+  const catShown = (cat || []).filter((e) => (!onlyMissing || !e.owned) && (!catQuery || foldC(e.nameEn).includes(foldC(catQuery))));
+
+  const footer = cat ? (
+    <>
+      <button onClick={() => setCat(null)}>{t("gap_new_search")}</button>
+      <button className="primary" disabled={!catMissing.length} onClick={() => { onAddWishlist(catMissing.map(draftFrom)); onClose(); }}>{t("gap_wishlist_missing_all", { n: catMissing.length })}</button>
+    </>
+  ) : rows ? (
     <>
       <button onClick={() => setRows(null)}>{t("gap_new_search")}</button>
       <button className="primary" disabled={!missing.length} onClick={() => {
@@ -444,26 +480,50 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   ) : null;
 
   return (
-    <Modal open={open} onClose={onClose} wide title={t("gap_title")} subtitle={t("gap_subtitle")} footer={footer}>
-      <div className="row">
-        <div className="field" style={{ flex: 1 }}><label>{t("gap_series_label")}</label><input value={series} onChange={(e) => setSeries(e.target.value)} placeholder={t("gap_series_ph")} /></div>
-        <button className="primary" onClick={run} disabled={busy} style={{ alignSelf: "flex-end" }}>{busy ? <span className="spin" /> : t("gap_search")}</button>
-      </div>
-      {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
-      {rows ? (
-        <div className="grid" style={{ gap: 8, marginTop: 12 }}>
-          <div className="help">{t("gap_summary", { owned: rows.filter((r) => r.owned).length, missing: missing.length, total: rows.length })}</div>
-          {rows.map((r, i) => (
-            <div className="listrow" key={i} style={{ opacity: r.owned ? 0.6 : 1 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 700 }}>{r.owned ? "✓ " : ""}{r.character}{r.year ? <span className="muted"> · {r.year}</span> : null}</div>
-                {r.edition || r.notes ? <div className="mini">{[r.edition, r.notes].filter(Boolean).join(" — ")}</div> : null}
+    <Modal open={open} onClose={onClose} wide title={cat ? t("gap_cat_title") : t("gap_title")} subtitle={cat ? "" : t("gap_subtitle")} footer={footer}>
+      {cat ? (
+        <div className="grid" style={{ gap: 10 }}>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="field" style={{ flex: 1, minWidth: 160 }}><input value={catQuery} onChange={(e) => setCatQuery(e.target.value)} placeholder={t("search_ph")} /></div>
+            <div className="switch"><span className="mini">{t("gap_only_missing")}</span><input type="checkbox" checked={onlyMissing} onChange={(e) => setOnlyMissing(e.target.checked)} style={{ width: "auto" }} /></div>
+          </div>
+          <div className="help">{t("gap_cat_summary", { owned: cat.filter((e) => e.owned).length, total: cat.length, missing: catMissing.length })}</div>
+          {catShown.map((e, i) => (
+            <div className="scanrow" key={i} style={{ opacity: e.owned ? 0.55 : 1, alignItems: "center" }}>
+              <div className="scanthumb">{e.image ? <img src={e.image} alt="" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="mugname" style={{ fontSize: 14 }}>{e.nameEn}</div>
+                <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${e.estLow}–${e.estHigh} ${e.estCur}` : null)].filter(Boolean).join(" · ")}</div>
               </div>
-              <Badge kind={r.owned ? "owned" : "wishlist"}>{r.owned ? t("gap_owned") : t("gap_missing")}</Badge>
+              {e.owned ? <Badge kind="owned">{t("gap_in_collection")}</Badge>
+                : <button onClick={() => onAddWishlist([draftFrom(e)])}>{t("gap_wish")}</button>}
             </div>
           ))}
         </div>
-      ) : null}
+      ) : (
+        <>
+          <div className="row">
+            <div className="field" style={{ flex: 1 }}><label>{t("gap_series_label")}</label><input value={series} onChange={(e) => setSeries(e.target.value)} placeholder={t("gap_series_ph")} /></div>
+            <button className="primary" onClick={run} disabled={busy} style={{ alignSelf: "flex-end" }}>{busy ? <span className="spin" /> : t("gap_search")}</button>
+          </div>
+          <button onClick={loadCatalogue} disabled={catBusy} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>{catBusy ? <span className="spin" /> : `📖 ${t("gap_browse")}`}</button>
+          {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
+          {rows ? (
+            <div className="grid" style={{ gap: 8, marginTop: 12 }}>
+              <div className="help">{t("gap_summary", { owned: rows.filter((r) => r.owned).length, missing: missing.length, total: rows.length })}</div>
+              {rows.map((r, i) => (
+                <div className="listrow" key={i} style={{ opacity: r.owned ? 0.6 : 1 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700 }}>{r.owned ? "✓ " : ""}{r.character}{r.year ? <span className="muted"> · {r.year}</span> : null}</div>
+                    {r.edition || r.notes ? <div className="mini">{[r.edition, r.notes].filter(Boolean).join(" — ")}</div> : null}
+                  </div>
+                  <Badge kind={r.owned ? "owned" : "wishlist"}>{r.owned ? t("gap_owned") : t("gap_missing")}</Badge>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </>
+      )}
     </Modal>
   );
 }
@@ -605,11 +665,18 @@ export default function App() {
   // Backfill product images for mugs that don't have a photo yet, one at a
   // time so we're gentle on the search sources. Saved server-side (quietly).
   const ensureImages = async (list) => {
-    const targets = (list || []).filter((m) => m && m.id && m.name && !m.photoUrl);
+    const targets = (list || []).filter((m) => m && m.id && m.name && (!m.photoUrl || m.year == null || (m.estValueLow == null && m.estValueHigh == null)));
     for (const m of targets) {
       try {
-        const { imageUrl } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ id: m.id, name: m.name, series: m.series, year: m.year }) });
-        if (imageUrl) setMugs((prev) => prev.map((x) => (x.id === m.id && !x.photoUrl ? { ...x, photoUrl: imageUrl } : x)));
+        const { imageUrl, year, value } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ id: m.id, name: m.name, series: m.series, year: m.year }) });
+        setMugs((prev) => prev.map((x) => {
+          if (x.id !== m.id) return x;
+          const n = { ...x };
+          if (imageUrl && !n.photoUrl) n.photoUrl = imageUrl;
+          if (year && n.year == null) n.year = year;
+          if (value && n.estValueLow == null && n.estValueHigh == null) { n.estValueLow = value.low; n.estValueHigh = value.high; n.estValueCurrency = value.cur; }
+          return n;
+        }));
       } catch { /* ignore — the card keeps its placeholder */ }
     }
   };

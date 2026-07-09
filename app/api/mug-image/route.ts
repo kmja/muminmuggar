@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { catalogImage } from "@/lib/catalog";
-import { setMugPhoto } from "@/lib/mugs";
+import { catalogImage, catalogYear, catalogValue } from "@/lib/catalog";
+import { setMugPhoto, setMugYear, setMugValue } from "@/lib/mugs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,10 +16,16 @@ export async function POST(req: Request) {
     const { id, name, series, year } = await req.json();
     if (!name || !String(name).trim()) return NextResponse.json({ error: "name required" }, { status: 400 });
     const imageUrl = await catalogImage({ name, series, year });
-    if (imageUrl && id) {
-      try { await setMugPhoto(String(id), imageUrl); } catch (e) { console.error("setMugPhoto:", e); }
+    const yr = catalogYear({ name, year });
+    const value = catalogValue({ name, year });
+    if (id) {
+      try {
+        if (imageUrl) await setMugPhoto(String(id), imageUrl);
+        if (yr) await setMugYear(String(id), yr);
+        if (value && (value.low != null || value.high != null)) await setMugValue(String(id), value.low, value.high, value.cur);
+      } catch (e) { console.error("persist catalog data:", e); }
     }
-    return NextResponse.json({ imageUrl });
+    return NextResponse.json({ imageUrl, year: yr, value });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

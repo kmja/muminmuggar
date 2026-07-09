@@ -1,6 +1,12 @@
 import { query } from "./db";
 import type { Mug } from "./types";
 import seed from "./catalog-seed.json";
+import masterCatalog from "./master-catalog.json";
+
+type MasterEntry = {
+  num: number; nameEn: string; year: number | null; years: string; capacity: string;
+  estLow: number | null; estHigh: number | null; estCur: string; image: string | null; norm: string;
+};
 
 /**
  * A stored catalog of official Moomin product images. We populate it once from
@@ -22,6 +28,7 @@ export function fold(s: unknown): string {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
+    .replace(/['’`]/g, "")          // moomin's -> moomins (matches our slugs)
     .replace(/\bmumin/g, "moomin")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
@@ -189,6 +196,38 @@ function score(mug: Pick<Mug, "name" | "series" | "year">, row: CatalogRow): num
   }
   s -= row.norm.length / 300; // tie-break toward the most specific (shortest) title
   return s;
+}
+
+/** The full authoritative catalogue (196 Arabia mugs) with baked-in images + values. */
+export async function listMasterCatalog(): Promise<MasterEntry[]> {
+  return masterCatalog as MasterEntry[];
+}
+
+/** Best-matching master-catalogue entry for a mug (by name + year). */
+function matchMaster(mug: Pick<Mug, "name" | "year">): MasterEntry | null {
+  const toks = fold(mug.name).split(" ").filter((t) => t && !STOP.has(t));
+  if (!toks.length) return null;
+  let best: MasterEntry | null = null, bs = 10.5;
+  for (const e of masterCatalog as MasterEntry[]) {
+    const nw = words(e.norm);
+    if (!toks.every((t) => nw.includes(words(t)))) continue;
+    let s = 10 + toks.length;
+    if (mug.year && e.year) s += Number(mug.year) === Number(e.year) ? 5 : -2;
+    if (s > bs) { bs = s; best = e; }
+  }
+  return best;
+}
+
+/** Authoritative production year for a mug (for filling in missing years). */
+export function catalogYear(mug: Pick<Mug, "name" | "year">): number | null {
+  return matchMaster(mug)?.year ?? null;
+}
+
+/** Authoritative market-value range (EUR) for a mug, from the catalogue. */
+export function catalogValue(mug: Pick<Mug, "name" | "year">): { low: number | null; high: number | null; cur: string } | null {
+  const m = matchMaster(mug);
+  if (!m || (m.estLow == null && m.estHigh == null)) return null;
+  return { low: m.estLow, high: m.estHigh, cur: m.estCur || "EUR" };
 }
 
 /** Best-matching official image for a mug, from our stored catalog. No web/Gemini calls. */

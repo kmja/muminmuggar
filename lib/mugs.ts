@@ -125,3 +125,16 @@ export async function deleteMug(id: string): Promise<void> {
 export async function setMugPhoto(id: string, url: string): Promise<void> {
   await query("UPDATE mugs SET photo_url = $1 WHERE id = $2 AND (photo_url IS NULL OR photo_url = '')", [url, id]);
 }
+
+/** Fill a mug's production year (only if not already set), without touching updated_at. */
+export async function setMugYear(id: string, year: number): Promise<void> {
+  await query("UPDATE mugs SET year = $1 WHERE id = $2 AND year IS NULL", [year, id]);
+}
+
+/** Fill a mug's estimated value (only if not already set), without touching updated_at. */
+export async function setMugValue(id: string, low: number | null, high: number | null, cur: string): Promise<void> {
+  await query(
+    "UPDATE mugs SET est_value_low = $1, est_value_high = $2, est_value_currency = $3 WHERE id = $4 AND est_value_low IS NULL AND est_value_high IS NULL",
+    [low, high, cur, id],
+  );
+}
