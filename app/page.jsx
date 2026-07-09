@@ -225,23 +225,47 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 }
 
 /* ------------------------------ ScanModal ----------------------------- */
-function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
+function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
   const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
   const [photoUrl, setPhotoUrl] = useState("");
-  const camRef = useRef(null), fileRef = useRef(null);
-  useEffect(() => { if (open) { setBusy(false); setError(""); setItems([]); setPhotoUrl(""); } }, [open]);
+  const [camLive, setCamLive] = useState(false);
+  const [camTried, setCamTried] = useState(false);
+  const camRef = useRef(null), fileRef = useRef(null), videoRef = useRef(null), streamRef = useRef(null);
 
-  const run = async (file) => {
-    setError("");
-    if (!file) return;
-    setBusy(true); setItems([]);
+  const stopCam = () => {
+    if (streamRef.current) { streamRef.current.getTracks().forEach((tr) => tr.stop()); streamRef.current = null; }
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCamLive(false);
+  };
+  const startCam = async () => {
+    setCamTried(true);
+    if (!navigator.mediaDevices?.getUserMedia) { setCamLive(false); return; }
     try {
-      const raw = await fileToDataUrl(file);
-      const small = await downscaleImage(raw, 1400, 0.85);
-      setPhotoUrl(small);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
+      setCamLive(true);
+    } catch { setCamLive(false); }
+  };
+
+  // Reset on open; start the viewfinder when we're on the capture screen; always release the camera on close.
+  useEffect(() => {
+    if (open) { setBusy(false); setError(""); setItems([]); setPhotoUrl(""); setCamTried(false); }
+    else stopCam();
+    return () => stopCam();
+  }, [open]);
+  useEffect(() => {
+    if (open && !items.length && !busy) startCam();
+    else stopCam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, items.length, busy]);
+
+  const process = async (small) => {
+    setBusy(true); setItems([]); setPhotoUrl(small);
+    try {
       // Always detect every mug in the photo — one or many.
       const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
       if (!drafts.length) { setError(t("scan_no_mugs")); return; }
@@ -254,6 +278,23 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
       setItems(drafts.map((d) => ({ draft: { ...d, photoUrl: "" }, checked: d.isMoominMug !== false, position: d.position || "" })));
     } catch (err) { setError(err.message || String(err)); }
     finally { setBusy(false); }
+  };
+  const run = async (file) => {
+    setError("");
+    if (!file) return;
+    const raw = await fileToDataUrl(file);
+    await process(await downscaleImage(raw, 1400, 0.85));
+  };
+  const capture = async () => {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) return;
+    setError("");
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0);
+    let dataUrl; try { dataUrl = c.toDataURL("image/jpeg", 0.9); } catch { return; }
+    stopCam();
+    await process(await downscaleImage(dataUrl, 1400, 0.85));
   };
 
   const patchItem = (i, patch) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, draft: { ...it.draft, ...patch } } : it)));
@@ -269,9 +310,21 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, mugs }) {
     <Modal open={open} onClose={onClose} wide title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
       {!items.length && !busy ? (
         <div className="grid" style={{ gap: 12 }}>
+          <div className="vfwrap">
+            <video ref={videoRef} className="viewfinder" playsInline muted autoPlay style={{ display: camLive ? "block" : "none" }} />
+            {camLive ? (
+              <button className="vfcapture" onClick={capture} aria-label={t("scan_capture_aria")} />
+            ) : (
+              <div className="vfplaceholder">
+                {!camTried ? <span className="spin" /> : <MugMark size={40} />}
+                <div className="help" style={{ marginTop: 10 }}>{!camTried ? t("scan_starting_cam") : t("scan_cam_blocked")}</div>
+              </div>
+            )}
+          </div>
           <div className="row">
-            <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => camRef.current?.click()}>{t("scan_take_photo")}</button>
-            <button style={{ flex: 1, justifyContent: "center", padding: "14px" }} onClick={() => fileRef.current?.click()}>{t("scan_choose_image")}</button>
+            {!camLive ? <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => camRef.current?.click()}>{t("scan_take_photo")}</button> : null}
+            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => fileRef.current?.click()}>{t("scan_choose_image")}</button>
+            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => { stopCam(); onManual(); }}>{t("scan_add_manual")}</button>
           </div>
           <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
           <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
@@ -711,7 +764,7 @@ export default function App() {
       <nav className="bottomnav">
         <button className={"bn " + (tab === "collection" ? "active" : "")} onClick={() => setTab("collection")}><span className="ic">🗄️</span>{t("nav_collection")}</button>
         <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><span className="ic">♡</span>{t("nav_wishlist")}</button>
-        <button className="bn bn-scan" onClick={() => setScanOpen(true)} aria-label={t("nav_scan_aria")}><span className="ic">📷</span></button>
+        <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="ic bn-addic">＋</span>{t("nav_add")}</button>
         <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><span className="ic">📊</span>{t("nav_stats")}</button>
         <button className="bn" onClick={() => setAboutOpen(true)}><span className="ic">🔔</span>{t("nav_alerts")}</button>
       </nav>
@@ -722,7 +775,7 @@ export default function App() {
       </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mode={formMode} mugs={mugs} onSave={saveMug} saving={saving} />
-      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} />
+      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onManual={() => { setScanOpen(false); openCreate(); }} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
 

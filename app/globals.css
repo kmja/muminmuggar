@@ -123,10 +123,10 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .bn:hover{border-color:transparent; background:none}
 .bn .ic{font-size:20px; line-height:1}
 .bn.active{color:var(--accent)}
-.bn-scan{margin-top:-26px; width:58px; height:58px; border-radius:999px; justify-content:center; gap:0;
-  background: var(--accent); color:#fff; border:4px solid var(--bg); box-shadow: 0 6px 18px rgba(107,78,140,.3)}
-.bn-scan:hover{background: var(--accent-ink)}
-.bn-scan .ic{font-size:26px}
+.bn-add{color:var(--accent)}
+.bn-add .bn-addic{width:44px; height:44px; margin-top:-22px; border-radius:999px; display:flex; align-items:center; justify-content:center;
+  background: var(--accent); color:#fff; border:4px solid var(--bg); box-shadow: 0 6px 18px rgba(107,78,140,.3); font-size:26px; font-weight:300}
+.bn-add:hover .bn-addic{background: var(--accent-ink)}
 .kpi{display:grid; gap:14px; grid-template-columns:1fr 1fr}
 @media(min-width: 820px){ .kpi{grid-template-columns:repeat(4,1fr)} }
 .kpicard{padding:16px}
@@ -139,6 +139,17 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .bar > span{display:block;height:100%;background: var(--accent)}
 .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
 .drop{border:1.5px dashed var(--border); border-radius:10px; padding:22px; text-align:center; color:var(--muted); background: var(--bg2)}
+/* camera viewfinder */
+.vfwrap{position:relative; border-radius:12px; overflow:hidden; background:#12101a}
+.viewfinder{width:100%; aspect-ratio:3/4; max-height:56vh; object-fit:cover; display:block; background:#12101a}
+.vfplaceholder{aspect-ratio:3/4; max-height:44vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--muted); background: var(--lilac); padding:20px; text-align:center}
+.vfplaceholder svg{color: var(--accent); opacity:.6}
+.vfcapture{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); width:66px; height:66px; padding:0;
+  border-radius:999px; background:transparent; border:3px solid rgba(255,255,255,.85); box-shadow:0 3px 12px rgba(0,0,0,.35)}
+.vfcapture::after{content:""; display:block; width:48px; height:48px; border-radius:999px; background:#fff; margin:0 auto}
+.vfcapture:hover{background:transparent}
+.vfcapture:active::after{background: var(--lilac)}
 .scanrow{display:flex; gap:12px; align-items:flex-start; padding:12px; border:1px solid var(--border); border-radius:10px}
 .spin{width:16px;height:16px;border-radius:999px;border:2px solid color-mix(in srgb,var(--accent) 30%, transparent);border-top-color: var(--accent);animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
