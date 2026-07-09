@@ -175,6 +175,27 @@ export async function findSeriesMugs(series: string): Promise<CatalogEntry[]> {
   return obj?.mugs || [];
 }
 
+/**
+ * Find the official product image for a specific mug via Google-Search
+ * grounding. Returns candidate direct image URLs and candidate product-page
+ * URLs (best first), preferring official/brand and major-retailer sources.
+ * The caller resolves these to a final image (e.g. via a page's og:image).
+ */
+export async function findOfficialImageCandidates(q: string): Promise<{ imageUrls: string[]; pageUrls: string[] }> {
+  const prompt =
+    `Find the OFFICIAL product image for this exact Moomin mug: "${q}". ` +
+    `Strongly prefer the brand/official shop and major retailers: shop.moomin.com, moomin.com, arabia.com, finnishdesignshop.com, royaldesign.com, skandium.com, nordicnest.com. ` +
+    `Return ONLY JSON: {"imageUrls": string[], "pageUrls": string[]}. ` +
+    `"imageUrls" = direct links to the product image file (.jpg/.png/.webp) if you know them; ` +
+    `"pageUrls" = the product page URLs. Order best/most-official first. Only include the exact mug. If unsure, return what you can.`;
+  const { text, grounding } = await generate({ useSearch: true, parts: [{ text: prompt }] });
+  const parsed = parseJson<{ imageUrls?: string[]; pageUrls?: string[] }>(text) || {};
+  const http = (u: unknown) => typeof u === "string" && /^https?:\/\//.test(u);
+  const imageUrls = (parsed.imageUrls || []).filter(http);
+  const pageUrls = Array.from(new Set([...(parsed.pageUrls || []), ...grounding.map((g) => g.uri)].filter(http)));
+  return { imageUrls, pageUrls };
+}
+
 /** Broad, on-demand web search across retailers/marketplaces (returns prose + linked sources). */
 export async function groundedDealSearch(q: string): Promise<{ text: string; sources: { title: string; uri: string }[] }> {
   const prompt =

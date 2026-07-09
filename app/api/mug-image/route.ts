@@ -4,6 +4,7 @@ import { setMugPhoto } from "@/lib/mugs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // grounded search + a few page fetches
 
 /**
  * Find a product image for a mug. If an `id` is supplied and an image is
