@@ -217,7 +217,36 @@ export async function listMasterCatalog(): Promise<MasterEntry[]> {
   return (masterCatalog as MasterEntry[]).map((e) => ({ ...e, estLow: toSek(e.estLow), estHigh: toSek(e.estHigh), estCur: "SEK" }));
 }
 
-/** Best-matching master-catalogue entry for a mug (edition first, then name). */
+/** Parse a "1999–2013" / "2005-" / "2016" production span into [lo, hi]. */
+function parseYears(years: string): [number, number] {
+  const nums = (String(years).match(/(?:19|20)\d{2}/g) || []).map(Number);
+  if (!nums.length) return [0, 0];
+  const open = /[-–]\s*$/.test(String(years));
+  return [Math.min(...nums), open ? 9999 : Math.max(...nums)];
+}
+
+/**
+ * Last-resort match on the primary character + production span — for scanned
+ * mugs whose motif Gemini got wrong but whose lead character + year still pin
+ * down a classic mug (e.g. "Moominpappa, …" 2006 → "Moominpappa Thinking").
+ */
+function matchByCharacter(mug: MugQ): MasterEntry | null {
+  const first = fold(mug.name).split(" ").filter((t) => t && !STOP.has(t))[0];
+  if (!first || first.length < 3) return null;
+  const y = Number(mug.year) || 0;
+  let best: MasterEntry | null = null, bs = 0;
+  for (const e of masterCatalog as MasterEntry[]) {
+    const et = fold(e.nameEn).split(" ").filter((t) => t && !STOP.has(t));
+    if (et[0] !== first) continue;                       // catalogue name must lead with that character
+    const [lo, hi] = parseYears(e.years);
+    const inRange = y && lo && y >= lo && y <= hi;
+    const s = 5 + (inRange ? 5 : 0) - et.length * 0.5;   // prefer in-range, simplest name
+    if (s > bs) { bs = s; best = e; }
+  }
+  return best;
+}
+
+/** Best-matching master-catalogue entry for a mug (edition → name → character). */
 function matchMaster(mug: MugQ): MasterEntry | null {
   for (const q of candidates(mug)) {
     let best: MasterEntry | null = null, bs = 9.5;
@@ -227,7 +256,7 @@ function matchMaster(mug: MugQ): MasterEntry | null {
     }
     if (best) return best;
   }
-  return null;
+  return matchByCharacter(mug);
 }
 
 /** Authoritative production year for a mug (for filling in missing years). */
@@ -257,5 +286,5 @@ export async function catalogImage(mug: MugQ): Promise<string | null> {
     }
     if (best) return best.imageUrl;
   }
-  return null;
+  return matchByCharacter(mug)?.image ?? null;
 }

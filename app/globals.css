@@ -171,6 +171,20 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .srcitem{padding:10px 12px;border:1px solid var(--border);border-radius:8px;display:flex;gap:10px;align-items:center}
 .srcitem img{width:56px;height:56px;border-radius:6px;object-fit:cover;flex:none;background:var(--lilac)}
 
+/* mug picker (catalogue-locked name selector) */
+.mugpicker{position:relative}
+.mugpicker input.invalid{border-color:var(--danger)}
+.pickmenu{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:70; max-height:min(340px, 52vh); overflow:auto;
+  background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 30px rgba(27,20,35,.18); padding:6px}
+.pickitem{display:flex; align-items:center; gap:10px; width:100%; justify-content:flex-start; border:none; background:transparent;
+  padding:7px 8px; border-radius:8px; text-align:left}
+.pickitem:hover{background:var(--lilac)}
+.pickthumb{width:36px; height:36px; flex:none; border-radius:6px; overflow:hidden; background:var(--lilac);
+  display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.pickthumb img{width:100%; height:100%; object-fit:cover}
+.pickname{display:flex; flex-direction:column; min-width:0; font-weight:500; font-size:14px; color:var(--text)}
+.pickmeta{font-weight:400; font-size:11px; color:var(--muted)}
+
 /* language picker */
 .langpick{position:relative}
 .langmenu{position:absolute; right:0; top:calc(100% + 6px); background:var(--card); border:1px solid var(--border);

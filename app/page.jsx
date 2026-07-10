@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
+import MASTER_CATALOG from "../lib/master-catalog.json";
 
 /* ------------------------------- i18n --------------------------------- */
 const I18nContext = createContext(makeT("sv"));
@@ -16,6 +17,9 @@ const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
 
 /* ----------------------------- helpers -------------------------------- */
 const normalizeText = (s) => (s || "").toString().trim().toLowerCase();
+const foldC = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/['’`]/g, "").replace(/\bmumin/g, "moomin").replace(/[^a-z0-9]+/g, " ").trim();
+const CAT_EUR_SEK = 11.3;
+const catSek = (eur) => (eur == null ? null : Math.round((eur * CAT_EUR_SEK) / 10) * 10);
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
 const tokenizeTags = (s) => (s || "").split(/[,#\n]+/).map((t) => t.trim()).filter(Boolean);
 function formatMoney(amount, currency = "SEK") {
@@ -165,6 +169,46 @@ function LangPicker({ lang, setLang }) {
   );
 }
 
+/* ---------------------------- MugPicker ------------------------------- */
+// Searchable, catalogue-locked selector: the name can only be a mug in our DB.
+function MugPicker({ value, onPick, invalid }) {
+  const t = useT();
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const results = useMemo(() => {
+    const f = foldC(q);
+    const list = f ? MASTER_CATALOG.filter((e) => foldC(e.nameEn + " " + e.years).includes(f)) : MASTER_CATALOG;
+    return list.slice(0, 80);
+  }, [q]);
+  return (
+    <div className="mugpicker" ref={boxRef}>
+      <input
+        className={invalid ? "invalid" : ""}
+        value={open ? q : (value || "")}
+        onFocus={() => { setOpen(true); setQ(""); }}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        placeholder={t("form_name_ph")}
+      />
+      {open ? (
+        <div className="pickmenu">
+          {results.length ? results.map((e, i) => (
+            <button type="button" key={e.num + "-" + i} className="pickitem" onClick={() => { onPick(e); setOpen(false); setQ(""); }}>
+              <span className="pickthumb">{e.image ? <img src={e.image} alt="" /> : <MugMark size={18} />}</span>
+              <span className="pickname">{e.nameEn}<span className="pickmeta">{[e.years, e.capacity, e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null].filter(Boolean).join(" · ")}</span></span>
+            </button>
+          )) : <div className="help" style={{ padding: "10px 12px" }}>{t("no_match")}</div>}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /* ------------------------------ MugForm ------------------------------- */
 function validateMug(m, t) {
   const e = {};
@@ -203,7 +247,19 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
         {dups.length ? <div className="note warn">{t("form_dup_warn", { list: dups.map((x) => x.name + (x.year ? ` (${x.year})` : "")).join(", ") })}</div> : null}
 
         <div className="row">
-          <div className="field" style={{ flex: 2, minWidth: 200 }}><label>{t("form_name")}</label><input value={d.name} onChange={(e) => up({ name: e.target.value })} placeholder={t("form_name_ph")} />{errors.name ? <div className="err">{errors.name}</div> : null}</div>
+          <div className="field" style={{ flex: 2, minWidth: 200 }}><label>{t("form_name")}</label>
+            <MugPicker value={d.name} invalid={!!errors.name} onPick={(e) => up({
+              name: e.nameEn,
+              year: e.year != null ? e.year : "",
+              series: "Arabia Moomin",
+              edition: "",
+              photoUrl: d.photoUrl || e.image || "",
+              estValueLow: d.estValueLow ?? catSek(e.estLow),
+              estValueHigh: d.estValueHigh ?? catSek(e.estHigh),
+              estValueCurrency: d.estValueCurrency || "SEK",
+            })} />
+            {errors.name ? <div className="err">{errors.name}</div> : null}
+          </div>
           <div className="field" style={{ minWidth: 150 }}><label>{t("form_status")}</label><select value={d.status} onChange={(e) => up({ status: e.target.value })}>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
         </div>
         <div className="row">
@@ -414,8 +470,6 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
 }
 
 /* ------------------------------ GapFinder ----------------------------- */
-const foldC = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/['’`]/g, "").replace(/\bmumin/g, "moomin").replace(/[^a-z0-9]+/g, " ").trim();
-
 function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const t = useT();
   const [series, setSeries] = useState("Arabia Moomin");
