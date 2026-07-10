@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { LANGS, makeT } from "../lib/i18n";
+import { APP_VERSION } from "../lib/version";
 
 /* ------------------------------- i18n --------------------------------- */
 const I18nContext = createContext(makeT("sv"));
@@ -815,7 +816,7 @@ export default function App() {
       <div className="top">
         <div className="brand">
           <div className="logo"><MugMark size={26} /></div>
-          <div className="title"><h1>{t("app_title")}</h1><div className="sub">{t("app_tagline")}</div></div>
+          <div className="title"><h1>{t("app_title")}<span className="ver">v{APP_VERSION}</span></h1><div className="sub">{t("app_tagline")}</div></div>
         </div>
         <div className="actions">
           <ThemeToggle theme={theme} setTheme={setTheme} />
