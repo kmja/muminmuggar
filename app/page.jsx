@@ -427,17 +427,12 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const [catQuery, setCatQuery] = useState("");
   useEffect(() => { if (open) { setBusy(false); setError(""); setRows(null); setCat(null); setCatQuery(""); } }, [open]);
   const ownedNames = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => normalizeText(m.name))), [mugs]);
-  const ownedFolded = useMemo(() => mugs.filter((m) => m.status !== "wishlist").map((m) => foldC(m.name)).filter(Boolean), [mugs]);
-
-  const isOwned = (nameEn) => {
-    const en = foldC(nameEn); const et = en.split(" ").filter((x) => x.length > 2);
-    if (!et.length) return false;
-    return ownedFolded.some((mn) => {
-      const mt = mn.split(" ").filter((x) => x.length > 2);
-      const nn = ` ${mn} `, ne = ` ${en} `;
-      return et.every((x) => nn.includes(` ${x} `)) || (mt.length > 0 && mt.every((x) => ne.includes(` ${x} `)));
-    });
-  };
+  // A tight key: fold, drop filler words, ignore spacing — so "Snufkin" matches
+  // "Snufkin" (and "Too-Ticky" == "Tooticky") but NOT "POP Snufkin" / "ABC Snufkin".
+  const OWN_STOP = new Set(["and", "the", "with", "of", "in", "on", "a", "x", "mug"]);
+  const ownKey = (s) => foldC(s).split(" ").filter((x) => x && !OWN_STOP.has(x)).join("");
+  const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
+  const isOwned = (nameEn) => { const k = ownKey(nameEn); return k !== "" && ownedKeys.has(k); };
 
   const run = async () => {
     setError(""); setBusy(true); setRows(null);

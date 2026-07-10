@@ -198,9 +198,13 @@ function score(mug: Pick<Mug, "name" | "series" | "year">, row: CatalogRow): num
   return s;
 }
 
-/** The full authoritative catalogue (196 Arabia mugs) with baked-in images + values. */
+// Catalogue values are quoted in EUR; the app works in SEK by default.
+const EUR_SEK = Number(process.env.EUR_SEK_RATE) || 11.3;
+const toSek = (eur: number | null): number | null => (eur == null ? null : Math.round((eur * EUR_SEK) / 10) * 10);
+
+/** The full authoritative catalogue (196 Arabia mugs) with baked-in images + values (SEK). */
 export async function listMasterCatalog(): Promise<MasterEntry[]> {
-  return masterCatalog as MasterEntry[];
+  return (masterCatalog as MasterEntry[]).map((e) => ({ ...e, estLow: toSek(e.estLow), estHigh: toSek(e.estHigh), estCur: "SEK" }));
 }
 
 /** Best-matching master-catalogue entry for a mug (by name + year). */
@@ -223,11 +227,11 @@ export function catalogYear(mug: Pick<Mug, "name" | "year">): number | null {
   return matchMaster(mug)?.year ?? null;
 }
 
-/** Authoritative market-value range (EUR) for a mug, from the catalogue. */
+/** Authoritative market-value range (SEK) for a mug, from the catalogue. */
 export function catalogValue(mug: Pick<Mug, "name" | "year">): { low: number | null; high: number | null; cur: string } | null {
   const m = matchMaster(mug);
   if (!m || (m.estLow == null && m.estHigh == null)) return null;
-  return { low: m.estLow, high: m.estHigh, cur: m.estCur || "EUR" };
+  return { low: toSek(m.estLow), high: toSek(m.estHigh), cur: "SEK" };
 }
 
 /** Best-matching official image for a mug, from our stored catalog. No web/Gemini calls. */
