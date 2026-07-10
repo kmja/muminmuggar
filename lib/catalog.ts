@@ -259,6 +259,14 @@ function matchMaster(mug: MugQ): MasterEntry | null {
   return matchByCharacter(mug);
 }
 
+/** Resolve a (scanned) mug to its catalogue entry — canonical name, image, year, value (SEK). */
+export type ResolvedMug = { num: number; nameEn: string; year: number | null; capacity: string; image: string | null; estLow: number | null; estHigh: number | null; estCur: string };
+export function resolveMug(mug: MugQ): ResolvedMug | null {
+  const m = matchMaster(mug);
+  if (!m) return null;
+  return { num: m.num, nameEn: m.nameEn, year: m.year, capacity: m.capacity, image: m.image, estLow: toSek(m.estLow), estHigh: toSek(m.estHigh), estCur: "SEK" };
+}
+
 /** Authoritative production year for a mug (for filling in missing years). */
 export function catalogYear(mug: MugQ): number | null {
   return matchMaster(mug)?.year ?? null;

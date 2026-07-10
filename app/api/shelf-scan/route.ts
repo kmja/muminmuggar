@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { identifyShelf } from "@/lib/gemini";
+import { resolveMug } from "@/lib/catalog";
 import type { AiMug } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -25,6 +26,8 @@ function draft(ai: AiMug) {
     aiConfidence: ai.confidence ?? null,
     isMoominMug: ai.isMoominMug !== false,
     position: ai.position || "",
+    // Resolve to a catalogue entry; null → the UI forces a manual pick.
+    catalog: resolveMug({ name: ai.character || "", year: ai.year ?? null, edition: ai.edition || "" }),
   };
 }
 

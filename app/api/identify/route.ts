@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { identifyMug } from "@/lib/gemini";
+import { resolveMug } from "@/lib/catalog";
 import type { AiMug } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -25,6 +26,7 @@ function draft(ai: AiMug, photoUrl: string) {
     tags: [],
     aiConfidence: ai.confidence ?? null,
     isMoominMug: ai.isMoominMug !== false,
+    catalog: resolveMug({ name: ai.character || "", year: ai.year ?? null, edition: ai.edition || "" }),
   };
 }
 

@@ -20,6 +20,9 @@ const normalizeText = (s) => (s || "").toString().trim().toLowerCase();
 const foldC = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/['’`]/g, "").replace(/\bmumin/g, "moomin").replace(/[^a-z0-9]+/g, " ").trim();
 const CAT_EUR_SEK = 11.3;
 const catSek = (eur) => (eur == null ? null : Math.round((eur * CAT_EUR_SEK) / 10) * 10);
+// A picked MASTER_CATALOG entry (EUR) -> normalized entry with SEK values.
+const catEntry = (e) => (e ? { num: e.num, nameEn: e.nameEn, year: e.year, capacity: e.capacity, image: e.image, estLow: catSek(e.estLow), estHigh: catSek(e.estHigh) } : null);
+const CATALOG_NAMES = new Set(MASTER_CATALOG.map((e) => foldC(e.nameEn)));
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
 const tokenizeTags = (s) => (s || "").split(/[,#\n]+/).map((t) => t.trim()).filter(Boolean);
 function formatMoney(amount, currency = "SEK") {
@@ -233,7 +236,10 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
       <button onClick={onClose}>{t("cancel")}</button>
       <button className="primary" disabled={saving} onClick={() => {
         const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: tokenizeTags(tagInput) };
-        const e = validateMug(next, t); setErrors(e); if (Object.keys(e).length) return;
+        const e = validateMug(next, t);
+        // Every added mug must map to a catalogue entry (no free-typed mugs).
+        if (mode === "create" && (!next.name || !CATALOG_NAMES.has(foldC(next.name)))) e.name = t("err_pick_catalog");
+        setErrors(e); if (Object.keys(e).length) return;
         onSave(next);
       }}>{saving ? <span className="spin" /> : t("save_mug")}</button>
     </>
@@ -338,39 +344,21 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
     else stopCam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, items.length, busy]);
-  // Once we have a batch checklist, look up a reference image for each mug so
-  // the user can visually verify the match (and it becomes the saved photo).
-  useEffect(() => {
-    if (!items.length) return;
-    let cancelled = false;
-    (async () => {
-      for (let i = 0; i < items.length; i++) {
-        const d = items[i]?.draft;
-        if (!d || !d.name || items[i].img !== undefined) continue;
-        try {
-          const { imageUrl } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ name: d.name, series: d.series, year: d.year, edition: d.edition }) });
-          if (cancelled) return;
-          setItems((list) => list.map((it, idx) => (idx === i ? { ...it, img: imageUrl || null } : it)));
-        } catch { if (!cancelled) setItems((list) => list.map((it, idx) => (idx === i ? { ...it, img: null } : it))); }
-      }
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length]);
-
   const process = async (small) => {
     setBusy(true); setItems([]); setPhotoUrl(small);
     try {
-      // Always detect every mug in the photo — one or many.
+      // Detect every mug in the photo; each is resolved to a catalogue entry server-side.
       const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
       if (!drafts.length) { setError(t("scan_no_mugs")); return; }
       if (drafts.length === 1) {
-        // A single mug: attach the photo and open the full review form.
-        onAddOne({ ...drafts[0], photoUrl: small });
-        onClose();
-        return;
+        // Single mug: open the review form pre-filled from the catalogue match (keep her photo).
+        const d0 = drafts[0], e = d0.catalog;
+        const initial = e
+          ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence }
+          : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence };
+        onAddOne(initial); onClose(); return;
       }
-      setItems(drafts.map((d) => ({ draft: { ...d, photoUrl: "" }, checked: d.isMoominMug !== false, position: d.position || "" })));
+      setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
     } catch (err) { setError(err.message || String(err)); }
     finally { setBusy(false); }
   };
@@ -392,12 +380,20 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
     await process(await downscaleImage(dataUrl, 1400, 0.85));
   };
 
-  const patchItem = (i, patch) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, draft: { ...it.draft, ...patch } } : it)));
-  const chosen = items.filter((it) => it.checked).length;
+  const setEntry = (i, entry) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, entry, checked: it.checked || !!entry } : it)));
+  const chosen = items.filter((it) => it.checked && it.entry).length;
   const footer = items.length ? (
     <>
       <button onClick={() => { setItems([]); setPhotoUrl(""); }}>{t("scan_rescan")}</button>
-      <button className="primary" disabled={!chosen} onClick={() => { onAddMany(items.filter((it) => it.checked).map((it) => ({ ...it.draft, photoUrl: it.draft.photoUrl || it.img || "" }))); onClose(); }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
+      <button className="primary" disabled={!chosen} onClick={() => {
+        onAddMany(items.filter((it) => it.checked && it.entry).map((it) => ({
+          ...blankMug(), name: it.entry.nameEn, series: "Arabia Moomin", year: it.entry.year ?? "", status: "owned",
+          condition: it.draft.condition || "Good", conditionNotes: it.draft.conditionNotes || "",
+          photoUrl: it.entry.image || "", estValueLow: it.entry.estLow, estValueHigh: it.entry.estHigh, estValueCurrency: "SEK",
+          aiConfidence: it.draft.aiConfidence ?? null,
+        })));
+        onClose();
+      }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
     </>
   ) : null;
 
@@ -434,30 +430,32 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
         <div className="grid" style={{ gap: 10, marginTop: error ? 10 : 0 }}>
           {photoUrl ? <div className="card" style={{ overflow: "hidden" }}><img src={photoUrl} alt="scan" style={{ width: "100%", maxHeight: 220, objectFit: "cover", display: "block" }} /></div> : null}
           {items.map((it, i) => {
-            const dups = findDuplicates(it.draft, mugs || []);
+            const e = it.entry;
+            const dups = e ? findDuplicates({ name: e.nameEn, year: e.year }, mugs || []) : [];
             return (
               <div className="scanrow" key={i}>
-                <input type="checkbox" checked={it.checked} onChange={(e) => setItems((list) => list.map((x, idx) => (idx === i ? { ...x, checked: e.target.checked } : x)))} style={{ width: "auto", marginTop: 4 }} />
+                <input type="checkbox" checked={it.checked && !!e} disabled={!e} onChange={(ev) => setItems((list) => list.map((x, idx) => (idx === i ? { ...x, checked: ev.target.checked } : x)))} style={{ width: "auto", marginTop: 4 }} />
                 <div className="scanthumb">
-                  {it.img ? <img src={it.img} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : (it.img === undefined ? <span className="spin" /> : <MugMark size={22} />)}
+                  {e?.image ? <img src={e.image} alt="" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="row" style={{ justifyContent: "space-between" }}>
-                    <input value={it.draft.name} onChange={(e) => patchItem(i, { name: e.target.value })} style={{ fontWeight: 800, maxWidth: 220 }} />
+                  <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <MugPicker value={e?.nameEn || ""} invalid={!e} onPick={(m) => setEntry(i, catEntry(m))} />
+                    </div>
                     <Confidence v={it.draft.aiConfidence} />
                   </div>
-                  <div className="row" style={{ marginTop: 8 }}>
-                    <input value={it.draft.series || ""} onChange={(e) => patchItem(i, { series: e.target.value })} placeholder={t("ph_series")} style={{ flex: 2, minWidth: 120 }} />
-                    <input value={it.draft.year ?? ""} onChange={(e) => patchItem(i, { year: e.target.value })} placeholder={t("ph_year")} style={{ maxWidth: 90 }} />
-                    <input value={it.draft.edition || ""} onChange={(e) => patchItem(i, { edition: e.target.value })} placeholder={t("ph_edition")} style={{ flex: 1, minWidth: 100 }} />
-                  </div>
-                  <div className="badges" style={{ marginTop: 8 }}>
-                    {it.position ? <Badge>📍 {it.position}</Badge> : null}
-                    {it.draft.condition ? <Badge>✓ {condLabel(t, it.draft.condition)}</Badge> : null}
-                    {(it.draft.estValueLow != null || it.draft.estValueHigh != null) ? <Badge>💰 {formatMoney(it.draft.estValueLow ?? it.draft.estValueHigh, it.draft.estValueCurrency)}</Badge> : null}
-                    {dups.length ? <Badge kind="fav">{t("scan_possible_dup")}</Badge> : null}
-                  </div>
-                  {it.draft.conditionNotes ? <div className="mini" style={{ marginTop: 6 }}>{it.draft.conditionNotes}</div> : null}
+                  {e ? (
+                    <div className="badges" style={{ marginTop: 8 }}>
+                      {it.position ? <Badge>📍 {it.position}</Badge> : null}
+                      <Badge>{[e.year, e.capacity].filter(Boolean).join(" · ")}</Badge>
+                      {it.draft.condition ? <Badge>✓ {condLabel(t, it.draft.condition)}</Badge> : null}
+                      {e.estLow != null ? <Badge>💰 ≈ {e.estLow}–{e.estHigh} kr</Badge> : null}
+                      {dups.length ? <Badge kind="fav">{t("scan_possible_dup")}</Badge> : null}
+                    </div>
+                  ) : (
+                    <div className="mini" style={{ marginTop: 6 }}>{t("scan_pick_hint", { name: it.draft.name || "?" })}</div>
+                  )}
                 </div>
               </div>
             );
