@@ -13,6 +13,9 @@ import {
 /* ------------------------------- i18n --------------------------------- */
 const I18nContext = createContext(makeT("sv"));
 const useT = () => useContext(I18nContext);
+// Current language, so components can localize catalogue names for display.
+const LangContext = createContext("sv");
+const useLang = () => useContext(LangContext);
 // Condition values are stored in English; fall back to the raw value if unknown.
 const condLabel = (t, c) => { if (!c) return c; const k = "cond_" + c; const v = t(k); return v === k ? c : v; };
 
@@ -28,6 +31,10 @@ const catSek = (eur) => (eur == null ? null : Math.round((eur * CAT_EUR_SEK) / 1
 // A picked MASTER_CATALOG entry (EUR) -> normalized entry with SEK values.
 const catEntry = (e) => (e ? { num: e.num, nameEn: e.nameEn, year: e.year, capacity: e.capacity, image: e.image, estLow: catSek(e.estLow), estHigh: catSek(e.estHigh) } : null);
 const CATALOG_NAMES = new Set(MASTER_CATALOG.map((e) => foldC(e.nameEn)));
+// English norm -> Swedish display name. Stored mug names stay English (they drive
+// catalogue matching); Swedish is applied only at render when lang === "sv".
+const SV_NAMES = new Map(MASTER_CATALOG.filter((e) => e.nameSv).map((e) => [foldC(e.nameEn), e.nameSv]));
+const catName = (name, lang) => (lang === "sv" && name ? (SV_NAMES.get(foldC(name)) || name) : name);
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
 const tokenizeTags = (s) => (s || "").split(/[,#\n]+/).map((t) => t.trim()).filter(Boolean);
 function formatMoney(amount, currency = "SEK") {
@@ -181,6 +188,7 @@ function LangPicker({ lang, setLang }) {
 // Searchable, catalogue-locked selector: the name can only be a mug in our DB.
 function MugPicker({ value, onPick, invalid }) {
   const t = useT();
+  const lang = useLang();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef(null);
@@ -191,14 +199,14 @@ function MugPicker({ value, onPick, invalid }) {
   }, []);
   const results = useMemo(() => {
     const f = foldC(q);
-    const list = f ? MASTER_CATALOG.filter((e) => foldC(e.nameEn + " " + e.years).includes(f)) : MASTER_CATALOG;
+    const list = f ? MASTER_CATALOG.filter((e) => foldC(e.nameEn + " " + (e.nameSv || "") + " " + e.years).includes(f)) : MASTER_CATALOG;
     return list.slice(0, 80);
   }, [q]);
   return (
     <div className="mugpicker" ref={boxRef}>
       <input
         className={invalid ? "invalid" : ""}
-        value={open ? q : (value || "")}
+        value={open ? q : (catName(value, lang) || "")}
         onFocus={() => { setOpen(true); setQ(""); }}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         placeholder={t("form_name_ph")}
@@ -208,7 +216,7 @@ function MugPicker({ value, onPick, invalid }) {
           {results.length ? results.map((e, i) => (
             <button type="button" key={e.num + "-" + i} className="pickitem" onClick={() => { onPick(e); setOpen(false); setQ(""); }}>
               <span className="pickthumb">{e.image ? <img src={e.image} alt="" /> : <MugMark size={18} />}</span>
-              <span className="pickname">{e.nameEn}<span className="pickmeta">{[e.years, e.capacity, e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null].filter(Boolean).join(" · ")}</span></span>
+              <span className="pickname">{catName(e.nameEn, lang)}<span className="pickmeta">{[e.years, e.capacity, e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null].filter(Boolean).join(" · ")}</span></span>
             </button>
           )) : <div className="help" style={{ padding: "10px 12px" }}>{t("no_match")}</div>}
         </div>
@@ -475,6 +483,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
 /* ------------------------------ GapFinder ----------------------------- */
 function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const t = useT();
+  const lang = useLang();
   const [series, setSeries] = useState("Arabia Moomin");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -515,7 +524,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
 
   const missing = (rows || []).filter((r) => !r.owned);
   const catMissing = (cat || []).filter((e) => !e.owned);
-  const catShown = (cat || []).filter((e) => (!onlyMissing || !e.owned) && (!catQuery || foldC(e.nameEn).includes(foldC(catQuery))));
+  const catShown = (cat || []).filter((e) => (!onlyMissing || !e.owned) && (!catQuery || foldC(e.nameEn + " " + catName(e.nameEn, "sv")).includes(foldC(catQuery))));
 
   const footer = cat ? (
     <>
@@ -545,7 +554,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
             <div className="scanrow" key={i} style={{ opacity: e.owned ? 0.55 : 1, alignItems: "center" }}>
               <div className="scanthumb">{e.image ? <img src={e.image} alt="" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="mugname" style={{ fontSize: 14 }}>{e.nameEn}</div>
+                <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
                 <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${e.estLow}–${e.estHigh} ${e.estCur}` : null)].filter(Boolean).join(" · ")}</div>
               </div>
               {e.owned ? <Badge kind="owned">{t("gap_in_collection")}</Badge>
@@ -642,6 +651,8 @@ function DealsModal({ open, onClose, mug }) {
 /* ------------------------------- MugCard ------------------------------ */
 function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   const t = useT();
+  const lang = useLang();
+  const displayName = catName(m.name, lang);
   const val = (m.estValueLow != null || m.estValueHigh != null)
     ? `${formatMoney(m.estValueLow ?? m.estValueHigh, m.estValueCurrency || "SEK")}${m.estValueLow != null && m.estValueHigh != null ? "–" + formatMoney(m.estValueHigh, m.estValueCurrency || "SEK") : ""}`
     : "";
@@ -649,14 +660,14 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   return (
     <div className="card mug">
       <div className="mugphoto">
-        {m.photoUrl ? <img src={m.photoUrl} alt={m.name} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
+        {m.photoUrl ? <img src={m.photoUrl} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <div className="abschip">
           <Badge kind={m.status}>{t("status_" + m.status)}</Badge>
           {m.favorite ? <Badge kind="fav"><Star size={12} fill="currentColor" /></Badge> : null}
         </div>
       </div>
       <div className="mugbody">
-        <div className="mugname" title={m.name}>{m.name || t("card_untitled")}</div>
+        <div className="mugname" title={displayName}>{displayName || t("card_untitled")}</div>
         <div className="sub">{[m.series || "—", m.year, m.edition].filter(Boolean).join(" · ")}</div>
         <div className="badges">
           {m.condition ? <Badge><CheckCircle2 size={12} /> {condLabel(t, m.condition)}</Badge> : null}
@@ -831,7 +842,7 @@ export default function App() {
       else if (statusFilter !== "all" && m.status !== statusFilter) return false;
       if (favoriteOnly && !m.favorite) return false;
       if (!q) return true;
-      const hay = [m.name, m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
+      const hay = [m.name, catName(m.name, "sv"), m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
       return normalizeText(hay).includes(q);
     });
     out.sort((a, b) => {
@@ -869,11 +880,12 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={t}>
+    <LangContext.Provider value={lang}>
     <div className="wrap">
       <div className="top">
         <div className="brand" role="button" tabIndex={0} onClick={() => setTab("collection")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setTab("collection"); }} aria-label={t("nav_collection")}>
           <div className="logo"><MugMark size={26} /></div>
-          <div className="title"><h1>{t("app_title")}<span className="ver">v{APP_VERSION}</span></h1><div className="sub">{t("app_tagline")}</div></div>
+          <div className="title"><h1>{t("app_title")}<span className="ver">v{APP_VERSION}</span></h1></div>
         </div>
         <div className="actions">
           <ThemeToggle theme={theme} setTheme={setTheme} />
@@ -917,10 +929,6 @@ export default function App() {
                 <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
               </div>
             ) : null}
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 12 }}>
-              <div className="row"><span className="pill">{t("shown", { n: viewMugs.length })}</span><span className="pill">{t("total", { n: mugs.length })}</span></div>
-              <div className="row"><button onClick={() => setGapOpen(true)}><Sparkles size={15} /> {t("gaps_btn")}</button><button onClick={openCreate}><Plus size={15} /> {t("add")}</button></div>
-            </div>
           </div>
 
           {loading ? (
@@ -1003,6 +1011,7 @@ export default function App() {
         </div>
       </Modal>
     </div>
+    </LangContext.Provider>
     </I18nContext.Provider>
   );
 }
