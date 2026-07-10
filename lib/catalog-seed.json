@@ -1223,5 +1223,152 @@
   "capacity": "0.4L",
   "image": "/mugs/snorkmaiden-0-4-04.jpg",
   "norm": "snorkmaiden 0 4 0 4l"
+ },
+ {
+  "name": "Misabel",
+  "year": 2020,
+  "capacity": "0.3L",
+  "image": "/mugs/misabel.jpg",
+  "norm": "misabel 0 3l"
+ },
+ {
+  "name": "In The Mountains",
+  "year": 2021,
+  "capacity": "0.3L",
+  "image": "/mugs/in-the-mountains.jpg",
+  "norm": "in the mountains 0 3l"
+ },
+ {
+  "name": "Sea Breeze",
+  "year": 2023,
+  "capacity": "0.3L",
+  "image": "/mugs/sea-breeze.jpg",
+  "norm": "sea breeze 0 3l"
+ },
+ {
+  "name": "Sea Breeze Platinum",
+  "year": 2023,
+  "capacity": "0.3L",
+  "image": "/mugs/sea-breeze-platinum.jpg",
+  "norm": "sea breeze platinum 0 3l"
+ },
+ {
+  "name": "Sniff On The Beach",
+  "year": 2024,
+  "capacity": "0.3L",
+  "image": "/mugs/sniff-on-the-beach.jpg",
+  "norm": "sniff on the beach 0 3l"
+ },
+ {
+  "name": "Moomin's Day 2024",
+  "year": 2024,
+  "capacity": "0.3L",
+  "image": "/mugs/moomins-day-2024.jpg",
+  "norm": "moomins day 2024 0 3l"
+ },
+ {
+  "name": "Ski Jumping",
+  "year": 2024,
+  "capacity": "0.3L",
+  "image": "/mugs/ski-jumping.jpg",
+  "norm": "ski jumping 0 3l"
+ },
+ {
+  "name": "Family Time",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/family-time.jpg",
+  "norm": "family time 0 3l"
+ },
+ {
+  "name": "Friends Forever",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/friends-forever.jpg",
+  "norm": "friends forever 0 3l"
+ },
+ {
+  "name": "ABC B",
+  "year": 2025,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-b-04.jpg",
+  "norm": "abc b 0 4l"
+ },
+ {
+  "name": "ABC G",
+  "year": 2025,
+  "capacity": "0.4L",
+  "image": "/mugs/abc-g-04.jpg",
+  "norm": "abc g 0 4l"
+ },
+ {
+  "name": "Opera",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/opera.jpg",
+  "norm": "opera 0 3l"
+ },
+ {
+  "name": "Ice Swimming",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/ice-swimming.jpg",
+  "norm": "ice swimming 0 3l"
+ },
+ {
+  "name": "Festive Moments",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/festive-moments.jpg",
+  "norm": "festive moments 0 3l"
+ },
+ {
+  "name": "POP Snufkin",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/pop-snufkin.jpg",
+  "norm": "pop snufkin 0 3l"
+ },
+ {
+  "name": "POP Moomintroll",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/pop-moomintroll.jpg",
+  "norm": "pop moomintroll 0 3l"
+ },
+ {
+  "name": "POP Little My",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/pop-little-my.jpg",
+  "norm": "pop little my 0 3l"
+ },
+ {
+  "name": "POP Snorkmaiden",
+  "year": 2025,
+  "capacity": "0.3L",
+  "image": "/mugs/pop-snorkmaiden.jpg",
+  "norm": "pop snorkmaiden 0 3l"
+ },
+ {
+  "name": "Simple Joy",
+  "year": 2026,
+  "capacity": "0.3L",
+  "image": "/mugs/simple-joy.jpg",
+  "norm": "simple joy 0 3l"
+ },
+ {
+  "name": "Dive with Seashells",
+  "year": 2006,
+  "capacity": "0.3L",
+  "image": "/mugs/dive-with-seashells.jpg",
+  "norm": "dive with seashells 0 3l"
+ },
+ {
+  "name": "Tove's Jubilee with glasses",
+  "year": 2014,
+  "capacity": "0.3L",
+  "image": "/mugs/toves-jubilee-with-glasses.jpg",
+  "norm": "toves jubilee with glasses 0 3l"
  }
 ]

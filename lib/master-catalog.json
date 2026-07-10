@@ -392,7 +392,7 @@
   "estLow": 20000,
   "estHigh": 40000,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/dive-with-seashells.jpg",
   "norm": "dive with seashells"
  },
  {
@@ -776,7 +776,7 @@
   "estLow": 80,
   "estHigh": 100,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/toves-jubilee-with-glasses.jpg",
   "norm": "toves jubilee with glasses"
  },
  {
@@ -1220,7 +1220,7 @@
   "estLow": 5,
   "estHigh": 10,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/misabel.jpg",
   "norm": "misabel"
  },
  {
@@ -1328,7 +1328,7 @@
   "estLow": 30,
   "estHigh": 40,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/in-the-mountains.jpg",
   "norm": "in the mountains"
  },
  {
@@ -1592,7 +1592,7 @@
   "estLow": 25,
   "estHigh": 35,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/sea-breeze.jpg",
   "norm": "sea breeze"
  },
  {
@@ -1604,7 +1604,7 @@
   "estLow": 100,
   "estHigh": 500,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/sea-breeze-platinum.jpg",
   "norm": "sea breeze platinum"
  },
  {
@@ -1772,7 +1772,7 @@
   "estLow": 10,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/sniff-on-the-beach.jpg",
   "norm": "sniff on the beach"
  },
  {
@@ -1808,7 +1808,7 @@
   "estLow": 25,
   "estHigh": 40,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/moomins-day-2024.jpg",
   "norm": "moomins day 2024"
  },
  {
@@ -1868,7 +1868,7 @@
   "estLow": 15,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/ski-jumping.jpg",
   "norm": "ski jumping"
  },
  {
@@ -1976,7 +1976,7 @@
   "estLow": 10,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/family-time.jpg",
   "norm": "family time"
  },
  {
@@ -1988,7 +1988,7 @@
   "estLow": 10,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/friends-forever.jpg",
   "norm": "friends forever"
  },
  {
@@ -2000,7 +2000,7 @@
   "estLow": 10,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/abc-b-04.jpg",
   "norm": "abc b"
  },
  {
@@ -2012,7 +2012,7 @@
   "estLow": 10,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/abc-g-04.jpg",
   "norm": "abc g"
  },
  {
@@ -2072,7 +2072,7 @@
   "estLow": 30,
   "estHigh": 60,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/opera.jpg",
   "norm": "opera"
  },
  {
@@ -2120,7 +2120,7 @@
   "estLow": 15,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/ice-swimming.jpg",
   "norm": "ice swimming"
  },
  {
@@ -2132,7 +2132,7 @@
   "estLow": 10,
   "estHigh": 20,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/festive-moments.jpg",
   "norm": "festive moments"
  },
  {
@@ -2144,7 +2144,7 @@
   "estLow": 10,
   "estHigh": 30,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/pop-snufkin.jpg",
   "norm": "pop snufkin"
  },
  {
@@ -2156,7 +2156,7 @@
   "estLow": 10,
   "estHigh": 30,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/pop-moomintroll.jpg",
   "norm": "pop moomintroll"
  },
  {
@@ -2168,7 +2168,7 @@
   "estLow": 10,
   "estHigh": 30,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/pop-little-my.jpg",
   "norm": "pop little my"
  },
  {
@@ -2180,7 +2180,7 @@
   "estLow": 10,
   "estHigh": 30,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/pop-snorkmaiden.jpg",
   "norm": "pop snorkmaiden"
  },
  {
@@ -2264,7 +2264,7 @@
   "estLow": 20,
   "estHigh": 30,
   "estCur": "EUR",
-  "image": null,
+  "image": "/mugs/simple-joy.jpg",
   "norm": "simple joy"
  },
  {
