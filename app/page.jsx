@@ -4,6 +4,11 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import MASTER_CATALOG from "../lib/master-catalog.json";
+import {
+  Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
+  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
+  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch,
+} from "lucide-react";
 
 /* ------------------------------- i18n --------------------------------- */
 const I18nContext = createContext(makeT("sv"));
@@ -98,7 +103,7 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
         <div className="head">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
-            <button className="ghost icon" onClick={onClose} aria-label={t("close")}>✕</button>
+            <button className="ghost icon" onClick={onClose} aria-label={t("close")}><X size={18} /></button>
           </div>
         </div>
         <div className="body">{children}</div>
@@ -138,7 +143,7 @@ function ThemeToggle({ theme, setTheme }) {
   return (
     <button type="button" className="ghost icon" aria-label={isDark ? t("theme_light") : t("theme_dark")} title={isDark ? t("theme_light") : t("theme_dark")}
       onClick={() => setTheme(isDark ? "light" : "dark")}>
-      <span style={{ fontSize: 17, lineHeight: 1 }}>{isDark ? "☀️" : "🌙"}</span>
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   );
 }
@@ -413,9 +418,9 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
             )}
           </div>
           <div className="row">
-            {!camLive ? <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => camRef.current?.click()}>{t("scan_take_photo")}</button> : null}
-            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => fileRef.current?.click()}>{t("scan_choose_image")}</button>
-            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => { stopCam(); onManual(); }}>{t("scan_add_manual")}</button>
+            {!camLive ? <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => camRef.current?.click()}><Camera size={16} /> {t("scan_take_photo")}</button> : null}
+            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => fileRef.current?.click()}><ImagePlus size={16} /> {t("scan_choose_image")}</button>
+            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => { stopCam(); onManual(); }}><Pencil size={16} /> {t("scan_add_manual")}</button>
           </div>
           <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
           <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
@@ -447,11 +452,11 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
                   </div>
                   {e ? (
                     <div className="badges" style={{ marginTop: 8 }}>
-                      {it.position ? <Badge>📍 {it.position}</Badge> : null}
+                      {it.position ? <Badge><MapPin size={12} /> {it.position}</Badge> : null}
                       <Badge>{[e.year, e.capacity].filter(Boolean).join(" · ")}</Badge>
-                      {it.draft.condition ? <Badge>✓ {condLabel(t, it.draft.condition)}</Badge> : null}
-                      {e.estLow != null ? <Badge>💰 ≈ {e.estLow}–{e.estHigh} kr</Badge> : null}
-                      {dups.length ? <Badge kind="fav">{t("scan_possible_dup")}</Badge> : null}
+                      {it.draft.condition ? <Badge><CheckCircle2 size={12} /> {condLabel(t, it.draft.condition)}</Badge> : null}
+                      {e.estLow != null ? <Badge><Coins size={12} /> ≈ {e.estLow}–{e.estHigh} kr</Badge> : null}
+                      {dups.length ? <Badge kind="fav"><AlertTriangle size={12} /> {t("scan_possible_dup")}</Badge> : null}
                     </div>
                   ) : (
                     <div className="mini" style={{ marginTop: 6 }}>{t("scan_pick_hint", { name: it.draft.name || "?" })}</div>
@@ -554,7 +559,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
             <div className="field" style={{ flex: 1 }}><label>{t("gap_series_label")}</label><input value={series} onChange={(e) => setSeries(e.target.value)} placeholder={t("gap_series_ph")} /></div>
             <button className="primary" onClick={run} disabled={busy} style={{ alignSelf: "flex-end" }}>{busy ? <span className="spin" /> : t("gap_search")}</button>
           </div>
-          <button onClick={loadCatalogue} disabled={catBusy} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>{catBusy ? <span className="spin" /> : `📖 ${t("gap_browse")}`}</button>
+          <button onClick={loadCatalogue} disabled={catBusy} style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>{catBusy ? <span className="spin" /> : <><BookOpen size={16} /> {t("gap_browse")}</>}</button>
           {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
           {rows ? (
             <div className="grid" style={{ gap: 8, marginTop: 12 }}>
@@ -562,7 +567,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
               {rows.map((r, i) => (
                 <div className="listrow" key={i} style={{ opacity: r.owned ? 0.6 : 1 }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 700 }}>{r.owned ? "✓ " : ""}{r.character}{r.year ? <span className="muted"> · {r.year}</span> : null}</div>
+                    <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>{r.owned ? <CheckCircle2 size={14} /> : null}{r.character}{r.year ? <span className="muted"> · {r.year}</span> : null}</div>
                     {r.edition || r.notes ? <div className="mini">{[r.edition, r.notes].filter(Boolean).join(" — ")}</div> : null}
                   </div>
                   <Badge kind={r.owned ? "owned" : "wishlist"}>{r.owned ? t("gap_owned") : t("gap_missing")}</Badge>
@@ -647,26 +652,26 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
         {m.photoUrl ? <img src={m.photoUrl} alt={m.name} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <div className="abschip">
           <Badge kind={m.status}>{t("status_" + m.status)}</Badge>
-          {m.favorite ? <Badge kind="fav">★</Badge> : null}
+          {m.favorite ? <Badge kind="fav"><Star size={12} fill="currentColor" /></Badge> : null}
         </div>
       </div>
       <div className="mugbody">
         <div className="mugname" title={m.name}>{m.name || t("card_untitled")}</div>
         <div className="sub">{[m.series || "—", m.year, m.edition].filter(Boolean).join(" · ")}</div>
         <div className="badges">
-          {m.condition ? <Badge>✓ {condLabel(t, m.condition)}</Badge> : null}
-          {m.price !== "" && m.price != null ? <Badge>💰 {formatMoney(m.price, m.currency || "SEK")}</Badge> : null}
+          {m.condition ? <Badge><CheckCircle2 size={12} /> {condLabel(t, m.condition)}</Badge> : null}
+          {m.price !== "" && m.price != null ? <Badge><Coins size={12} /> {formatMoney(m.price, m.currency || "SEK")}</Badge> : null}
           {val ? <Badge title={t("card_est_title")}>≈ {val}</Badge> : null}
-          {m.location ? <Badge>📍 {m.location}</Badge> : null}
-          {m.status === "wishlist" && dealCount ? <Badge kind="deal">{t("card_found", { n: dealCount })}</Badge> : null}
+          {m.location ? <Badge><MapPin size={12} /> {m.location}</Badge> : null}
+          {m.status === "wishlist" && dealCount ? <Badge kind="deal"><Bell size={12} /> {t("card_found", { n: dealCount })}</Badge> : null}
         </div>
-        {m.tags?.length ? <div className="badges">{m.tags.slice(0, 6).map((t) => <span key={t} className="chip">#{t}</span>)}</div> : null}
+        {m.tags?.length ? <div className="badges">{m.tags.slice(0, 6).map((t) => <span key={t} className="chip"><Tag size={11} />{t}</span>)}</div> : null}
         {m.conditionNotes ? <div className="mini lineclamp">{m.conditionNotes}</div> : null}
         {m.notes ? <div className="mini lineclamp">{m.notes}</div> : null}
         <div className="mugfoot">
-          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}>{t("card_deals")}</button> : <button onClick={() => onFav(m)}>{m.favorite ? "★" : "☆"} {t("card_fav")}</button>}
-          <button onClick={() => onEdit(m)}>{t("card_edit")}</button>
-          <button className="danger" onClick={() => onDelete(m)}>{t("card_delete")}</button>
+          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}><PackageSearch size={15} /> {t("card_deals")}</button> : <button onClick={() => onFav(m)}><Star size={15} fill={m.favorite ? "currentColor" : "none"} /> {t("card_fav")}</button>}
+          <button onClick={() => onEdit(m)}><Pencil size={15} /> {t("card_edit")}</button>
+          <button className="danger" onClick={() => onDelete(m)}><Trash2 size={15} /> {t("card_delete")}</button>
         </div>
       </div>
     </div>
@@ -866,16 +871,16 @@ export default function App() {
     <I18nContext.Provider value={t}>
     <div className="wrap">
       <div className="top">
-        <div className="brand">
+        <div className="brand" role="button" tabIndex={0} onClick={() => setTab("collection")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setTab("collection"); }} aria-label={t("nav_collection")}>
           <div className="logo"><MugMark size={26} /></div>
           <div className="title"><h1>{t("app_title")}<span className="ver">v{APP_VERSION}</span></h1><div className="sub">{t("app_tagline")}</div></div>
         </div>
         <div className="actions">
           <ThemeToggle theme={theme} setTheme={setTheme} />
           <LangPicker lang={lang} setLang={setLang} />
-          <button className="primary hide-mobile" onClick={() => setScanOpen(true)}>{t("scan")}</button>
-          <button className="hide-mobile" onClick={() => setGapOpen(true)}>{t("gaps_btn")}</button>
-          <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}>🔔</button>
+          <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("scan")}</button>
+          <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
+          <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
         </div>
       </div>
 
@@ -886,28 +891,35 @@ export default function App() {
       {tab !== "stats" ? (
         <>
           <div className="card pad" style={{ marginBottom: 12 }}>
-            <div className="row" style={{ alignItems: "flex-end" }}>
-              <div className="field" style={{ flex: 2, minWidth: 180 }}><label>{t("search")}</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} /></div>
-              <button type="button" className="only-mobile" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen}>{filtersOpen ? "▲ " : "▾ "}{t("filters")}</button>
-            </div>
-            <div className={"row filterfields" + (filtersOpen ? " open" : "")} style={{ marginTop: 10 }}>
-              {tab === "collection" ? (
-                <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
-              ) : null}
-              <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="updated_desc">{t("sort_updated")}</option>
-                  <option value="year_desc">{t("sort_year_desc")}</option>
-                  <option value="year_asc">{t("sort_year_asc")}</option>
-                  <option value="value_desc">{t("sort_value_desc")}</option>
-                  <option value="name">{t("sort_name")}</option>
-                </select>
+            <div className="row" style={{ alignItems: "center" }}>
+              <div className="field searchfield" style={{ flex: 1 }}>
+                <Search size={17} className="searchicon" aria-hidden="true" />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
               </div>
-              <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
+              <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}>
+                <SlidersHorizontal size={18} />
+              </button>
             </div>
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}>
+            {filtersOpen ? (
+              <div className="row" style={{ marginTop: 12 }}>
+                {tab === "collection" ? (
+                  <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+                ) : null}
+                <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                    <option value="updated_desc">{t("sort_updated")}</option>
+                    <option value="year_desc">{t("sort_year_desc")}</option>
+                    <option value="year_asc">{t("sort_year_asc")}</option>
+                    <option value="value_desc">{t("sort_value_desc")}</option>
+                    <option value="name">{t("sort_name")}</option>
+                  </select>
+                </div>
+                <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
+              </div>
+            ) : null}
+            <div className="row" style={{ justifyContent: "space-between", marginTop: 12 }}>
               <div className="row"><span className="pill">{t("shown", { n: viewMugs.length })}</span><span className="pill">{t("total", { n: mugs.length })}</span></div>
-              <div className="row"><button onClick={() => setGapOpen(true)}>{t("gaps_btn")}</button><button onClick={openCreate}>{t("add")}</button></div>
+              <div className="row"><button onClick={() => setGapOpen(true)}><Sparkles size={15} /> {t("gaps_btn")}</button><button onClick={openCreate}><Plus size={15} /> {t("add")}</button></div>
             </div>
           </div>
 
@@ -915,12 +927,12 @@ export default function App() {
             <div className="card pad"><span className="spin" /> {t("loading")}</div>
           ) : mugs.length === 0 ? (
             <div className="card pad" style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 40 }}>📷</div>
+              <div className="emptyicon"><Camera size={34} /></div>
               <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("empty_title")}</div>
               <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
               <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                <button className="primary" onClick={() => setScanOpen(true)}>{t("empty_scan")}</button>
-                <button onClick={openCreate}>{t("empty_add_manual")}</button>
+                <button className="primary" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("empty_scan")}</button>
+                <button onClick={openCreate}><Plus size={16} /> {t("empty_add_manual")}</button>
               </div>
             </div>
           ) : viewMugs.length === 0 ? (
@@ -959,14 +971,16 @@ export default function App() {
       )}
 
       <nav className="bottomnav">
-        <button className={"bn " + (tab === "collection" ? "active" : "")} onClick={() => setTab("collection")}><span className="ic">🗄️</span>{t("nav_collection")}</button>
-        <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><span className="ic">♡</span>{t("nav_wishlist")}</button>
-        <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="ic bn-addic">＋</span>{t("nav_add")}</button>
-        <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><span className="ic">📊</span>{t("nav_stats")}</button>
-        <button className="bn" onClick={() => setAboutOpen(true)}><span className="ic">🔔</span>{t("nav_alerts")}</button>
+        <svg className="navwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,40 L0,40 Z" /></svg>
+        <div className="navrow">
+          <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><Heart size={20} /><span>{t("nav_wishlist")}</span></button>
+          <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="bn-addic"><Plus size={22} /></span><span>{t("nav_add")}</span></button>
+          <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><BarChart3 size={20} /><span>{t("nav_stats")}</span></button>
+          <button className="bn" onClick={() => setAboutOpen(true)}><Bell size={20} /><span>{t("nav_alerts")}</span></button>
+        </div>
       </nav>
 
-      <footer className="sitefoot">
+      <footer className="sitefoot hide-mobile">
         <svg className="wave" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0,26 C180,48 360,6 720,20 C1080,34 1260,48 1440,18 L1440,48 L0,48 Z" /></svg>
         <div className="footinner"><span className="footmark"><MugMark size={20} /></span><span>{t("app_title")}</span></div>
       </footer>
@@ -979,12 +993,12 @@ export default function App() {
       <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title={t("about_title")} subtitle={t("about_subtitle")}>
         <div className="grid" style={{ gap: 12 }}>
           <div className="note">{t("about_body")}</div>
-          <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
+          <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? <CheckCircle2 size={16} /> : <Bell size={16} />} {notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
           <div className="help">{t("about_help")}</div>
           <div className="divider" />
           <div className="note">{t("catalog_about")}</div>
-          <button onClick={fillCatalog} disabled={catalogBusy}>{catalogBusy ? <><span className="spin" /> {t("catalog_filling")}</> : t("catalog_fill")}</button>
+          <button onClick={fillCatalog} disabled={catalogBusy}>{catalogBusy ? <><span className="spin" /> {t("catalog_filling")}</> : <><BookOpen size={16} /> {t("catalog_fill")}</>}</button>
           {catalogMsg ? <div className="note good">{catalogMsg}</div> : null}
         </div>
       </Modal>
