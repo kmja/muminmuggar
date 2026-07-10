@@ -35,6 +35,15 @@ const CATALOG_NAMES = new Set(MASTER_CATALOG.map((e) => foldC(e.nameEn)));
 // catalogue matching); Swedish is applied only at render when lang === "sv".
 const SV_NAMES = new Map(MASTER_CATALOG.filter((e) => e.nameSv).map((e) => [foldC(e.nameEn), e.nameSv]));
 const catName = (name, lang) => (lang === "sv" && name ? (SV_NAMES.get(foldC(name)) || name) : name);
+// Catalogue photos are now transparent WebP; upgrade any older /mugs/*.jpg paths
+// stored on existing mugs so they still resolve.
+const mugImg = (u) => (typeof u === "string" ? u.replace(/^(\/mugs\/[^?]+)\.jpg$/i, "$1.webp") : u);
+// Ownership key: fold + drop filler words + ignore spacing, so "Snufkin" matches
+// but "POP Snufkin" doesn't. Stored mugs are keyed by name, so same-named catalogue
+// variants share a key — the "add to collection" list shows one entry per name.
+const OWN_STOP = new Set(["and", "the", "with", "of", "in", "on", "a", "x", "mug"]);
+const ownKey = (s) => foldC(s).split(" ").filter((x) => x && !OWN_STOP.has(x)).join("");
+const CATALOG_UNIQUE = (() => { const seen = new Set(), out = []; for (const e of MASTER_CATALOG) { const k = ownKey(e.nameEn); if (k && seen.has(k)) continue; seen.add(k); out.push(e); } return out; })();
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
 const tokenizeTags = (s) => (s || "").split(/[,#\n]+/).map((t) => t.trim()).filter(Boolean);
 function formatMoney(amount, currency = "SEK") {
@@ -305,7 +314,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
           </div>
         </div>
 
-        {d.photoUrl ? <div className="formphoto"><img src={d.photoUrl} alt={catName(d.name, lang) || "Mug"} /></div> : null}
+        {d.photoUrl ? <div className="formphoto"><img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /></div> : null}
         {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
 
         {/* Everything personal is optional and tucked away. */}
@@ -503,6 +512,64 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
   );
 }
 
+/* ------------------------------- AddModal ----------------------------- */
+// Manual add = a searchable list of mugs you don't own yet; each row has a +
+// for instant adding (as owned). Details are filled in later by editing the card.
+function AddModal({ open, onClose, mugs, onAdd }) {
+  const t = useT();
+  const lang = useLang();
+  const [q, setQ] = useState("");
+  const [added, setAdded] = useState(() => new Set());
+  useEffect(() => { if (open) { setQ(""); setAdded(new Set()); } }, [open]);
+
+  const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
+  const results = useMemo(() => {
+    const f = foldC(q);
+    return CATALOG_UNIQUE.filter((e) => {
+      const k = ownKey(e.nameEn);
+      if (k && ownedKeys.has(k)) return false;            // already in the collection
+      if (added.has(e.nameEn)) return false;               // just added this session
+      if (!f) return true;
+      return foldC(e.nameEn + " " + (e.nameSv || "") + " " + e.years).includes(f);
+    });
+  }, [q, ownedKeys, added]);
+
+  const add = (e) => {
+    setAdded((s) => new Set(s).add(e.nameEn));
+    onAdd({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status: "owned",
+      capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
+  };
+
+  const footer = (
+    <div className="formactions">
+      {added.size ? <span className="help" style={{ marginRight: "auto" }}>{t("form_added_count", { n: added.size })}</span> : null}
+      <button className="primary big" onClick={onClose}>{t("add_done")}</button>
+    </div>
+  );
+
+  return (
+    <Modal open={open} wide title={t("add_mugs_title")} subtitle={t("add_mugs_sub")} onClose={onClose} footer={footer}>
+      <div className="grid" style={{ gap: 10 }}>
+        <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} autoFocus />
+        </div>
+        {added.size ? <div className="help">{t("add_mugs_edit_hint")}</div> : null}
+        {results.length === 0 ? <div className="card pad"><div className="muted">{t("add_mugs_none")}</div></div>
+          : results.map((e) => (
+            <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
+              <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
+                <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null)].filter(Boolean).join(" · ")}</div>
+              </div>
+              <button className="addbtn" aria-label={t("add")} onClick={() => add(e)}><Plus size={20} /></button>
+            </div>
+          ))}
+      </div>
+    </Modal>
+  );
+}
+
 /* ------------------------------ GapFinder ----------------------------- */
 function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const t = useT();
@@ -686,7 +753,7 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   return (
     <div className="card mug">
       <div className="mugphoto">
-        {m.photoUrl ? <img src={m.photoUrl} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
+        {m.photoUrl ? <img src={mugImg(m.photoUrl)} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <div className="abschip">
           <Badge kind={m.status}>{t("status_" + m.status)}</Badge>
           {m.favorite ? <Badge kind="fav"><Star size={12} fill="currentColor" /></Badge> : null}
@@ -736,6 +803,7 @@ export default function App() {
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dealsMug, setDealsMug] = useState(null);
@@ -815,6 +883,14 @@ export default function App() {
       for (const d of drafts) { const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(d) }); created.push(mug); }
       setMugs((prev) => [...created, ...prev]);
       ensureImages(created);
+    } catch (e) { alert(t("add_failed", { msg: e.message || e })); }
+  };
+  // Quick-add a single mug (from the "add mugs" list) — optimistic, no dialog.
+  const quickAdd = async (draft) => {
+    try {
+      const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(draft) });
+      setMugs((prev) => [mug, ...prev]);
+      if (!mug.photoUrl) ensureImages([mug]);
     } catch (e) { alert(t("add_failed", { msg: e.message || e })); }
   };
   const del = async (m) => {
@@ -1007,7 +1083,7 @@ export default function App() {
               <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
               <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
                 <button className="primary" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("empty_scan")}</button>
-                <button onClick={openCreate}><Plus size={16} /> {t("empty_add_manual")}</button>
+                <button onClick={() => setAddOpen(true)}><Plus size={16} /> {t("empty_add_manual")}</button>
               </div>
             </div>
           ) : viewMugs.length === 0 ? (
@@ -1064,7 +1140,8 @@ export default function App() {
       </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mode={formMode} mugs={mugs} onSave={saveMug} saving={saving} />
-      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onManual={() => { setScanOpen(false); openCreate(); }} />
+      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onManual={() => { setScanOpen(false); setAddOpen(true); }} />
+      <AddModal open={addOpen} onClose={() => setAddOpen(false)} mugs={mugs} onAdd={quickAdd} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
 

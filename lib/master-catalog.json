@@ -8,7 +8,7 @@
     "estLow": 600,
     "estHigh": 900,
     "estCur": "EUR",
-    "image": "/mugs/dark-green.jpg",
+    "image": "/mugs/dark-green.webp",
     "norm": "mug green",
     "nameSv": "Mugg Grön"
   },
@@ -21,7 +21,7 @@
     "estLow": 150,
     "estHigh": 200,
     "estCur": "EUR",
-    "image": "/mugs/04-blue.jpg",
+    "image": "/mugs/04-blue.webp",
     "norm": "mug blue",
     "nameSv": "Mugg Blå"
   },
@@ -34,7 +34,7 @@
     "estLow": 550,
     "estHigh": 850,
     "estCur": "EUR",
-    "image": "/mugs/dark-rose.jpg",
+    "image": "/mugs/dark-rose.webp",
     "norm": "mug rose",
     "nameSv": "Mugg Rosa"
   },
@@ -47,7 +47,7 @@
     "estLow": 250,
     "estHigh": 300,
     "estCur": "EUR",
-    "image": "/mugs/04-yellow.jpg",
+    "image": "/mugs/04-yellow.webp",
     "norm": "mug yellow",
     "nameSv": "Mugg Gul"
   },
@@ -60,7 +60,7 @@
     "estLow": 150,
     "estHigh": 220,
     "estCur": "EUR",
-    "image": "/mugs/dark-blue.jpg",
+    "image": "/mugs/dark-blue.webp",
     "norm": "mug dark blue",
     "nameSv": "Mugg Mörkblå"
   },
@@ -73,7 +73,7 @@
     "estLow": 150,
     "estHigh": 220,
     "estCur": "EUR",
-    "image": "/mugs/dark-green.jpg",
+    "image": "/mugs/dark-green.webp",
     "norm": "mug dark green",
     "nameSv": "Mugg Mörkgrön"
   },
@@ -86,7 +86,7 @@
     "estLow": 150,
     "estHigh": 220,
     "estCur": "EUR",
-    "image": "/mugs/dark-yellow.jpg",
+    "image": "/mugs/dark-yellow.webp",
     "norm": "mug dark yellow",
     "nameSv": "Mugg Mörkgul"
   },
@@ -99,7 +99,7 @@
     "estLow": 150,
     "estHigh": 200,
     "estCur": "EUR",
-    "image": "/mugs/dark-rose.jpg",
+    "image": "/mugs/dark-rose.webp",
     "norm": "mug dark rose",
     "nameSv": "Mugg Mörkrosa"
   },
@@ -112,7 +112,7 @@
     "estLow": 170,
     "estHigh": 240,
     "estCur": "EUR",
-    "image": "/mugs/drawing.jpg",
+    "image": "/mugs/drawing.webp",
     "norm": "drawing",
     "nameSv": "Ritning"
   },
@@ -125,7 +125,7 @@
     "estLow": 260,
     "estHigh": 380,
     "estCur": "EUR",
-    "image": "/mugs/peace.jpg",
+    "image": "/mugs/peace.webp",
     "norm": "peace",
     "nameSv": "Fred"
   },
@@ -138,7 +138,7 @@
     "estLow": 170,
     "estHigh": 250,
     "estCur": "EUR",
-    "image": "/mugs/office.jpg",
+    "image": "/mugs/office.webp",
     "norm": "office",
     "nameSv": "Kontor"
   },
@@ -151,7 +151,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/love-blue.jpg",
+    "image": "/mugs/love-blue.webp",
     "norm": "love",
     "nameSv": "Kärlek"
   },
@@ -164,7 +164,7 @@
     "estLow": 250,
     "estHigh": 350,
     "estCur": "EUR",
-    "image": "/mugs/christmas-greetings.jpg",
+    "image": "/mugs/christmas-greetings.webp",
     "norm": "christmas greeting",
     "nameSv": "Julhälsning"
   },
@@ -177,7 +177,7 @@
     "estLow": 20,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/moominpappa-thinking.jpg",
+    "image": "/mugs/moominpappa-thinking.webp",
     "norm": "moominpappa thinking",
     "nameSv": "Muminpappan funderar"
   },
@@ -190,7 +190,7 @@
     "estLow": 20,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/moominmamma-and-berries.jpg",
+    "image": "/mugs/moominmamma-and-berries.webp",
     "norm": "moominmamma and berries",
     "nameSv": "Muminmamman och bären"
   },
@@ -203,7 +203,7 @@
     "estLow": 20,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/moomintroll-on-ice.jpg",
+    "image": "/mugs/moomintroll-on-ice.webp",
     "norm": "moomintroll on ice",
     "nameSv": "Mumintrollet på isen"
   },
@@ -216,7 +216,7 @@
     "estLow": 50,
     "estHigh": 70,
     "estCur": "EUR",
-    "image": "/mugs/little-my-sliding.jpg",
+    "image": "/mugs/little-my-sliding.webp",
     "norm": "little my sliding",
     "nameSv": "Lilla My glider"
   },
@@ -229,7 +229,7 @@
     "estLow": 300,
     "estHigh": 500,
     "estCur": "EUR",
-    "image": "/mugs/millenium.jpg",
+    "image": "/mugs/millenium.webp",
     "norm": "millenium",
     "nameSv": "Millennium"
   },
@@ -242,7 +242,7 @@
     "estLow": 20,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden.jpg",
+    "image": "/mugs/snorkmaiden.webp",
     "norm": "snorkmaiden",
     "nameSv": "Snorkfröken"
   },
@@ -255,7 +255,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/stinky.jpg",
+    "image": "/mugs/stinky.webp",
     "norm": "stinky",
     "nameSv": "Stinky"
   },
@@ -268,7 +268,7 @@
     "estLow": 60,
     "estHigh": 90,
     "estCur": "EUR",
-    "image": "/mugs/sniff-blue.jpg",
+    "image": "/mugs/sniff-blue.webp",
     "norm": "sniff",
     "nameSv": "Sniff"
   },
@@ -281,7 +281,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/snufkin.jpg",
+    "image": "/mugs/snufkin.webp",
     "norm": "snufkin",
     "nameSv": "Snusmumriken"
   },
@@ -294,7 +294,7 @@
     "estLow": 35,
     "estHigh": 45,
     "estCur": "EUR",
-    "image": "/mugs/family.jpg",
+    "image": "/mugs/family.webp",
     "norm": "family",
     "nameSv": "Familjen"
   },
@@ -307,7 +307,7 @@
     "estLow": 35,
     "estHigh": 45,
     "estCur": "EUR",
-    "image": "/mugs/fillyjonk.jpg",
+    "image": "/mugs/fillyjonk.webp",
     "norm": "fillyjonk",
     "nameSv": "Filifjonkan"
   },
@@ -320,7 +320,7 @@
     "estLow": 35,
     "estHigh": 45,
     "estCur": "EUR",
-    "image": "/mugs/hemulen.jpg",
+    "image": "/mugs/hemulen.webp",
     "norm": "hemulen",
     "nameSv": "Hemulen"
   },
@@ -333,7 +333,7 @@
     "estLow": 160,
     "estHigh": 220,
     "estCur": "EUR",
-    "image": "/mugs/moomin-collection-mug-christmas-2004-2005.jpg",
+    "image": "/mugs/moomin-collection-mug-christmas-2004-2005.webp",
     "norm": "christmas mug",
     "nameSv": "Julmugg"
   },
@@ -346,7 +346,7 @@
     "estLow": 10000,
     "estHigh": 15000,
     "estCur": "EUR",
-    "image": "/mugs/fazer-special-mug.jpg",
+    "image": "/mugs/fazer-special-mug.webp",
     "norm": "fazer",
     "nameSv": "Fazer"
   },
@@ -359,7 +359,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/groke.jpg",
+    "image": "/mugs/groke.webp",
     "norm": "groke",
     "nameSv": "Mårran"
   },
@@ -372,7 +372,7 @@
     "estLow": 1800,
     "estHigh": 2500,
     "estCur": "EUR",
-    "image": "/mugs/moomintroll-daydreaming.jpg",
+    "image": "/mugs/moomintroll-daydreaming.webp",
     "norm": "moomintroll daydreaming",
     "nameSv": "Mumintrollet dagdrömmer"
   },
@@ -385,7 +385,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/thingumy-and-bob.jpg",
+    "image": "/mugs/thingumy-and-bob.webp",
     "norm": "thingumy and bob",
     "nameSv": "Tofslan och Vifslan"
   },
@@ -398,7 +398,7 @@
     "estLow": 15,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/tooticky.jpg",
+    "image": "/mugs/tooticky.webp",
     "norm": "tooticky",
     "nameSv": "Too-ticki"
   },
@@ -411,7 +411,7 @@
     "estLow": 90,
     "estHigh": 120,
     "estCur": "EUR",
-    "image": "/mugs/dive.jpg",
+    "image": "/mugs/dive.webp",
     "norm": "dive",
     "nameSv": "Simhopp"
   },
@@ -424,7 +424,7 @@
     "estLow": 20000,
     "estHigh": 40000,
     "estCur": "EUR",
-    "image": "/mugs/dive-with-seashells.jpg",
+    "image": "/mugs/dive-with-seashells.webp",
     "norm": "dive with seashells",
     "nameSv": "Simhopp med snäckskal"
   },
@@ -437,7 +437,7 @@
     "estLow": 90,
     "estHigh": 120,
     "estCur": "EUR",
-    "image": "/mugs/winternight.jpg",
+    "image": "/mugs/winternight.webp",
     "norm": "winternight",
     "nameSv": "Vinternatt"
   },
@@ -450,7 +450,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/hattifnatteners.jpg",
+    "image": "/mugs/hattifnatteners.webp",
     "norm": "hattifatteners",
     "nameSv": "Hattifnattarna"
   },
@@ -463,7 +463,7 @@
     "estLow": 45,
     "estHigh": 70,
     "estCur": "EUR",
-    "image": "/mugs/dolphin-dive-1-edited.jpg",
+    "image": "/mugs/dolphin-dive-1-edited.webp",
     "norm": "dolphin dive",
     "nameSv": "Delfindykning"
   },
@@ -476,7 +476,7 @@
     "estLow": 40,
     "estHigh": 60,
     "estCur": "EUR",
-    "image": "/mugs/snowlantern.jpg",
+    "image": "/mugs/snowlantern.webp",
     "norm": "snow lantern",
     "nameSv": "Snölykta"
   },
@@ -489,7 +489,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/little-my.jpg",
+    "image": "/mugs/little-my.webp",
     "norm": "little my",
     "nameSv": "Lilla My"
   },
@@ -502,7 +502,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/mymble.jpg",
+    "image": "/mugs/mymble.webp",
     "norm": "mymble",
     "nameSv": "Mymlan"
   },
@@ -515,7 +515,7 @@
     "estLow": 45,
     "estHigh": 70,
     "estCur": "EUR",
-    "image": "/mugs/on-the-beach.jpg",
+    "image": "/mugs/on-the-beach.webp",
     "norm": "on the beach",
     "nameSv": "Tid på stranden"
   },
@@ -528,7 +528,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/sniff-turquoise.jpg",
+    "image": "/mugs/sniff-turquoise.webp",
     "norm": "sniff turquoise",
     "nameSv": "Sniff Turkos"
   },
@@ -541,7 +541,7 @@
     "estLow": 45,
     "estHigh": 65,
     "estCur": "EUR",
-    "image": "/mugs/winter-bonfire.jpg",
+    "image": "/mugs/winter-bonfire.webp",
     "norm": "winter bonfire",
     "nameSv": "Vinterbrasa"
   },
@@ -554,7 +554,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/inspector.jpg",
+    "image": "/mugs/inspector.webp",
     "norm": "inspector",
     "nameSv": "Polismästaren"
   },
@@ -567,7 +567,7 @@
     "estLow": 45,
     "estHigh": 70,
     "estCur": "EUR",
-    "image": "/mugs/siesta.jpg",
+    "image": "/mugs/siesta.webp",
     "norm": "siesta",
     "nameSv": "Siesta"
   },
@@ -580,7 +580,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/adventure.jpg",
+    "image": "/mugs/adventure.webp",
     "norm": "adventure",
     "nameSv": "Äventyr"
   },
@@ -593,7 +593,7 @@
     "estLow": 35,
     "estHigh": 60,
     "estCur": "EUR",
-    "image": "/mugs/christmas-surprise.jpg",
+    "image": "/mugs/christmas-surprise.webp",
     "norm": "christmas surprise",
     "nameSv": "Julöverraskning"
   },
@@ -606,7 +606,7 @@
     "estLow": 100,
     "estHigh": 130,
     "estCur": "EUR",
-    "image": "/mugs/night-sail.jpg",
+    "image": "/mugs/night-sail.webp",
     "norm": "night sailing",
     "nameSv": "Kvällsseglats"
   },
@@ -619,7 +619,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/muddler.jpg",
+    "image": "/mugs/muddler.webp",
     "norm": "muddler",
     "nameSv": "Rådd-djuret"
   },
@@ -632,7 +632,7 @@
     "estLow": 55,
     "estHigh": 80,
     "estCur": "EUR",
-    "image": "/mugs/rose-garden.jpg",
+    "image": "/mugs/rose-garden.webp",
     "norm": "rose garden",
     "nameSv": "Rosenträdgård"
   },
@@ -645,7 +645,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/skiing-competition.jpg",
+    "image": "/mugs/skiing-competition.webp",
     "norm": "skiing competition",
     "nameSv": "Skidtävling"
   },
@@ -658,7 +658,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/fuzzy.jpg",
+    "image": "/mugs/fuzzy.webp",
     "norm": "fuzzy",
     "nameSv": "Sås-djuret"
   },
@@ -671,7 +671,7 @@
     "estLow": 40,
     "estHigh": 60,
     "estCur": "EUR",
-    "image": "/mugs/soap-bubbles.jpg",
+    "image": "/mugs/soap-bubbles.webp",
     "norm": "soap bubbles",
     "nameSv": "Såpbubblor"
   },
@@ -684,7 +684,7 @@
     "estLow": 30,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/winter-games.jpg",
+    "image": "/mugs/winter-games.webp",
     "norm": "winter games",
     "nameSv": "Snölekar"
   },
@@ -697,7 +697,7 @@
     "estLow": 55,
     "estHigh": 65,
     "estCur": "EUR",
-    "image": "/mugs/hurray.jpg",
+    "image": "/mugs/hurray.webp",
     "norm": "hurray",
     "nameSv": "Hurraa!"
   },
@@ -710,7 +710,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/mymbles-mother.jpg",
+    "image": "/mugs/mymbles-mother.webp",
     "norm": "mymbles mother",
     "nameSv": "Mymlans mamma"
   },
@@ -723,7 +723,7 @@
     "estLow": 30,
     "estHigh": 45,
     "estCur": "EUR",
-    "image": "/mugs/primadonnas-horse.jpg",
+    "image": "/mugs/primadonnas-horse.webp",
     "norm": "primadonnas horse",
     "nameSv": "Primadonnas häst"
   },
@@ -736,7 +736,7 @@
     "estLow": 65,
     "estHigh": 90,
     "estCur": "EUR",
-    "image": "/mugs/stockmann.jpg",
+    "image": "/mugs/stockmann.webp",
     "norm": "stockmann",
     "nameSv": "Stockmann"
   },
@@ -749,7 +749,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/winter-forest.jpg",
+    "image": "/mugs/winter-forest.webp",
     "norm": "winter forest",
     "nameSv": "Vinterskog"
   },
@@ -762,7 +762,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden.jpg",
+    "image": "/mugs/snorkmaiden.webp",
     "norm": "snorkmaiden",
     "nameSv": "Snorkfröken"
   },
@@ -775,7 +775,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-moomintroll.jpg",
+    "image": "/mugs/abc-moomintroll.webp",
     "norm": "moomintroll",
     "nameSv": "Mumintrollet"
   },
@@ -788,7 +788,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden-and-poet.jpg",
+    "image": "/mugs/snorkmaiden-and-poet.webp",
     "norm": "snorkmaiden and the poet",
     "nameSv": "Snorkfröken och poeten"
   },
@@ -801,7 +801,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/adventure-move.jpg",
+    "image": "/mugs/adventure-move.webp",
     "norm": "adventure move",
     "nameSv": "Mumin på äventyr – flytten"
   },
@@ -814,7 +814,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/under-the-tree.jpg",
+    "image": "/mugs/under-the-tree.webp",
     "norm": "under the tree",
     "nameSv": "Under granen"
   },
@@ -827,7 +827,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/toves-jubilee.jpg",
+    "image": "/mugs/toves-jubilee.webp",
     "norm": "toves jubilee",
     "nameSv": "Toves jubileum"
   },
@@ -840,7 +840,7 @@
     "estLow": 80,
     "estHigh": 100,
     "estCur": "EUR",
-    "image": "/mugs/toves-jubilee-with-glasses.jpg",
+    "image": "/mugs/toves-jubilee-with-glasses.webp",
     "norm": "toves jubilee with glasses",
     "nameSv": "Toves jubileum med glasögon"
   },
@@ -853,7 +853,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/moominmamma-apricot.jpg",
+    "image": "/mugs/moominmamma-apricot.webp",
     "norm": "moominmamma",
     "nameSv": "Muminmamman"
   },
@@ -866,7 +866,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/moominpappa-grey.jpg",
+    "image": "/mugs/moominpappa-grey.webp",
     "norm": "moominpappa",
     "nameSv": "Muminpappan"
   },
@@ -879,7 +879,7 @@
     "estLow": 15,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/sailing-with-nibling-and-tooticky.jpg",
+    "image": "/mugs/sailing-with-nibling-and-tooticky.webp",
     "norm": "sailing with nibling and too ticky",
     "nameSv": "Segling med Klippdassen och Too-ticki"
   },
@@ -892,7 +892,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/skiing-with-mr-brisk.jpg",
+    "image": "/mugs/skiing-with-mr-brisk.webp",
     "norm": "skiing with mr brisk",
     "nameSv": "Skida med herr Brisk"
   },
@@ -905,7 +905,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/moomin-house.jpg",
+    "image": "/mugs/moomin-house.webp",
     "norm": "moominhouse",
     "nameSv": "Muminhuset"
   },
@@ -918,7 +918,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/keep-waters-clean.jpg",
+    "image": "/mugs/keep-waters-clean.webp",
     "norm": "keep waters clean",
     "nameSv": "Håll vattnet rent"
   },
@@ -931,7 +931,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/snufkin-green.jpg",
+    "image": "/mugs/snufkin-green.webp",
     "norm": "snufkin green",
     "nameSv": "Snusmumriken Grön"
   },
@@ -944,7 +944,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/little-my.jpg",
+    "image": "/mugs/little-my.webp",
     "norm": "little my",
     "nameSv": "Lilla My"
   },
@@ -957,7 +957,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/moment-on-the-shore.jpg",
+    "image": "/mugs/moment-on-the-shore.webp",
     "norm": "moment on the shore",
     "nameSv": "Tid på stranden"
   },
@@ -970,7 +970,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/hibernation.jpg",
+    "image": "/mugs/hibernation.webp",
     "norm": "hibernation",
     "nameSv": "Dvala"
   },
@@ -983,7 +983,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/our-coast.jpg",
+    "image": "/mugs/our-coast.webp",
     "norm": "our coast",
     "nameSv": "Vår kust"
   },
@@ -996,7 +996,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/tooticky.jpg",
+    "image": "/mugs/tooticky.webp",
     "norm": "too ticky",
     "nameSv": "Too-Ticki"
   },
@@ -1009,7 +1009,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/ancestor-black.jpg",
+    "image": "/mugs/ancestor-black.webp",
     "norm": "ancestor",
     "nameSv": "Förfadern"
   },
@@ -1022,7 +1022,7 @@
     "estLow": 40,
     "estHigh": 60,
     "estCur": "EUR",
-    "image": "/mugs/midsummer.jpg",
+    "image": "/mugs/midsummer.webp",
     "norm": "midsummer",
     "nameSv": "Midsommar"
   },
@@ -1035,7 +1035,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/snow-horse.jpg",
+    "image": "/mugs/snow-horse.webp",
     "norm": "snow horse",
     "nameSv": "Snöhästen"
   },
@@ -1048,7 +1048,7 @@
     "estLow": 15,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/summer-theater.jpg",
+    "image": "/mugs/summer-theater.webp",
     "norm": "summer theatre",
     "nameSv": "Sommarteatern"
   },
@@ -1061,7 +1061,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/moominvalley-2017.jpg",
+    "image": "/mugs/moominvalley-2017.webp",
     "norm": "moominvalley",
     "nameSv": "Mumindalen"
   },
@@ -1074,7 +1074,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/true-to-its-origins.jpg",
+    "image": "/mugs/true-to-its-origins.webp",
     "norm": "true to its origins",
     "nameSv": "Trogen sitt ursprung"
   },
@@ -1087,7 +1087,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/spring-winter.jpg",
+    "image": "/mugs/spring-winter.webp",
     "norm": "spring winter",
     "nameSv": "Vårvinter"
   },
@@ -1100,7 +1100,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/thingumy-and-bob.jpg",
+    "image": "/mugs/thingumy-and-bob.webp",
     "norm": "thingumy and bob",
     "nameSv": "Tofslan och Vifslan"
   },
@@ -1113,7 +1113,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/hobgoblin-purple.jpg",
+    "image": "/mugs/hobgoblin-purple.webp",
     "norm": "hobgoblin",
     "nameSv": "Trollkarlen"
   },
@@ -1126,7 +1126,7 @@
     "estLow": 30,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/going-on-vacation.jpg",
+    "image": "/mugs/going-on-vacation.webp",
     "norm": "going on vacation",
     "nameSv": "Vi åker på semester"
   },
@@ -1139,7 +1139,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/friendship.jpg",
+    "image": "/mugs/friendship.webp",
     "norm": "friendship",
     "nameSv": "Vänskap"
   },
@@ -1152,7 +1152,7 @@
     "estLow": 75,
     "estHigh": 90,
     "estCur": "EUR",
-    "image": "/mugs/moomins-day-2018.jpg",
+    "image": "/mugs/moomins-day-2018.webp",
     "norm": "moomins day",
     "nameSv": "Mumindagen"
   },
@@ -1165,7 +1165,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/light-snowfall.jpg",
+    "image": "/mugs/light-snowfall.webp",
     "norm": "light snowfall",
     "nameSv": "Lätt snöfall"
   },
@@ -1178,7 +1178,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/moomintroll-grassgreen.jpg",
+    "image": "/mugs/moomintroll-grassgreen.webp",
     "norm": "moomintroll grassgreen",
     "nameSv": "Mumintrollet Gräsgrön"
   },
@@ -1191,7 +1191,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/ninny-powder.jpg",
+    "image": "/mugs/ninny-powder.webp",
     "norm": "ninny powder",
     "nameSv": "Ninni Puder"
   },
@@ -1204,7 +1204,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/moominvalley-park-japan.jpg",
+    "image": "/mugs/moominvalley-park-japan.webp",
     "norm": "moominvalley park japan",
     "nameSv": "Moominvalley Park Japan"
   },
@@ -1217,7 +1217,7 @@
     "estLow": 30,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/eveningswim1.jpg",
+    "image": "/mugs/eveningswim1.webp",
     "norm": "evening swim",
     "nameSv": "Kvällsdopp"
   },
@@ -1230,7 +1230,7 @@
     "estLow": 15,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/last-dragon.jpg",
+    "image": "/mugs/last-dragon.webp",
     "norm": "last dragon",
     "nameSv": "Den sista draken"
   },
@@ -1243,7 +1243,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/night-with-the-groke.jpg",
+    "image": "/mugs/night-with-the-groke.webp",
     "norm": "night of the groke",
     "nameSv": "Ensam hemma"
   },
@@ -1256,7 +1256,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/golden-tale.jpg",
+    "image": "/mugs/golden-tale.webp",
     "norm": "golden tale",
     "nameSv": "Den gyllene svansen"
   },
@@ -1269,7 +1269,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/moominvalley-5-midwinter.jpg",
+    "image": "/mugs/moominvalley-5-midwinter.webp",
     "norm": "midwinter",
     "nameSv": "Trollvinter"
   },
@@ -1282,7 +1282,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/sleep-well.jpg",
+    "image": "/mugs/sleep-well.webp",
     "norm": "sleep well",
     "nameSv": "Sov gott"
   },
@@ -1295,7 +1295,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/crown-snow-load.jpg",
+    "image": "/mugs/crown-snow-load.webp",
     "norm": "crown snow load",
     "nameSv": "Djupsnö"
   },
@@ -1308,7 +1308,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden.jpg",
+    "image": "/mugs/snorkmaiden.webp",
     "norm": "snorkmaiden",
     "nameSv": "Snorkfröken"
   },
@@ -1321,7 +1321,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/misabel.jpg",
+    "image": "/mugs/misabel.webp",
     "norm": "misabel",
     "nameSv": "Misan"
   },
@@ -1334,7 +1334,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/relaxing.jpg",
+    "image": "/mugs/relaxing.webp",
     "norm": "relaxing",
     "nameSv": "Vilopaus"
   },
@@ -1347,7 +1347,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/the-fire-spirit.jpg",
+    "image": "/mugs/the-fire-spirit.webp",
     "norm": "the fire spirit",
     "nameSv": "Snusmumriken och eldens ande"
   },
@@ -1360,7 +1360,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/moominmammas-mural.jpg",
+    "image": "/mugs/moominmammas-mural.webp",
     "norm": "moominmammas mural",
     "nameSv": "Muminmammans muralmålning"
   },
@@ -1373,7 +1373,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/snow-blizzard.jpg",
+    "image": "/mugs/snow-blizzard.webp",
     "norm": "snow blizzard",
     "nameSv": "Snöstorm"
   },
@@ -1386,7 +1386,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/moominmamma-marmelade.jpg",
+    "image": "/mugs/moominmamma-marmelade.webp",
     "norm": "moominmamma marmelade",
     "nameSv": "Muminmammans marmelad"
   },
@@ -1399,7 +1399,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/fillyjonk.jpg",
+    "image": "/mugs/fillyjonk.webp",
     "norm": "fillyjonk",
     "nameSv": "Filifjonkan"
   },
@@ -1412,7 +1412,7 @@
     "estLow": 15,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/together.jpg",
+    "image": "/mugs/together.webp",
     "norm": "together",
     "nameSv": "Tillsammans"
   },
@@ -1425,7 +1425,7 @@
     "estLow": 25,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/moomins-day-2021.jpg",
+    "image": "/mugs/moomins-day-2021.webp",
     "norm": "moomins day 2021",
     "nameSv": "Mumindagen 2021"
   },
@@ -1438,7 +1438,7 @@
     "estLow": 30,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/in-the-mountains.jpg",
+    "image": "/mugs/in-the-mountains.webp",
     "norm": "in the mountains",
     "nameSv": "Bland bergen"
   },
@@ -1451,7 +1451,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/04-yellow.jpg",
+    "image": "/mugs/04-yellow.webp",
     "norm": "mug yellow",
     "nameSv": "Mugg Gul"
   },
@@ -1464,7 +1464,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/04-blue.jpg",
+    "image": "/mugs/04-blue.webp",
     "norm": "mug blue",
     "nameSv": "Mugg Blå"
   },
@@ -1477,7 +1477,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/snow-moonlight.jpg",
+    "image": "/mugs/snow-moonlight.webp",
     "norm": "snow moonlight",
     "nameSv": "Vintermånsken"
   },
@@ -1490,7 +1490,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/stinky-in-action-1.jpg",
+    "image": "/mugs/stinky-in-action-1.webp",
     "norm": "stinky in action",
     "nameSv": "Stinky i farten"
   },
@@ -1503,7 +1503,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/little-my-and-meadow.jpg",
+    "image": "/mugs/little-my-and-meadow.webp",
     "norm": "little my and meadow",
     "nameSv": "Lilla My på ängen"
   },
@@ -1516,7 +1516,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/fishing.jpg",
+    "image": "/mugs/fishing.webp",
     "norm": "fishing",
     "nameSv": "Fiske"
   },
@@ -1529,7 +1529,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/green-04.jpg",
+    "image": "/mugs/green-04.webp",
     "norm": "mug green",
     "nameSv": "Mugg Grön"
   },
@@ -1542,7 +1542,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/rose-04.jpg",
+    "image": "/mugs/rose-04.webp",
     "norm": "mug rose",
     "nameSv": "Mugg Rosa"
   },
@@ -1555,7 +1555,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/abc-snufkin-1.jpg",
+    "image": "/mugs/abc-snufkin-1.webp",
     "norm": "abc snufkin",
     "nameSv": "ABC Snusmumriken"
   },
@@ -1568,7 +1568,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/abc-moomintroll.jpg",
+    "image": "/mugs/abc-moomintroll.webp",
     "norm": "abc moomintroll",
     "nameSv": "ABC Mumintrollet"
   },
@@ -1581,7 +1581,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/winter-wonders.jpg",
+    "image": "/mugs/winter-wonders.webp",
     "norm": "winter wonders",
     "nameSv": "Vinterns under"
   },
@@ -1594,7 +1594,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.jpg",
+    "image": "/mugs/abc-l-04.webp",
     "norm": "abc l",
     "nameSv": "ABC L"
   },
@@ -1607,7 +1607,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-o-04.jpg",
+    "image": "/mugs/abc-o-04.webp",
     "norm": "abc o",
     "nameSv": "ABC O"
   },
@@ -1620,7 +1620,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-v-04.jpg",
+    "image": "/mugs/abc-v-04.webp",
     "norm": "abc v",
     "nameSv": "ABC V"
   },
@@ -1633,7 +1633,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-e-04.jpg",
+    "image": "/mugs/abc-e-04.webp",
     "norm": "abc e",
     "nameSv": "ABC E"
   },
@@ -1646,7 +1646,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-h-04.jpg",
+    "image": "/mugs/abc-h-04.webp",
     "norm": "abc h",
     "nameSv": "ABC H"
   },
@@ -1659,7 +1659,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-m-04.jpg",
+    "image": "/mugs/abc-m-04.webp",
     "norm": "abc m",
     "nameSv": "ABC M"
   },
@@ -1672,7 +1672,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/moominpappa-grey.jpg",
+    "image": "/mugs/moominpappa-grey.webp",
     "norm": "moominpappa grey",
     "nameSv": "Muminpappan Grå"
   },
@@ -1685,7 +1685,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/hemulen-yellow.jpg",
+    "image": "/mugs/hemulen-yellow.webp",
     "norm": "hemulen yellow",
     "nameSv": "Hemulen Gul"
   },
@@ -1698,7 +1698,7 @@
     "estLow": 20,
     "estHigh": 60,
     "estCur": "EUR",
-    "image": "/mugs/moominvalley-park-japan.jpg",
+    "image": "/mugs/moominvalley-park-japan.webp",
     "norm": "moominvalley park japan 2023",
     "nameSv": "Moominvalley Park Japan 2023"
   },
@@ -1711,7 +1711,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/garden-party.jpg",
+    "image": "/mugs/garden-party.webp",
     "norm": "garden party",
     "nameSv": "Trädgårdsfest"
   },
@@ -1724,7 +1724,7 @@
     "estLow": 25,
     "estHigh": 35,
     "estCur": "EUR",
-    "image": "/mugs/sea-breeze.jpg",
+    "image": "/mugs/sea-breeze.webp",
     "norm": "sea breeze",
     "nameSv": "Havsbris"
   },
@@ -1737,7 +1737,7 @@
     "estLow": 100,
     "estHigh": 500,
     "estCur": "EUR",
-    "image": "/mugs/sea-breeze-platinum.jpg",
+    "image": "/mugs/sea-breeze-platinum.webp",
     "norm": "sea breeze platinum",
     "nameSv": "Havsbris Platina"
   },
@@ -1750,7 +1750,7 @@
     "estLow": 20,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/love-04.jpg",
+    "image": "/mugs/love-04.webp",
     "norm": "love",
     "nameSv": "Kärlek"
   },
@@ -1763,7 +1763,7 @@
     "estLow": 20,
     "estHigh": 25,
     "estCur": "EUR",
-    "image": "/mugs/peace-04.jpg",
+    "image": "/mugs/peace-04.webp",
     "norm": "peace",
     "nameSv": "Fred"
   },
@@ -1776,7 +1776,7 @@
     "estLow": 75,
     "estHigh": 100,
     "estCur": "EUR",
-    "image": "/mugs/moomin-finnair-journey-mug.jpg",
+    "image": "/mugs/moomin-finnair-journey-mug.webp",
     "norm": "journey",
     "nameSv": "Resa Finnair 100 år"
   },
@@ -1789,7 +1789,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/little-my-sliding.jpg",
+    "image": "/mugs/little-my-sliding.webp",
     "norm": "sliding",
     "nameSv": "Åka kana"
   },
@@ -1802,7 +1802,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-f-04.jpg",
+    "image": "/mugs/abc-f-04.webp",
     "norm": "abc f",
     "nameSv": "ABC F"
   },
@@ -1815,7 +1815,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.jpg",
+    "image": "/mugs/abc-l-04.webp",
     "norm": "abc a",
     "nameSv": "ABC A"
   },
@@ -1828,7 +1828,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-i-04.jpg",
+    "image": "/mugs/abc-i-04.webp",
     "norm": "abc i",
     "nameSv": "ABC I"
   },
@@ -1841,7 +1841,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-y-04.jpg",
+    "image": "/mugs/abc-y-04.webp",
     "norm": "abc y",
     "nameSv": "ABC Y"
   },
@@ -1854,7 +1854,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-r-04.jpg",
+    "image": "/mugs/abc-r-04.webp",
     "norm": "abc r",
     "nameSv": "ABC R"
   },
@@ -1867,7 +1867,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-n-04.jpg",
+    "image": "/mugs/abc-n-04.webp",
     "norm": "abc n",
     "nameSv": "ABC N"
   },
@@ -1880,7 +1880,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-d-04.jpg",
+    "image": "/mugs/abc-d-04.webp",
     "norm": "abc d",
     "nameSv": "ABC D"
   },
@@ -1893,7 +1893,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-s-04.jpg",
+    "image": "/mugs/abc-s-04.webp",
     "norm": "abc s",
     "nameSv": "ABC S"
   },
@@ -1906,7 +1906,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/muskrat-beige.jpg",
+    "image": "/mugs/muskrat-beige.webp",
     "norm": "muskrat in a cave",
     "nameSv": "Bisamråttan i grottan"
   },
@@ -1919,7 +1919,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/sniff-on-the-beach.jpg",
+    "image": "/mugs/sniff-on-the-beach.webp",
     "norm": "sniff on the beach",
     "nameSv": "Sniff på stranden"
   },
@@ -1932,7 +1932,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/love-blue.jpg",
+    "image": "/mugs/love-blue.webp",
     "norm": "love blue",
     "nameSv": "Kärlek blå"
   },
@@ -1945,7 +1945,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/berry-season.jpg",
+    "image": "/mugs/berry-season.webp",
     "norm": "berry season",
     "nameSv": "Bärsäsong"
   },
@@ -1958,7 +1958,7 @@
     "estLow": 25,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/moomins-day-2024.jpg",
+    "image": "/mugs/moomins-day-2024.webp",
     "norm": "moomins day 2024",
     "nameSv": "Mumindagen 2024"
   },
@@ -1971,7 +1971,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/moomintroll-on-ice-0-4-04.jpg",
+    "image": "/mugs/moomintroll-on-ice-0-4-04.webp",
     "norm": "moomintroll on ice",
     "nameSv": "Mumintrollet på isen"
   },
@@ -1984,7 +1984,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/little-my-sliding-0-4-04.jpg",
+    "image": "/mugs/little-my-sliding-0-4-04.webp",
     "norm": "little my sliding",
     "nameSv": "Lilla My glider"
   },
@@ -1997,7 +1997,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden-0-4-04.jpg",
+    "image": "/mugs/snorkmaiden-0-4-04.webp",
     "norm": "snorkmaiden",
     "nameSv": "Snorkfröken"
   },
@@ -2010,7 +2010,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/family-mug-0-4-04.jpg",
+    "image": "/mugs/family-mug-0-4-04.webp",
     "norm": "family",
     "nameSv": "Familjen"
   },
@@ -2023,7 +2023,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/ski-jumping.jpg",
+    "image": "/mugs/ski-jumping.webp",
     "norm": "ski jumping",
     "nameSv": "Backhoppning"
   },
@@ -2036,7 +2036,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-c-04.jpg",
+    "image": "/mugs/abc-c-04.webp",
     "norm": "abc c",
     "nameSv": "ABC C"
   },
@@ -2049,7 +2049,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-j-04.jpg",
+    "image": "/mugs/abc-j-04.webp",
     "norm": "abc j",
     "nameSv": "ABC J"
   },
@@ -2062,7 +2062,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-k-04.jpg",
+    "image": "/mugs/abc-k-04.webp",
     "norm": "abc k",
     "nameSv": "ABC K"
   },
@@ -2075,7 +2075,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-p-04.jpg",
+    "image": "/mugs/abc-p-04.webp",
     "norm": "abc p",
     "nameSv": "ABC P"
   },
@@ -2088,7 +2088,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-t-04.jpg",
+    "image": "/mugs/abc-t-04.webp",
     "norm": "abc t",
     "nameSv": "ABC T"
   },
@@ -2101,7 +2101,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-w-04.jpg",
+    "image": "/mugs/abc-w-04.webp",
     "norm": "abc w",
     "nameSv": "ABC W"
   },
@@ -2114,7 +2114,7 @@
     "estLow": 500,
     "estHigh": 1500,
     "estCur": "EUR",
-    "image": "/mugs/home-handpainted.jpg",
+    "image": "/mugs/home-handpainted.webp",
     "norm": "home",
     "nameSv": "Hem"
   },
@@ -2127,7 +2127,7 @@
     "estLow": 15,
     "estHigh": 40,
     "estCur": "EUR",
-    "image": "/mugs/home-at-last.jpg",
+    "image": "/mugs/home-at-last.webp",
     "norm": "home at last",
     "nameSv": "Äntligen hemma"
   },
@@ -2140,7 +2140,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/family-time.jpg",
+    "image": "/mugs/family-time.webp",
     "norm": "family time",
     "nameSv": "Familjemys"
   },
@@ -2153,7 +2153,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/friends-forever.jpg",
+    "image": "/mugs/friends-forever.webp",
     "norm": "friends forever",
     "nameSv": "Vänner för alltid"
   },
@@ -2166,7 +2166,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-b-04.jpg",
+    "image": "/mugs/abc-b-04.webp",
     "norm": "abc b",
     "nameSv": "ABC B"
   },
@@ -2179,7 +2179,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-g-04.jpg",
+    "image": "/mugs/abc-g-04.webp",
     "norm": "abc g",
     "nameSv": "ABC G"
   },
@@ -2192,7 +2192,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-q-04.jpg",
+    "image": "/mugs/abc-q-04.webp",
     "norm": "abc q",
     "nameSv": "ABC Q"
   },
@@ -2205,7 +2205,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-u-04.jpg",
+    "image": "/mugs/abc-u-04.webp",
     "norm": "abc u",
     "nameSv": "ABC U"
   },
@@ -2218,7 +2218,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.jpg",
+    "image": "/mugs/abc-l-04.webp",
     "norm": "abc x",
     "nameSv": "ABC X"
   },
@@ -2231,7 +2231,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-z-04.jpg",
+    "image": "/mugs/abc-z-04.webp",
     "norm": "abc z",
     "nameSv": "ABC Z"
   },
@@ -2244,7 +2244,7 @@
     "estLow": 30,
     "estHigh": 60,
     "estCur": "EUR",
-    "image": "/mugs/opera.jpg",
+    "image": "/mugs/opera.webp",
     "norm": "opera",
     "nameSv": "Opera"
   },
@@ -2257,7 +2257,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/moomin-arabia-beach-day.jpg",
+    "image": "/mugs/moomin-arabia-beach-day.webp",
     "norm": "beach day",
     "nameSv": "Stranddag"
   },
@@ -2270,7 +2270,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/home-at-last.jpg",
+    "image": "/mugs/home-at-last.webp",
     "norm": "home at last",
     "nameSv": "Äntligen hemma"
   },
@@ -2283,7 +2283,7 @@
     "estLow": 30,
     "estHigh": 50,
     "estCur": "EUR",
-    "image": "/mugs/moomins-day-2025.jpg",
+    "image": "/mugs/moomins-day-2025.webp",
     "norm": "moomins day 2025",
     "nameSv": "Mumindagen 2025"
   },
@@ -2296,7 +2296,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/ice-swimming.jpg",
+    "image": "/mugs/ice-swimming.webp",
     "norm": "ice swimming",
     "nameSv": "Vinterbad"
   },
@@ -2309,7 +2309,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/festive-moments.jpg",
+    "image": "/mugs/festive-moments.webp",
     "norm": "festive moments",
     "nameSv": "Festliga stunder"
   },
@@ -2322,7 +2322,7 @@
     "estLow": 10,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/pop-snufkin.jpg",
+    "image": "/mugs/pop-snufkin.webp",
     "norm": "pop snufkin",
     "nameSv": "POP Snusmumriken"
   },
@@ -2335,7 +2335,7 @@
     "estLow": 10,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/pop-moomintroll.jpg",
+    "image": "/mugs/pop-moomintroll.webp",
     "norm": "pop moomintroll",
     "nameSv": "POP Mumintrollet"
   },
@@ -2348,7 +2348,7 @@
     "estLow": 10,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/pop-little-my.jpg",
+    "image": "/mugs/pop-little-my.webp",
     "norm": "pop little my",
     "nameSv": "POP Lilla My"
   },
@@ -2361,7 +2361,7 @@
     "estLow": 10,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/pop-snorkmaiden.jpg",
+    "image": "/mugs/pop-snorkmaiden.webp",
     "norm": "pop snorkmaiden",
     "nameSv": "POP Snorkfröken"
   },
@@ -2374,7 +2374,7 @@
     "estLow": 150,
     "estHigh": 800,
     "estCur": "EUR",
-    "image": "/mugs/moomin-arabia-beams.jpg",
+    "image": "/mugs/moomin-arabia-beams.webp",
     "norm": "beams japan",
     "nameSv": "BEAMS Japan"
   },
@@ -2387,7 +2387,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/lovingcare-a.jpg",
+    "image": "/mugs/lovingcare-a.webp",
     "norm": "loving care",
     "nameSv": "Omtanke"
   },
@@ -2400,7 +2400,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/sweethearts.jpg",
+    "image": "/mugs/sweethearts.webp",
     "norm": "sweethearts",
     "nameSv": "Förälskelse"
   },
@@ -2413,7 +2413,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/love-30-anniversary-a.jpg",
+    "image": "/mugs/love-30-anniversary-a.webp",
     "norm": "love 30th anniversary",
     "nameSv": "Kärlek 30-årsjubileum"
   },
@@ -2426,7 +2426,7 @@
     "estLow": 30,
     "estHigh": 120,
     "estCur": "EUR",
-    "image": "/mugs/moominvalley-park-japan.jpg",
+    "image": "/mugs/moominvalley-park-japan.webp",
     "norm": "moominvalley park japan 2026",
     "nameSv": "Moominvalley Park Japan 2026"
   },
@@ -2439,7 +2439,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.jpg",
+    "image": "/mugs/abc-l-04.webp",
     "norm": "abc a",
     "nameSv": "ABC Ä"
   },
@@ -2452,7 +2452,7 @@
     "estLow": 20,
     "estHigh": 30,
     "estCur": "EUR",
-    "image": "/mugs/simple-joy.jpg",
+    "image": "/mugs/simple-joy.webp",
     "norm": "simple joy",
     "nameSv": "Simple Joy"
   },
@@ -2465,7 +2465,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/holiday-rush.jpg",
+    "image": "/mugs/holiday-rush.webp",
     "norm": "holiday rush",
     "nameSv": "Redo för semester"
   },
@@ -2478,7 +2478,7 @@
     "estLow": 15,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/summer-dance.jpg",
+    "image": "/mugs/summer-dance.webp",
     "norm": "summer dance",
     "nameSv": "Sommardans"
   },
@@ -2491,7 +2491,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/boss-lady-04.jpg",
+    "image": "/mugs/boss-lady-04.webp",
     "norm": "boss lady",
     "nameSv": "Boss Lady"
   },
@@ -2504,7 +2504,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/party-queue-04.jpg",
+    "image": "/mugs/party-queue-04.webp",
     "norm": "party queue",
     "nameSv": "Party Queue"
   },
@@ -2517,7 +2517,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/rebel-club-04.jpg",
+    "image": "/mugs/rebel-club-04.webp",
     "norm": "rebel club",
     "nameSv": "Rebel Club"
   },
@@ -2530,7 +2530,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/talk-it-all-out-04.jpg",
+    "image": "/mugs/talk-it-all-out-04.webp",
     "norm": "talk it all out",
     "nameSv": "Talk It All Out"
   },
@@ -2543,7 +2543,7 @@
     "estLow": 30,
     "estHigh": 50,
     "estCur": "EUR",
-    "image": "/mugs/moomins-day-2026.jpg",
+    "image": "/mugs/moomins-day-2026.webp",
     "norm": "moomins day 2026",
     "nameSv": "Mumindagen 2026"
   }
