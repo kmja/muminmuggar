@@ -900,7 +900,9 @@ export default function App() {
 
       {loadError ? <div className="note warn" style={{ marginBottom: 12 }}>{t("load_error", { msg: loadError })}</div> : null}
 
-      <div className="tabs hide-mobile">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
+      {/* Collection / Wishlist are top-level tabs on every screen; Stats lives here on
+          desktop and in the bottom nav on mobile. */}
+      <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tb.k === "stats" ? "hide-mobile " : "") + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
       {tab !== "stats" ? (
         <>
@@ -997,9 +999,8 @@ export default function App() {
       <nav className="bottomnav">
         <svg className="navwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,40 L0,40 Z" /></svg>
         <div className="navrow">
-          <button className={"bn " + (tab === "wishlist" ? "active" : "")} onClick={() => setTab("wishlist")}><Heart size={20} /><span>{t("nav_wishlist")}</span></button>
-          <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="bn-addic"><Plus size={22} /></span><span>{t("nav_add")}</span></button>
           <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><BarChart3 size={20} /><span>{t("nav_stats")}</span></button>
+          <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="bn-addic"><Plus size={22} /></span><span>{t("nav_add")}</span></button>
           <button className="bn" onClick={() => setAboutOpen(true)}><Bell size={20} /><span>{t("nav_alerts")}</span></button>
         </div>
       </nav>
