@@ -891,14 +891,19 @@ export default function App() {
   const collectionCount = useMemo(() => mugs.filter((m) => m.status !== "wishlist").length, [mugs]);
   const tabHasItems = tab === "wishlist" ? mugs.some((m) => m.status === "wishlist") : collectionCount > 0;
 
-  // Swipe left/right to move between the top-level tabs (touch devices).
+  // Swipe left/right to move between the top-level tabs (touch devices). We track
+  // the moving finger and settle on touchend *or* touchcancel — mobile browsers
+  // often fire touchcancel once they claim the gesture, so relying on touchend
+  // alone silently misses swipes.
   const TAB_ORDER = ["collection", "wishlist", "stats"];
-  const swipe = useRef({ x: 0, y: 0 });
-  const onTouchStart = (e) => { const t = e.changedTouches[0]; swipe.current = { x: t.clientX, y: t.clientY }; };
-  const onTouchEnd = (e) => {
-    const t = e.changedTouches[0];
-    const dx = t.clientX - swipe.current.x, dy = t.clientY - swipe.current.y;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.4) return;  // needs a clear horizontal swipe
+  const swipe = useRef(null);
+  const onTouchStart = (e) => { const t = e.changedTouches[0]; swipe.current = { x: t.clientX, y: t.clientY, lx: t.clientX, ly: t.clientY }; };
+  const onTouchMove = (e) => { const s = swipe.current; if (!s) return; const t = e.changedTouches[0]; s.lx = t.clientX; s.ly = t.clientY; };
+  const onTouchEnd = () => {
+    const s = swipe.current; swipe.current = null;
+    if (!s) return;
+    const dx = s.lx - s.x, dy = s.ly - s.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy)) return;  // clear, mostly-horizontal swipe
     const i = TAB_ORDER.indexOf(tab);
     if (i < 0) return;
     const next = dx < 0 ? Math.min(i + 1, TAB_ORDER.length - 1) : Math.max(i - 1, 0);
@@ -950,7 +955,7 @@ export default function App() {
           desktop and in the bottom nav on mobile. */}
       <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tb.k === "stats" ? "hide-mobile " : "") + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
-      <div className="tabpanel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="tabpanel" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
       {tab !== "stats" ? (
         <>
           {tabHasItems ? (

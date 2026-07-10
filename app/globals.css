@@ -69,6 +69,10 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .searchfield input{padding-left:42px}
 /* Understated tab strip — a shared baseline with an underline on the active tab,
    in keeping with the Arabia Moomin look (no heavy pill buttons). */
+/* Reserve horizontal gestures for tab-swiping; keep vertical scroll native.
+   On mobile, min-height keeps a swipe target even when the page is short. */
+.tabpanel{touch-action:pan-y}
+@media (max-width: 719px){ .tabpanel{min-height:62vh} }
 .tabs{display:flex; gap:34px; margin: 10px 0 22px; border-bottom:1px solid var(--border); overflow-x:auto}
 .tabbtn{padding:9px 2px; margin-bottom:-1px; border:none; border-bottom:2px solid transparent; border-radius:0;
   background:transparent; color: var(--muted); font-weight:400; font-size:15px; letter-spacing:.04em; white-space:nowrap}
