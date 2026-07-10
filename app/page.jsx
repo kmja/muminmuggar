@@ -842,7 +842,11 @@ export default function App() {
     const q = normalizeText(query);
     let out = mugs.filter((m) => {
       if (tab === "wishlist") { if (m.status !== "wishlist") return false; }
-      else if (statusFilter !== "all" && m.status !== statusFilter) return false;
+      else {
+        // The collection tab is owned/sold only — wishlist has its own tab.
+        if (m.status === "wishlist") return false;
+        if (statusFilter !== "all" && m.status !== statusFilter) return false;
+      }
       if (favoriteOnly && !m.favorite) return false;
       if (!q) return true;
       const hay = [m.name, catName(m.name, "sv"), m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
@@ -858,6 +862,24 @@ export default function App() {
     });
     return out;
   }, [mugs, query, statusFilter, favoriteOnly, sortBy, tab]);
+
+  // Owned/sold mugs (the collection); wishlist has its own tab.
+  const collectionCount = useMemo(() => mugs.filter((m) => m.status !== "wishlist").length, [mugs]);
+  const tabHasItems = tab === "wishlist" ? mugs.some((m) => m.status === "wishlist") : collectionCount > 0;
+
+  // Swipe left/right to move between the top-level tabs (touch devices).
+  const TAB_ORDER = ["collection", "wishlist", "stats"];
+  const swipe = useRef({ x: 0, y: 0 });
+  const onTouchStart = (e) => { const t = e.changedTouches[0]; swipe.current = { x: t.clientX, y: t.clientY }; };
+  const onTouchEnd = (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - swipe.current.x, dy = t.clientY - swipe.current.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.4) return;  // needs a clear horizontal swipe
+    const i = TAB_ORDER.indexOf(tab);
+    if (i < 0) return;
+    const next = dx < 0 ? Math.min(i + 1, TAB_ORDER.length - 1) : Math.max(i - 1, 0);
+    if (next !== i) setTab(TAB_ORDER[next]);
+  };
 
   const stats = useMemo(() => {
     const owned = mugs.filter((m) => m.status === "owned");
@@ -904,9 +926,10 @@ export default function App() {
           desktop and in the bottom nav on mobile. */}
       <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tb.k === "stats" ? "hide-mobile " : "") + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
+      <div className="tabpanel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       {tab !== "stats" ? (
         <>
-          {mugs.length > 0 ? (
+          {tabHasItems ? (
           <div className="card pad" style={{ marginBottom: 12 }}>
             <div className="row" style={{ alignItems: "center" }}>
               <div className="field searchfield" style={{ flex: 1 }}>
@@ -920,7 +943,7 @@ export default function App() {
             {filtersOpen ? (
               <div className="row" style={{ marginTop: 12 }}>
                 {tab === "collection" ? (
-                  <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+                  <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
                 ) : null}
                 <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -948,7 +971,7 @@ export default function App() {
                 <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
               </div>
             </div>
-          ) : mugs.length === 0 ? (
+          ) : tab === "collection" && collectionCount === 0 ? (
             <div className="card pad" style={{ textAlign: "center" }}>
               <div className="emptyicon"><Camera size={34} /></div>
               <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("empty_title")}</div>
@@ -995,6 +1018,7 @@ export default function App() {
           </div>
         </>
       )}
+      </div>
 
       <nav className="bottomnav">
         <svg className="navwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,40 L0,40 Z" /></svg>

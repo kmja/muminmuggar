@@ -67,12 +67,15 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .searchfield{position:relative}
 .searchfield .searchicon{position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none}
 .searchfield input{padding-left:42px}
-.tabs{display:flex; gap:9px; margin: 8px 0 20px; overflow-x:auto; padding-bottom:2px}
-@media (max-width: 719px){ .tabs{justify-content:center; gap:10px; margin:4px 0 16px} .tabbtn{flex:1; max-width:220px; justify-content:center; padding:12px 18px; font-size:15px} }
-.tabbtn{padding:10px 18px; border-radius: 999px; border:1px solid var(--border); background: transparent; color: var(--muted); font-weight:400; font-size:14px; white-space:nowrap}
-.tabbtn:hover{background:transparent; border-color: var(--muted)}
-.tabbtn.active{background: var(--accent); color:#fff; border-color: var(--accent)}
-.tabbtn.active:hover{background: var(--accent-ink)}
+/* Understated tab strip — a shared baseline with an underline on the active tab,
+   in keeping with the Arabia Moomin look (no heavy pill buttons). */
+.tabs{display:flex; gap:34px; margin: 10px 0 22px; border-bottom:1px solid var(--border); overflow-x:auto}
+.tabbtn{padding:9px 2px; margin-bottom:-1px; border:none; border-bottom:2px solid transparent; border-radius:0;
+  background:transparent; color: var(--muted); font-weight:400; font-size:15px; letter-spacing:.04em; white-space:nowrap}
+.tabbtn:hover{background:transparent; color: var(--ink); border-color:transparent; border-bottom:2px solid transparent}
+.tabbtn.active{background:transparent; color: var(--accent); border-bottom:2px solid var(--accent); font-weight:500}
+.tabbtn.active:hover{background:transparent; color: var(--accent); border-bottom:2px solid var(--accent)}
+@media (max-width: 719px){ .tabs{gap:0; margin:6px 0 16px} .tabbtn{flex:1; justify-content:center; text-align:center; padding:13px 6px; font-size:16px} }
 .muggrid{display:grid; gap:16px; grid-template-columns: 1fr}
 @media (min-width: 620px){ .muggrid{grid-template-columns:1fr 1fr} }
 @media (min-width: 980px){ .muggrid{grid-template-columns:1fr 1fr 1fr} }
