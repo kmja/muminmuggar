@@ -492,7 +492,8 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const [catBusy, setCatBusy] = useState(false);
   const [onlyMissing, setOnlyMissing] = useState(true);
   const [catQuery, setCatQuery] = useState("");
-  useEffect(() => { if (open) { setBusy(false); setError(""); setRows(null); setCat(null); setCatQuery(""); } }, [open]);
+  // Open straight into the browsable catalogue (search + add mugs you don't own).
+  useEffect(() => { if (open) { setBusy(false); setError(""); setRows(null); setCat(null); setCatQuery(""); loadCatalogue(); } }, [open]);
   const ownedNames = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => normalizeText(m.name))), [mugs]);
   // A tight key: fold, drop filler words, ignore spacing — so "Snufkin" matches
   // "Snufkin" (and "Too-Ticky" == "Tooticky") but NOT "POP Snufkin" / "ABC Snufkin".
@@ -562,6 +563,8 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
             </div>
           ))}
         </div>
+      ) : catBusy ? (
+        <div className="card pad" style={{ textAlign: "center", border: "none", boxShadow: "none" }}><span className="spin" /> {t("loading")}</div>
       ) : (
         <>
           <div className="row">
@@ -884,8 +887,7 @@ export default function App() {
     <div className="wrap">
       <div className="top">
         <div className="brand" role="button" tabIndex={0} onClick={() => setTab("collection")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setTab("collection"); }} aria-label={t("nav_collection")}>
-          <div className="logo"><MugMark size={26} /></div>
-          <div className="title"><h1>{t("app_title")}<span className="ver">v{APP_VERSION}</span></h1></div>
+          <div className="title"><h1>{t("app_title")}</h1><span className="ver">v{APP_VERSION}</span></div>
         </div>
         <div className="actions">
           <ThemeToggle theme={theme} setTheme={setTheme} />
@@ -902,6 +904,7 @@ export default function App() {
 
       {tab !== "stats" ? (
         <>
+          {mugs.length > 0 ? (
           <div className="card pad" style={{ marginBottom: 12 }}>
             <div className="row" style={{ alignItems: "center" }}>
               <div className="field searchfield" style={{ flex: 1 }}>
@@ -930,9 +933,19 @@ export default function App() {
               </div>
             ) : null}
           </div>
+          ) : null}
 
           {loading ? (
             <div className="card pad"><span className="spin" /> {t("loading")}</div>
+          ) : tab === "wishlist" && viewMugs.length === 0 ? (
+            <div className="card pad" style={{ textAlign: "center" }}>
+              <div className="emptyicon"><Heart size={34} /></div>
+              <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("wishlist_empty_title")}</div>
+              <div className="sub" style={{ marginTop: 6 }}>{t("wishlist_empty_sub")}</div>
+              <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
+                <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
+              </div>
+            </div>
           ) : mugs.length === 0 ? (
             <div className="card pad" style={{ textAlign: "center" }}>
               <div className="emptyicon"><Camera size={34} /></div>
@@ -946,7 +959,10 @@ export default function App() {
           ) : viewMugs.length === 0 ? (
             <div className="card pad"><div className="muted">{t("no_match")}</div></div>
           ) : (
-            <div className="muggrid">{viewMugs.map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+            <>
+              <div className="muggrid">{viewMugs.map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+              {tab === "wishlist" ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
+            </>
           )}
 
           {tab === "wishlist" ? <div className="help" style={{ marginTop: 12 }}>{t("wishlist_tip")}</div> : null}
