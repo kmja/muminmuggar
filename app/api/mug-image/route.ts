@@ -13,11 +13,11 @@ export const maxDuration = 60; // may trigger a one-time catalog sync on first u
  */
 export async function POST(req: Request) {
   try {
-    const { id, name, series, year } = await req.json();
+    const { id, name, series, year, edition } = await req.json();
     if (!name || !String(name).trim()) return NextResponse.json({ error: "name required" }, { status: 400 });
-    const imageUrl = await catalogImage({ name, series, year });
-    const yr = catalogYear({ name, year });
-    const value = catalogValue({ name, year });
+    const imageUrl = await catalogImage({ name, series, year, edition });
+    const yr = catalogYear({ name, year, edition });
+    const value = catalogValue({ name, year, edition });
     if (id) {
       try {
         if (imageUrl) await setMugPhoto(String(id), imageUrl);

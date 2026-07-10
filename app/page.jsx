@@ -292,7 +292,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
         const d = items[i]?.draft;
         if (!d || !d.name || items[i].img !== undefined) continue;
         try {
-          const { imageUrl } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ name: d.name, series: d.series, year: d.year }) });
+          const { imageUrl } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ name: d.name, series: d.series, year: d.year, edition: d.edition }) });
           if (cancelled) return;
           setItems((list) => list.map((it, idx) => (idx === i ? { ...it, img: imageUrl || null } : it)));
         } catch { if (!cancelled) setItems((list) => list.map((it, idx) => (idx === i ? { ...it, img: null } : it))); }
@@ -664,7 +664,7 @@ export default function App() {
     const targets = (list || []).filter((m) => m && m.id && m.name && (!m.photoUrl || m.year == null || (m.estValueLow == null && m.estValueHigh == null)));
     for (const m of targets) {
       try {
-        const { imageUrl, year, value } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ id: m.id, name: m.name, series: m.series, year: m.year }) });
+        const { imageUrl, year, value } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ id: m.id, name: m.name, series: m.series, year: m.year, edition: m.edition }) });
         setMugs((prev) => prev.map((x) => {
           if (x.id !== m.id) return x;
           const n = { ...x };

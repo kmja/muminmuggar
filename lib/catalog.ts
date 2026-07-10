@@ -181,20 +181,30 @@ async function cachedRows(): Promise<CatalogRow[]> {
 
 const STOP = new Set(["and", "the", "with", "of", "on", "in", "a", "mug", "moomin"]);
 const words = (s: string) => ` ${s} `;
+const stripParen = (s: unknown) => String(s || "").replace(/\(.*?\)/g, " ");
 
-function score(mug: Pick<Mug, "name" | "series" | "year">, row: CatalogRow): number {
-  const toks = fold(mug.name).split(" ").filter((t) => t && !STOP.has(t));
+// A mug's identifying motif usually lives in `edition` (e.g. "Midsummer"),
+// while `name` is the character list. Try the edition first, then the name.
+type MugQ = Pick<Mug, "name" | "year"> & { edition?: string | null; series?: string | null };
+const candidates = (mug: MugQ): string[] =>
+  [stripParen(mug.edition), stripParen(mug.name)].map((s) => s.trim()).filter(Boolean);
+
+/** Score a query name against a row's norm; all query tokens must appear as whole words. */
+const sig = (norm: string) => norm.split(" ").filter((t) => t && !STOP.has(t) && !/^\d+$/.test(t) && !/^\d?l$/.test(t));
+
+function scoreNorm(qName: string, year: number | null | undefined, rowNorm: string, rowYear: number | null): number {
+  const toks = fold(qName).split(" ").filter((t) => t && !STOP.has(t));
   if (!toks.length) return 0;
-  const nw = words(row.norm);
-  // Every name token must appear as a whole word (so "ABC F" ≠ "ABC L").
+  const nw = words(rowNorm);
   if (!toks.every((t) => nw.includes(words(t)))) return 0;
-  let s = 10 + toks.length; // more matched tokens = a more specific hit
-  if (mug.year && row.year) s += Number(mug.year) === Number(row.year) ? 6 : -3;
-  if (mug.series) {
-    const st = fold(mug.series).split(" ").filter((t) => t && !STOP.has(t));
-    s += st.filter((t) => nw.includes(words(t))).length;
-  }
-  s -= row.norm.length / 300; // tie-break toward the most specific (shortest) title
+  let s = 10 + toks.length;
+  // Penalise rows that carry extra descriptive words (so "Moominvalley" prefers
+  // "Moominvalley" over "Moominvalley Park Japan").
+  s -= sig(rowNorm).filter((t) => !toks.includes(t)).length * 1.5;
+  // Year is a tiebreaker (helps pick the right seasonal), not a blocker —
+  // Gemini's year can be off, and a name match is already a hard requirement.
+  if (year && rowYear) s += Number(year) === Number(rowYear) ? 6 : -1;
+  s -= rowNorm.length / 300;
   return s;
 }
 
@@ -207,45 +217,45 @@ export async function listMasterCatalog(): Promise<MasterEntry[]> {
   return (masterCatalog as MasterEntry[]).map((e) => ({ ...e, estLow: toSek(e.estLow), estHigh: toSek(e.estHigh), estCur: "SEK" }));
 }
 
-/** Best-matching master-catalogue entry for a mug (by name + year). */
-function matchMaster(mug: Pick<Mug, "name" | "year">): MasterEntry | null {
-  const toks = fold(mug.name).split(" ").filter((t) => t && !STOP.has(t));
-  if (!toks.length) return null;
-  let best: MasterEntry | null = null, bs = 10.5;
-  for (const e of masterCatalog as MasterEntry[]) {
-    const nw = words(e.norm);
-    if (!toks.every((t) => nw.includes(words(t)))) continue;
-    let s = 10 + toks.length;
-    if (mug.year && e.year) s += Number(mug.year) === Number(e.year) ? 5 : -2;
-    if (s > bs) { bs = s; best = e; }
+/** Best-matching master-catalogue entry for a mug (edition first, then name). */
+function matchMaster(mug: MugQ): MasterEntry | null {
+  for (const q of candidates(mug)) {
+    let best: MasterEntry | null = null, bs = 9.5;
+    for (const e of masterCatalog as MasterEntry[]) {
+      const s = scoreNorm(q, mug.year, e.norm, e.year);
+      if (s > bs) { bs = s; best = e; }
+    }
+    if (best) return best;
   }
-  return best;
+  return null;
 }
 
 /** Authoritative production year for a mug (for filling in missing years). */
-export function catalogYear(mug: Pick<Mug, "name" | "year">): number | null {
+export function catalogYear(mug: MugQ): number | null {
   return matchMaster(mug)?.year ?? null;
 }
 
 /** Authoritative market-value range (SEK) for a mug, from the catalogue. */
-export function catalogValue(mug: Pick<Mug, "name" | "year">): { low: number | null; high: number | null; cur: string } | null {
+export function catalogValue(mug: MugQ): { low: number | null; high: number | null; cur: string } | null {
   const m = matchMaster(mug);
   if (!m || (m.estLow == null && m.estHigh == null)) return null;
   return { low: toSek(m.estLow), high: toSek(m.estHigh), cur: "SEK" };
 }
 
 /** Best-matching official image for a mug, from our stored catalog. No web/Gemini calls. */
-export async function catalogImage(mug: Pick<Mug, "name" | "series" | "year">): Promise<string | null> {
+export async function catalogImage(mug: MugQ): Promise<string | null> {
   let rows = await cachedRows();
   if (!rows.length) {
     try { await loadSeedOnce(); } catch { /* ignore */ }
     rows = await cachedRows();
   }
-  let best: CatalogRow | null = null;
-  let bestScore = 10.5; // require a real name match
-  for (const r of rows) {
-    const sc = score(mug, r);
-    if (sc > bestScore) { bestScore = sc; best = r; }
+  for (const q of candidates(mug)) {
+    let best: CatalogRow | null = null, bs = 9.5;
+    for (const r of rows) {
+      const s = scoreNorm(q, mug.year, r.norm, r.year);
+      if (s > bs) { bs = s; best = r; }
+    }
+    if (best) return best.imageUrl;
   }
-  return best?.imageUrl ?? null;
+  return null;
 }
