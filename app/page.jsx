@@ -235,85 +235,103 @@ function validateMug(m, t) {
 }
 function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
   const t = useT();
+  const lang = useLang();
   const [d, setD] = useState(initial);
   const [tagInput, setTagInput] = useState((initial?.tags || []).join(", "));
   const [errors, setErrors] = useState({});
+  const [added, setAdded] = useState(0);   // mugs saved via "add another" without closing
   const uploadRef = useRef(null);
-  useEffect(() => { setD(initial); setTagInput((initial?.tags || []).join(", ")); setErrors({}); }, [initial, open]);
+  useEffect(() => { setD(initial); setTagInput((initial?.tags || []).join(", ")); setErrors({}); setAdded(0); }, [initial, open]);
   const dups = useMemo(() => (mode === "create" && d ? findDuplicates(d, mugs || []) : []), [d?.name, d?.year, d?.series, mode, mugs]);
   if (!d) return null;
   const up = (patch) => setD((x) => ({ ...x, ...patch }));
 
+  // Pick a catalogue entry → fill in everything derived (series, year, value, image).
+  const pick = (e) => up({
+    name: e.nameEn,
+    year: e.year != null ? e.year : "",
+    series: "Arabia Moomin",
+    edition: "",
+    capacity: e.capacity || d.capacity || "",
+    photoUrl: d.photoUrl || e.image || "",
+    estValueLow: catSek(e.estLow),
+    estValueHigh: catSek(e.estHigh),
+    estValueCurrency: "SEK",
+  });
+
+  // Build a clean record and validate; returns the record or null if invalid.
+  const build = () => {
+    const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: tokenizeTags(tagInput) };
+    const e = validateMug(next, t);
+    // Every added mug must map to a catalogue entry (no free-typed mugs).
+    if (mode === "create" && (!next.name || !CATALOG_NAMES.has(foldC(next.name)))) e.name = t("err_pick_catalog");
+    setErrors(e);
+    return Object.keys(e).length ? null : next;
+  };
+  const submit = async (addAnother) => {
+    const next = build();
+    if (!next) return;
+    const ok = await onSave(next, { keepOpen: addAnother });
+    if (ok && addAnother) {
+      // Reset for the next mug but keep the chosen status (usually "owned").
+      setD({ ...blankMug(), status: d.status });
+      setTagInput(""); setErrors({}); setAdded((n) => n + 1);
+    }
+  };
+
   const footer = (
     <>
       <button onClick={onClose}>{t("cancel")}</button>
-      <button className="primary" disabled={saving} onClick={() => {
-        const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: tokenizeTags(tagInput) };
-        const e = validateMug(next, t);
-        // Every added mug must map to a catalogue entry (no free-typed mugs).
-        if (mode === "create" && (!next.name || !CATALOG_NAMES.has(foldC(next.name)))) e.name = t("err_pick_catalog");
-        setErrors(e); if (Object.keys(e).length) return;
-        onSave(next);
-      }}>{saving ? <span className="spin" /> : t("save_mug")}</button>
+      {mode === "create" ? <button disabled={saving} onClick={() => submit(true)}><Plus size={15} /> {t("save_add_another")}</button> : null}
+      <button className="primary" disabled={saving} onClick={() => submit(false)}>{saving ? <span className="spin" /> : t("save_mug")}</button>
     </>
   );
 
   return (
     <Modal open={open} title={mode === "edit" ? t("form_edit_title") : t("form_add_title")} subtitle={t("form_subtitle")} onClose={onClose} footer={footer}>
-      <div className="grid" style={{ gap: 12 }}>
-        {d.photoUrl ? <div className="card" style={{ overflow: "hidden" }}><img src={d.photoUrl} alt="Mug" style={{ width: "100%", maxHeight: 240, objectFit: "cover", display: "block" }} /></div> : null}
-        {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
-        {dups.length ? <div className="note warn">{t("form_dup_warn", { list: dups.map((x) => x.name + (x.year ? ` (${x.year})` : "")).join(", ") })}</div> : null}
+      <div className="grid" style={{ gap: 14 }}>
+        {dups.length ? <div className="note warn">{t("form_dup_warn", { list: dups.map((x) => catName(x.name, lang) + (x.year ? ` (${x.year})` : "")).join(", ") })}</div> : null}
 
-        <div className="row">
-          <div className="field" style={{ flex: 2, minWidth: 200 }}><label>{t("form_name")}</label>
-            <MugPicker value={d.name} invalid={!!errors.name} onPick={(e) => up({
-              name: e.nameEn,
-              year: e.year != null ? e.year : "",
-              series: "Arabia Moomin",
-              edition: "",
-              photoUrl: d.photoUrl || e.image || "",
-              estValueLow: d.estValueLow ?? catSek(e.estLow),
-              estValueHigh: d.estValueHigh ?? catSek(e.estHigh),
-              estValueCurrency: d.estValueCurrency || "SEK",
-            })} />
-            {errors.name ? <div className="err">{errors.name}</div> : null}
+        {/* Lead with the catalogue picker — it drives everything else. */}
+        <div className="field bigpick"><label>{t("form_name")}</label>
+          <MugPicker value={d.name} invalid={!!errors.name} onPick={pick} />
+          {errors.name ? <div className="err">{errors.name}</div> : null}
+        </div>
+
+        <div className="field"><label>{t("form_status")}</label><select value={d.status} onChange={(e) => up({ status: e.target.value })}>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+
+        {d.photoUrl ? <div className="card" style={{ overflow: "hidden" }}><img src={d.photoUrl} alt={catName(d.name, lang) || "Mug"} style={{ width: "100%", maxHeight: 220, objectFit: "cover", display: "block" }} /></div> : null}
+        {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
+
+        {/* Everything personal is optional and tucked away. */}
+        <details className="moredetails">
+          <summary>{t("form_more_details")}</summary>
+          <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+            <div className="row">
+              <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
+              <div className="field"><label>{t("form_acquired")}</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
+            </div>
+            <div className="field"><label>{t("form_condition_notes")}</label><input value={d.conditionNotes || ""} onChange={(e) => up({ conditionNotes: e.target.value })} placeholder={t("form_condition_notes_ph")} /></div>
+            <div className="field"><label>{t("form_location")}</label><input value={d.location || ""} onChange={(e) => up({ location: e.target.value })} placeholder={t("form_location_ph")} /></div>
+            <div className="row">
+              <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} />{errors.price ? <div className="err">{errors.price}</div> : null}</div>
+              <div className="field"><label>{t("form_currency")}</label><input value={d.currency || ""} onChange={(e) => up({ currency: e.target.value })} placeholder="SEK" /></div>
+            </div>
+            <div className="field"><label>{t("form_tags")}</label><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder={t("form_tags_ph")} /></div>
+            <div className="switch"><span className="mini">{t("form_favorite")}</span><input type="checkbox" checked={!!d.favorite} onChange={(e) => up({ favorite: e.target.checked })} style={{ width: "auto" }} /></div>
+            <div className="field">
+              <label>{t("form_photo")}</label>
+              <div className="row">
+                <button type="button" onClick={() => uploadRef.current?.click()}>{t("form_upload")}</button>
+                <button type="button" className={d.photoUrl ? "danger" : ""} disabled={!d.photoUrl} onClick={() => up({ photoUrl: "" })}>{t("form_clear")}</button>
+                <input className="sr-only" ref={uploadRef} type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const raw = await fileToDataUrl(f); up({ photoUrl: await downscaleImage(raw) }); e.target.value = ""; }} />
+              </div>
+            </div>
+            <div className="field"><label>{t("form_notes")}</label><textarea value={d.notes || ""} onChange={(e) => up({ notes: e.target.value })} placeholder={t("form_notes_ph")} /></div>
           </div>
-          <div className="field" style={{ minWidth: 150 }}><label>{t("form_status")}</label><select value={d.status} onChange={(e) => up({ status: e.target.value })}>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
-        </div>
-        <div className="row">
-          <div className="field"><label>{t("form_series")}</label><input value={d.series || ""} onChange={(e) => up({ series: e.target.value })} placeholder={t("form_series_ph")} /></div>
-          <div className="field"><label>{t("form_edition")}</label><input value={d.edition || ""} onChange={(e) => up({ edition: e.target.value })} placeholder={t("form_edition_ph")} /></div>
-        </div>
-        <div className="row">
-          <div className="field"><label>{t("form_year")}</label><input inputMode="numeric" value={d.year ?? ""} onChange={(e) => up({ year: e.target.value })} placeholder={t("form_year_ph")} />{errors.year ? <div className="err">{errors.year}</div> : null}</div>
-          <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
-        </div>
-        <div className="field"><label>{t("form_condition_notes")}</label><input value={d.conditionNotes || ""} onChange={(e) => up({ conditionNotes: e.target.value })} placeholder={t("form_condition_notes_ph")} /></div>
-        <div className="row">
-          <div className="field"><label>{t("form_location")}</label><input value={d.location || ""} onChange={(e) => up({ location: e.target.value })} placeholder={t("form_location_ph")} /></div>
-          <div className="field"><label>{t("form_acquired")}</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
-        </div>
-        <div className="row">
-          <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} />{errors.price ? <div className="err">{errors.price}</div> : null}</div>
-          <div className="field"><label>{t("form_currency")}</label><input value={d.currency || ""} onChange={(e) => up({ currency: e.target.value })} placeholder="SEK" /></div>
-        </div>
-        <div className="row">
-          <div className="field"><label>{t("form_est_low")}</label><input inputMode="decimal" value={d.estValueLow ?? ""} onChange={(e) => up({ estValueLow: e.target.value === "" ? null : Number(e.target.value) })} placeholder="—" /></div>
-          <div className="field"><label>{t("form_est_high")}</label><input inputMode="decimal" value={d.estValueHigh ?? ""} onChange={(e) => up({ estValueHigh: e.target.value === "" ? null : Number(e.target.value) })} placeholder="—" /></div>
-          <div className="field" style={{ maxWidth: 120 }}><label>{t("form_val_currency")}</label><input value={d.estValueCurrency || ""} onChange={(e) => up({ estValueCurrency: e.target.value })} placeholder="SEK" /></div>
-        </div>
-        <div className="field"><label>{t("form_tags")}</label><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder={t("form_tags_ph")} /></div>
-        <div className="switch"><span className="mini">{t("form_favorite")}</span><input type="checkbox" checked={!!d.favorite} onChange={(e) => up({ favorite: e.target.checked })} style={{ width: "auto" }} /></div>
-        <div className="field">
-          <label>{t("form_photo")}</label>
-          <div className="row">
-            <button type="button" onClick={() => uploadRef.current?.click()}>{t("form_upload")}</button>
-            <button type="button" className={d.photoUrl ? "danger" : ""} disabled={!d.photoUrl} onClick={() => up({ photoUrl: "" })}>{t("form_clear")}</button>
-            <input className="sr-only" ref={uploadRef} type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const raw = await fileToDataUrl(f); up({ photoUrl: await downscaleImage(raw) }); e.target.value = ""; }} />
-          </div>
-        </div>
-        <div className="field"><label>{t("form_notes")}</label><textarea value={d.notes || ""} onChange={(e) => up({ notes: e.target.value })} placeholder={t("form_notes_ph")} /></div>
+        </details>
+
+        {added > 0 ? <div className="note good">{t("form_added_count", { n: added })}</div> : null}
       </div>
     </Modal>
   );
@@ -770,7 +788,7 @@ export default function App() {
     try { if (theme === "system") localStorage.removeItem("theme"); else localStorage.setItem("theme", theme); } catch { /* ignore */ }
   }, [theme]);
 
-  const saveMug = async (next) => {
+  const saveMug = async (next, opts = {}) => {
     setSaving(true);
     try {
       if (next.id && mugs.some((m) => m.id === next.id)) {
@@ -781,8 +799,9 @@ export default function App() {
         setMugs((prev) => [mug, ...prev]);
         if (!mug.photoUrl) ensureImages([mug]);
       }
-      setFormOpen(false);
-    } catch (e) { alert(t("save_failed", { msg: e.message || e })); }
+      if (!opts.keepOpen) setFormOpen(false);
+      return true;
+    } catch (e) { alert(t("save_failed", { msg: e.message || e })); return false; }
     finally { setSaving(false); }
   };
   const addMany = async (drafts) => {

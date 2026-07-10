@@ -181,6 +181,16 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* mug picker (catalogue-locked name selector) */
 .mugpicker{position:relative}
 .mugpicker input.invalid{border-color:var(--danger)}
+/* The manual-add form leads with a large catalogue picker. */
+.bigpick .mugpicker input{font-size:17px; padding:15px 16px; height:auto}
+/* Collapsed "more details" section for the optional/personal fields. */
+.moredetails{border:1px solid var(--border); border-radius:10px}
+.moredetails>summary{cursor:pointer; list-style:none; display:flex; align-items:center; gap:9px; padding:14px 16px; color:var(--muted); font-size:14px; letter-spacing:.02em}
+.moredetails>summary::-webkit-details-marker{display:none}
+.moredetails>summary::before{content:"›"; font-size:19px; line-height:1; transition:transform .15s ease; color:var(--muted)}
+.moredetails[open]>summary{color:var(--ink); border-bottom:1px solid var(--border)}
+.moredetails[open]>summary::before{transform:rotate(90deg)}
+.moredetails>.grid{padding:14px 16px 16px; margin-top:0 !important}
 .pickmenu{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:70; max-height:min(340px, 52vh); overflow:auto;
   background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 30px rgba(27,20,35,.18); padding:6px}
 .pickitem{display:flex; align-items:center; gap:11px; width:100%; justify-content:flex-start; border:none; background:transparent;
