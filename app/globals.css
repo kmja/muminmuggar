@@ -183,6 +183,25 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .mugpicker input.invalid{border-color:var(--danger)}
 /* The manual-add form leads with a large catalogue picker. */
 .bigpick .mugpicker input{font-size:17px; padding:15px 16px; height:auto}
+/* Collection / Wishlist as a two-option segmented radio. */
+.segradio{display:flex; gap:8px}
+.segradio button{flex:1; justify-content:center; padding:13px 14px; border-radius:10px; border:1.5px solid var(--border);
+  background:transparent; color:var(--muted); font-size:15px}
+.segradio button:hover{background:transparent; border-color:var(--muted)}
+.segradio button.active{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500}
+/* Catalogue product shot: show the whole mug, modestly sized. */
+.formphoto{display:flex; justify-content:center; align-items:center; background:var(--lilac); border-radius:10px; padding:12px}
+.formphoto img{max-height:150px; max-width:100%; object-fit:contain; display:block}
+/* Form footer actions — big, mobile-first, with a quiet cancel. */
+.formactions{display:flex; gap:10px; width:100%; align-items:center; justify-content:flex-end; flex-wrap:wrap}
+.formactions .linkbtn{margin-right:auto}   /* quiet cancel, far left on desktop */
+.big{padding:14px 22px; font-size:16px; border-radius:12px}
+.linkbtn{border:none; background:transparent; color:var(--muted); padding:14px 12px; font-size:15px}
+.linkbtn:hover{background:transparent; color:var(--ink)}
+@media (max-width: 719px){
+  .formactions{flex-direction:column-reverse; align-items:stretch; gap:9px}   /* primary on top, cancel at the bottom */
+  .formactions .big, .formactions .linkbtn{width:100%; justify-content:center; margin-right:0}
+}
 /* Collapsed "more details" section for the optional/personal fields. */
 .moredetails{border:1px solid var(--border); border-radius:10px}
 .moredetails>summary{cursor:pointer; list-style:none; display:flex; align-items:center; gap:9px; padding:14px 16px; color:var(--muted); font-size:14px; letter-spacing:.02em}

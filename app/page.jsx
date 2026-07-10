@@ -280,11 +280,11 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
   };
 
   const footer = (
-    <>
-      <button onClick={onClose}>{t("cancel")}</button>
-      {mode === "create" ? <button disabled={saving} onClick={() => submit(true)}><Plus size={15} /> {t("save_add_another")}</button> : null}
-      <button className="primary" disabled={saving} onClick={() => submit(false)}>{saving ? <span className="spin" /> : t("save_mug")}</button>
-    </>
+    <div className="formactions">
+      <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
+      {mode === "create" ? <button className="big" disabled={saving} onClick={() => submit(true)}><Plus size={17} /> {t("save_add_another")}</button> : null}
+      <button className="primary big" disabled={saving} onClick={() => submit(false)}>{saving ? <span className="spin" /> : t("save_mug")}</button>
+    </div>
   );
 
   return (
@@ -298,9 +298,14 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
           {errors.name ? <div className="err">{errors.name}</div> : null}
         </div>
 
-        <div className="field"><label>{t("form_status")}</label><select value={d.status} onChange={(e) => up({ status: e.target.value })}>{STATUS_VALUES.map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+        <div className="field"><label>{t("form_status")}</label>
+          <div className="segradio" role="radiogroup" aria-label={t("form_status")}>
+            <button type="button" role="radio" aria-checked={d.status !== "wishlist"} className={d.status !== "wishlist" ? "active" : ""} onClick={() => up({ status: "owned" })}>{t("tab_collection")}</button>
+            <button type="button" role="radio" aria-checked={d.status === "wishlist"} className={d.status === "wishlist" ? "active" : ""} onClick={() => up({ status: "wishlist" })}>{t("nav_wishlist")}</button>
+          </div>
+        </div>
 
-        {d.photoUrl ? <div className="card" style={{ overflow: "hidden" }}><img src={d.photoUrl} alt={catName(d.name, lang) || "Mug"} style={{ width: "100%", maxHeight: 220, objectFit: "cover", display: "block" }} /></div> : null}
+        {d.photoUrl ? <div className="formphoto"><img src={d.photoUrl} alt={catName(d.name, lang) || "Mug"} /></div> : null}
         {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
 
         {/* Everything personal is optional and tucked away. */}
