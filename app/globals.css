@@ -26,11 +26,17 @@
 .signincard{width:100%; max-width:380px; text-align:center; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:36px 28px; box-shadow:0 12px 40px rgba(27,20,35,.10)}
 .signincard h1{font-size:26px; font-weight:300; margin-top:14px}
 .signinlogo{width:72px; height:72px; margin:0 auto; border-radius:18px; background:var(--lilac); color:var(--accent); display:flex; align-items:center; justify-content:center}
-/* Account row in the alerts modal */
-.accountrow{display:flex; align-items:center; gap:12px; justify-content:space-between}
-.accountwho{display:flex; align-items:center; gap:11px; min-width:0}
-.accountavatar{width:40px; height:40px; flex:none; border-radius:999px; overflow:hidden; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:500}
-.accountavatar img{width:100%; height:100%; object-fit:cover}
+/* Top-right avatar button + its dropdown menu */
+.avatarbtn{width:40px; height:40px; padding:0; flex:none; border-radius:999px; overflow:hidden; border:1.5px solid var(--border);
+  background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:500}
+.avatarbtn:hover{border-color:var(--muted); background:var(--accent)}
+.avatarbtn img{width:100%; height:100%; object-fit:cover}
+.accountmenu{position:absolute; right:0; top:calc(100% + 8px); background:var(--card); border:1px solid var(--border);
+  border-radius:12px; box-shadow:0 14px 34px rgba(27,20,35,.18); padding:6px; z-index:60; min-width:210px;
+  display:flex; flex-direction:column; gap:2px}
+.accthead{padding:9px 11px 7px}
+.acctemail{font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.menudiv{height:1px; background:var(--border); margin:4px 2px}
 html,body{height:100%}
 body{
   margin:0;

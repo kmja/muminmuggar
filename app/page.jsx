@@ -8,7 +8,7 @@ import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
-  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3,
+  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut,
 } from "lucide-react";
 
 /* ------------------------------- i18n --------------------------------- */
@@ -188,6 +188,49 @@ function LangPicker({ lang, setLang }) {
               <span style={{ fontSize: 18 }}>{l.flag}</span><span>{l.label}</span>
             </button>
           ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+/* Top-right avatar → menu with theme, language, and sign-out. */
+function AccountMenu({ user, theme, setTheme, lang, setLang }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const [systemDark, setSystemDark] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => setSystemDark(mq.matches); sync();
+    mq.addEventListener?.("change", sync);
+    return () => mq.removeEventListener?.("change", sync);
+  }, []);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const isDark = theme === "dark" || (theme === "system" && systemDark);
+  const initial = (user?.name || user?.email || "?").trim().slice(0, 1).toUpperCase();
+  return (
+    <div className="langpick" ref={ref}>
+      <button type="button" className="avatarbtn" aria-haspopup="menu" aria-expanded={open} aria-label={t("account")} onClick={() => setOpen((o) => !o)}>
+        {user?.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" /> : <span>{initial}</span>}
+      </button>
+      {open ? (
+        <div className="accountmenu" role="menu">
+          {user ? <div className="accthead"><div className="mini">{t("signed_in_as")}</div><div className="acctemail" title={user.email || user.name}>{user.email || user.name}</div></div> : null}
+          <button type="button" className="langitem" role="menuitem" onClick={() => setTheme(isDark ? "light" : "dark")}>
+            {isDark ? <Sun size={17} /> : <Moon size={17} />}<span>{isDark ? t("theme_light") : t("theme_dark")}</span>
+          </button>
+          <div className="menudiv" />
+          {LANGS.map((l) => (
+            <button key={l.code} type="button" role="menuitem" className={"langitem" + (l.code === lang ? " active" : "")} onClick={() => { setLang(l.code); }}>
+              <span style={{ fontSize: 18 }}>{l.flag}</span><span>{l.label}</span>
+            </button>
+          ))}
+          <div className="menudiv" />
+          <button type="button" className="langitem" role="menuitem" onClick={() => signOut()}><LogOut size={17} /><span>{t("sign_out")}</span></button>
         </div>
       ) : null}
     </div>
@@ -1081,11 +1124,10 @@ export default function App() {
           <div className="title"><h1>{t("app_title")}</h1><span className="ver">v{APP_VERSION}</span></div>
         </div>
         <div className="actions">
-          <ThemeToggle theme={theme} setTheme={setTheme} />
-          <LangPicker lang={lang} setLang={setLang} />
           <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("scan")}</button>
           <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
           <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
+          <AccountMenu user={currentUser} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
         </div>
       </div>
 
@@ -1217,14 +1259,6 @@ export default function App() {
 
       <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title={t("about_title")} subtitle={t("about_subtitle")}>
         <div className="grid" style={{ gap: 12 }}>
-          <div className="accountrow">
-            <div className="accountwho">
-              <span className="accountavatar">{currentUser?.image ? <img src={currentUser.image} alt="" /> : (currentUser?.name || currentUser?.email || "?").slice(0, 1).toUpperCase()}</span>
-              <div style={{ minWidth: 0 }}><div className="mini">{t("signed_in_as")}</div><div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{currentUser?.email || currentUser?.name}</div></div>
-            </div>
-            <button onClick={() => signOut()}>{t("sign_out")}</button>
-          </div>
-          <div className="divider" />
           <div className="note">{t("about_body")}</div>
           <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? <CheckCircle2 size={16} /> : <Bell size={16} />} {notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
