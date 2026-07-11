@@ -88,7 +88,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* Compact table view: image · name/meta · actions per row */
 .muglist{display:flex; flex-direction:column; gap:8px}
 .mugrow{display:flex; align-items:center; gap:14px; padding:10px 12px 10px 10px; border:1px solid var(--border); border-radius:12px; background:var(--card)}
-.mugrow-thumb{position:relative; width:78px; height:78px; flex:none; border-radius:10px; background:var(--lilac); display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.mugrow-thumb{position:relative; width:78px; height:78px; flex:none; border-radius:10px; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 .mugrow-thumb img{width:100%; height:100%; object-fit:contain; padding:5px; display:block}
 .mugrow-fav{position:absolute; right:-4px; top:-4px; width:18px; height:18px; border-radius:999px; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .mugrow-main{flex:1; min-width:0}
@@ -183,7 +183,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .vfcapture:hover{background:transparent}
 .vfcapture:active::after{background: var(--lilac)}
 .scanrow{display:flex; gap:13px; align-items:flex-start; padding:13px; border:1px solid var(--border); border-radius:10px}
-.scanthumb{width:54px; height:54px; flex:none; border-radius:8px; overflow:hidden; background:var(--lilac); display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.scanthumb{width:54px; height:54px; flex:none; border-radius:8px; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 /* Quick-add "+" on each row of the add-mugs list. */
 .addbtn{flex:none; width:46px; height:46px; padding:0; justify-content:center; border-radius:999px; border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}
@@ -210,7 +210,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .segradio button:hover{background:transparent; border-color:var(--muted)}
 .segradio button.active{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500}
 /* Catalogue product shot: show the whole mug, modestly sized. */
-.formphoto{display:flex; justify-content:center; align-items:center; background:var(--lilac); border-radius:10px; padding:12px}
+.formphoto{display:flex; justify-content:center; align-items:center; background:transparent; border-radius:10px; padding:12px}
 .formphoto img{max-height:160px; max-width:100%; object-fit:contain; display:block}
 /* Form footer actions — big, mobile-first, with a quiet cancel. */
 .formactions{display:flex; gap:10px; width:100%; align-items:center; justify-content:flex-end; flex-wrap:wrap}
@@ -235,7 +235,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .pickitem{display:flex; align-items:center; gap:11px; width:100%; justify-content:flex-start; border:none; background:transparent;
   padding:8px 9px; border-radius:8px; text-align:left}
 .pickitem:hover{background:var(--lilac)}
-.pickthumb{width:38px; height:38px; flex:none; border-radius:6px; overflow:hidden; background:var(--lilac);
+.pickthumb{width:38px; height:38px; flex:none; border-radius:6px; overflow:hidden; background:transparent;
   display:flex; align-items:center; justify-content:center; color:var(--accent)}
 .pickthumb img{width:100%; height:100%; object-fit:contain}
 .pickname{display:flex; flex-direction:column; min-width:0; font-weight:500; font-size:15px; color:var(--text)}
