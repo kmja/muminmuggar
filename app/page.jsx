@@ -551,7 +551,7 @@ function AddModal({ open, onClose, mugs, onAdd }) {
     <Modal open={open} wide title={t("add_mugs_title")} subtitle={t("add_mugs_sub")} onClose={onClose} footer={footer}>
       <div className="grid" style={{ gap: 10 }}>
         <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} autoFocus />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
         </div>
         {added.size ? <div className="help">{t("add_mugs_edit_hint")}</div> : null}
         {results.length === 0 ? <div className="card pad"><div className="muted">{t("add_mugs_none")}</div></div>
