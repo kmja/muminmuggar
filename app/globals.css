@@ -87,9 +87,9 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .viewtoggle{display:flex; gap:4px; flex:none}
 /* Compact table view: image · name/meta · actions per row */
 .muglist{display:flex; flex-direction:column; gap:8px}
-.mugrow{display:flex; align-items:center; gap:13px; padding:8px 12px 8px 8px; border:1px solid var(--border); border-radius:12px; background:var(--card)}
-.mugrow-thumb{position:relative; width:52px; height:52px; flex:none; border-radius:9px; background:var(--lilac); display:flex; align-items:center; justify-content:center; color:var(--accent)}
-.mugrow-thumb img{width:100%; height:100%; object-fit:contain; padding:3px; display:block}
+.mugrow{display:flex; align-items:center; gap:14px; padding:10px 12px 10px 10px; border:1px solid var(--border); border-radius:12px; background:var(--card)}
+.mugrow-thumb{position:relative; width:78px; height:78px; flex:none; border-radius:10px; background:var(--lilac); display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.mugrow-thumb img{width:100%; height:100%; object-fit:contain; padding:5px; display:block}
 .mugrow-fav{position:absolute; right:-4px; top:-4px; width:18px; height:18px; border-radius:999px; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .mugrow-main{flex:1; min-width:0}
 .mugrow-name{font-weight:400; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
