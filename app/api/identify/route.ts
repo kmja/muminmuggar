@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { identifyMug } from "@/lib/gemini";
 import { resolveMug } from "@/lib/catalog";
+import { currentOwner, unauthorized } from "@/lib/session";
 import type { AiMug } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -31,6 +32,7 @@ function draft(ai: AiMug, photoUrl: string) {
 }
 
 export async function POST(req: Request) {
+  if (!(await currentOwner())) return unauthorized();
   try {
     const { imageDataUrl } = await req.json();
     if (!imageDataUrl) return NextResponse.json({ error: "No image provided" }, { status: 400 });

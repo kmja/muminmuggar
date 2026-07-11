@@ -21,6 +21,16 @@
   --shadow: 0 1px 3px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}
+/* Sign-in gate */
+.authgate{min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px}
+.signincard{width:100%; max-width:380px; text-align:center; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:36px 28px; box-shadow:0 12px 40px rgba(27,20,35,.10)}
+.signincard h1{font-size:26px; font-weight:300; margin-top:14px}
+.signinlogo{width:72px; height:72px; margin:0 auto; border-radius:18px; background:var(--lilac); color:var(--accent); display:flex; align-items:center; justify-content:center}
+/* Account row in the alerts modal */
+.accountrow{display:flex; align-items:center; gap:12px; justify-content:space-between}
+.accountwho{display:flex; align-items:center; gap:11px; min-width:0}
+.accountavatar{width:40px; height:40px; flex:none; border-radius:999px; overflow:hidden; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:500}
+.accountavatar img{width:100%; height:100%; object-fit:cover}
 html,body{height:100%}
 body{
   margin:0;

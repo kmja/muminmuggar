@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { currentOwner, unauthorized } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
   try {
     const sub = await req.json();
     const endpoint = sub?.endpoint;
@@ -14,10 +17,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid subscription" }, { status: 400 });
     }
     await query(
-      `INSERT INTO push_subscriptions (endpoint, p256dh, auth)
-       VALUES ($1,$2,$3)
-       ON CONFLICT (endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth`,
-      [endpoint, p256dh, auth],
+      `INSERT INTO push_subscriptions (owner, endpoint, p256dh, auth)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (endpoint) DO UPDATE SET owner = EXCLUDED.owner, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth`,
+      [owner, endpoint, p256dh, auth],
     );
     return NextResponse.json({ ok: true });
   } catch (e) {

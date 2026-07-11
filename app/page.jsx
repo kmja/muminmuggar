@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import MASTER_CATALOG from "../lib/master-catalog.json";
@@ -819,6 +820,13 @@ export default function App() {
   const [theme, setTheme] = useState("system"); // system | light | dark
   const t = useMemo(() => makeT(lang), [lang]);
 
+  // Auth: a signed-in Google account is required. NEXT_PUBLIC_DEV_OWNER is a
+  // local-only bypass (mirrors the server DEV_OWNER) so the app runs without creds.
+  const { data: session, status } = useSession();
+  const devOwner = process.env.NEXT_PUBLIC_DEV_OWNER || "";
+  const authed = status === "authenticated" || !!devOwner;
+  const currentUser = session?.user || (devOwner ? { email: devOwner, name: devOwner } : null);
+
   const [mugs, setMugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -871,7 +879,6 @@ export default function App() {
     }
   };
   useEffect(() => {
-    load();
     const params = new URLSearchParams(window.location.search);
     if (params.get("tab") === "wishlist") setTab("wishlist");
     // Restore the saved language preference (Swedish by default).
@@ -883,6 +890,8 @@ export default function App() {
     // Register the service worker so the app is an installable PWA.
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
+  // Load the collection once the user is signed in.
+  useEffect(() => { if (authed) load(); }, [authed]);
   useEffect(() => {
     try { localStorage.setItem("lang", lang); } catch { /* ignore */ }
     if (typeof document !== "undefined") document.documentElement.lang = lang;
@@ -1043,6 +1052,26 @@ export default function App() {
     { k: "stats", label: t("tab_stats") },
   ];
 
+  // Sign-in gate — the collection is per-account, so require Google sign-in first.
+  if (!authed) {
+    return (
+      <I18nContext.Provider value={t}>
+        <div className="wrap authgate">
+          <div className="signincard">
+            <div className="signinlogo"><MugMark size={40} /></div>
+            <h1>{t("app_title")}</h1>
+            <p className="sub" style={{ marginTop: 6 }}>{t("signin_sub")}</p>
+            <div style={{ marginTop: 22 }}>
+              {status === "loading"
+                ? <span className="spin" />
+                : <button className="primary big" onClick={() => signIn("google")} style={{ width: "100%", justifyContent: "center" }}>{t("signin_google")}</button>}
+            </div>
+          </div>
+        </div>
+      </I18nContext.Provider>
+    );
+  }
+
   return (
     <I18nContext.Provider value={t}>
     <LangContext.Provider value={lang}>
@@ -1188,6 +1217,14 @@ export default function App() {
 
       <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title={t("about_title")} subtitle={t("about_subtitle")}>
         <div className="grid" style={{ gap: 12 }}>
+          <div className="accountrow">
+            <div className="accountwho">
+              <span className="accountavatar">{currentUser?.image ? <img src={currentUser.image} alt="" /> : (currentUser?.name || currentUser?.email || "?").slice(0, 1).toUpperCase()}</span>
+              <div style={{ minWidth: 0 }}><div className="mini">{t("signed_in_as")}</div><div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{currentUser?.email || currentUser?.name}</div></div>
+            </div>
+            <button onClick={() => signOut()}>{t("sign_out")}</button>
+          </div>
+          <div className="divider" />
           <div className="note">{t("about_body")}</div>
           <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? <CheckCircle2 size={16} /> : <Bell size={16} />} {notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}

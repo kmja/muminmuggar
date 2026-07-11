@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { catalogImage, catalogYear, catalogValue } from "@/lib/catalog";
-import { setMugPhoto, setMugYear, setMugValue } from "@/lib/mugs";
+import { setMugPhoto, setMugYear, setMugValue, getMug } from "@/lib/mugs";
+import { currentOwner, unauthorized } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,13 +13,16 @@ export const maxDuration = 60; // may trigger a one-time catalog sync on first u
  * it's persisted to that mug (quietly, without reordering the collection).
  */
 export async function POST(req: Request) {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
   try {
     const { id, name, series, year, edition } = await req.json();
     if (!name || !String(name).trim()) return NextResponse.json({ error: "name required" }, { status: 400 });
     const imageUrl = await catalogImage({ name, series, year, edition });
     const yr = catalogYear({ name, year, edition });
     const value = catalogValue({ name, year, edition });
-    if (id) {
+    // Only persist onto a mug the caller actually owns.
+    if (id && (await getMug(String(id), owner))) {
       try {
         if (imageUrl) await setMugPhoto(String(id), imageUrl);
         if (yr) await setMugYear(String(id), yr);

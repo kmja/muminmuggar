@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { catalogCount, syncCatalogOnce } from "@/lib/catalog";
+import { currentOwner, unauthorized } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,6 +8,7 @@ export const maxDuration = 60; // fetches several pages of the official product 
 
 /** How many official product images we have stored. */
 export async function GET() {
+  if (!(await currentOwner())) return unauthorized();
   try {
     return NextResponse.json({ count: await catalogCount() });
   } catch (e) {
@@ -16,6 +18,7 @@ export async function GET() {
 
 /** (Re)populate the stored catalog from the official shop's product feed. */
 export async function POST() {
+  if (!(await currentOwner())) return unauthorized();
   try {
     const result = await syncCatalogOnce();
     return NextResponse.json({ ...result, count: await catalogCount() });

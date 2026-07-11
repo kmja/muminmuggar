@@ -13,7 +13,15 @@ const dateOrNull = (v: unknown) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
 };
 
-export async function listMugs(): Promise<Mug[]> {
+/** Assign pre-multi-user mugs (owner IS NULL) to the configured legacy owner, once. */
+async function adoptLegacyMugs(owner: string): Promise<void> {
+  const legacy = (process.env.LEGACY_OWNER || "").toLowerCase();
+  if (!legacy || owner !== legacy) return;
+  await query("UPDATE mugs SET owner = $1 WHERE owner IS NULL", [owner]);
+}
+
+export async function listMugs(owner: string): Promise<Mug[]> {
+  await adoptLegacyMugs(owner);
   const { rows } = await query(
     `SELECT m.*,
        COALESCE(
@@ -22,31 +30,34 @@ export async function listMugs(): Promise<Mug[]> {
          '[]'
        ) AS listings
      FROM mugs m
+     WHERE m.owner = $1
      ORDER BY m.updated_at DESC`,
+    [owner],
   );
   return rows.map(rowToMug);
 }
 
-export async function getMug(id: string): Promise<Mug | null> {
+export async function getMug(id: string, owner: string): Promise<Mug | null> {
   const { rows } = await query(
     `SELECT m.*, COALESCE((SELECT json_agg(l ORDER BY l.found_at DESC) FROM listings l WHERE l.mug_id = m.id), '[]') AS listings
-     FROM mugs m WHERE m.id = $1`,
-    [id],
+     FROM mugs m WHERE m.id = $1 AND m.owner = $2`,
+    [id, owner],
   );
   return rows[0] ? rowToMug(rows[0]) : null;
 }
 
-export async function createMug(d: Partial<Mug>): Promise<Mug> {
+export async function createMug(d: Partial<Mug>, owner: string): Promise<Mug> {
   const id = d.id || newId();
   const { rows } = await query(
     `INSERT INTO mugs
-      (id, name, series, edition, year, status, condition, condition_notes, location,
+      (id, owner, name, series, edition, year, status, condition, condition_notes, location,
        acquired_date, price, currency, favorite, photo_url, est_value_low, est_value_high,
        est_value_currency, notes, tags, ai_confidence)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
      RETURNING *`,
     [
       id,
+      owner,
       strOrNull(d.name) ?? "",
       strOrNull(d.series),
       strOrNull(d.edition),
@@ -100,7 +111,7 @@ const CAMEL_TO_COL: Record<string, string> = {
   estValueCurrency: "est_value_currency", notes: "notes", tags: "tags", aiConfidence: "ai_confidence",
 };
 
-export async function updateMug(id: string, patch: Record<string, unknown>): Promise<Mug | null> {
+export async function updateMug(id: string, patch: Record<string, unknown>, owner: string): Promise<Mug | null> {
   const sets: string[] = [];
   const vals: unknown[] = [];
   let i = 1;
@@ -110,15 +121,18 @@ export async function updateMug(id: string, patch: Record<string, unknown>): Pro
     sets.push(`${col} = $${i++}`);
     vals.push(COLS[col](v));
   }
-  if (!sets.length) return getMug(id);
+  if (!sets.length) return getMug(id, owner);
   sets.push(`updated_at = now()`);
-  vals.push(id);
-  const { rows } = await query(`UPDATE mugs SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`, vals);
+  vals.push(id, owner);
+  const { rows } = await query(
+    `UPDATE mugs SET ${sets.join(", ")} WHERE id = $${i} AND owner = $${i + 1} RETURNING *`,
+    vals,
+  );
   return rows[0] ? rowToMug(rows[0]) : null;
 }
 
-export async function deleteMug(id: string): Promise<void> {
-  await query("DELETE FROM mugs WHERE id = $1", [id]);
+export async function deleteMug(id: string, owner: string): Promise<void> {
+  await query("DELETE FROM mugs WHERE id = $1 AND owner = $2", [id, owner]);
 }
 
 /** Set a mug's photo without touching updated_at (keeps collection order stable during image backfill). */

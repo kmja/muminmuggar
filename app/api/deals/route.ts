@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { getMug } from "@/lib/mugs";
 import { mugQuery, searchMarketplaces } from "@/lib/marketplaces";
 import { groundedDealSearch } from "@/lib/gemini";
+import { currentOwner, unauthorized } from "@/lib/session";
 import type { Listing } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -20,9 +21,11 @@ async function persistListings(mugId: string, listings: Listing[]) {
 }
 
 export async function POST(req: Request) {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
   try {
     const { mugId } = await req.json();
-    const mug = await getMug(String(mugId));
+    const mug = await getMug(String(mugId), owner);
     if (!mug) return NextResponse.json({ error: "Mug not found" }, { status: 404 });
 
     const q = mugQuery(mug);

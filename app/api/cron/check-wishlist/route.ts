@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { query, rowToMug } from "@/lib/db";
 import { sourcesAvailable, searchMarketplaces } from "@/lib/marketplaces";
 import { syncCatalogOnce } from "@/lib/catalog";
-import { sendToAll, pushConfigured } from "@/lib/push";
+import { sendToOwner, pushConfigured } from "@/lib/push";
 import type { Listing } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -28,12 +28,14 @@ async function run() {
   if (!summary.sources) return summary; // no sources configured (need GEMINI_API_KEY and/or eBay)
 
   const { rows } = await query("SELECT * FROM mugs WHERE status = 'wishlist'");
-  const wishlist = rows.map(rowToMug);
-  summary.checked = wishlist.length;
+  summary.checked = rows.length;
 
-  const found: { mugName: string; count: number }[] = [];
+  // Fresh finds are grouped per owner so each user is only told about their own mugs.
+  const foundByOwner = new Map<string, { mugName: string; count: number }[]>();
 
-  for (const mug of wishlist) {
+  for (const row of rows) {
+    const owner = (row.owner as string) || null;
+    const mug = rowToMug(row);
     let listings: Listing[] = [];
     try {
       listings = await searchMarketplaces(mug);
@@ -52,18 +54,24 @@ async function run() {
       );
       if (res.rowCount && res.rowCount > 0) fresh++;
     }
-    if (fresh > 0) found.push({ mugName: mug.name, count: fresh });
+    if (fresh > 0 && owner) {
+      const list = foundByOwner.get(owner) || [];
+      list.push({ mugName: mug.name, count: fresh });
+      foundByOwner.set(owner, list);
+    }
     summary.newListings += fresh;
   }
 
-  if (found.length && pushConfigured()) {
-    const total = found.reduce((a, b) => a + b.count, 0);
-    const names = found.map((f) => f.mugName).slice(0, 3).join(", ");
-    summary.notified = await sendToAll({
-      title: "New Moomin mug listings found! 🫖",
-      body: `${total} new listing${total === 1 ? "" : "s"} for ${names}${found.length > 3 ? "…" : ""}. Tap to view.`,
-      url: "/?tab=wishlist",
-    });
+  if (foundByOwner.size && pushConfigured()) {
+    for (const [owner, found] of foundByOwner) {
+      const total = found.reduce((a, b) => a + b.count, 0);
+      const names = found.map((f) => f.mugName).slice(0, 3).join(", ");
+      summary.notified += await sendToOwner(owner, {
+        title: "New Moomin mug listings found! 🫖",
+        body: `${total} new listing${total === 1 ? "" : "s"} for ${names}${found.length > 3 ? "…" : ""}. Tap to view.`,
+        url: "/?tab=wishlist",
+      });
+    }
   }
 
   return summary;

@@ -24,11 +24,12 @@ export interface PushPayload {
   url?: string;
 }
 
-/** Send a payload to every stored subscription; prune dead ones (404/410). */
-export async function sendToAll(payload: PushPayload): Promise<number> {
+/** Send a payload to one owner's subscriptions; prune dead ones (404/410). */
+export async function sendToOwner(owner: string, payload: PushPayload): Promise<number> {
   if (!ensureConfigured()) return 0;
   const { rows } = await query<{ id: number; endpoint: string; p256dh: string; auth: string }>(
-    "SELECT id, endpoint, p256dh, auth FROM push_subscriptions",
+    "SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE owner = $1",
+    [owner],
   );
   let sent = 0;
   await Promise.all(

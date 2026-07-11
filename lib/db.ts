@@ -4,6 +4,7 @@ import type { Mug } from "./types";
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS mugs (
   id                 TEXT PRIMARY KEY,
+  owner              TEXT,
   name               TEXT NOT NULL,
   series             TEXT,
   edition            TEXT,
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS mugs (
 
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id         SERIAL PRIMARY KEY,
+  owner      TEXT,
   endpoint   TEXT UNIQUE NOT NULL,
   p256dh     TEXT NOT NULL,
   auth       TEXT NOT NULL,
@@ -65,6 +67,12 @@ CREATE TABLE IF NOT EXISTS catalog_mugs (
 );
 
 CREATE INDEX IF NOT EXISTS catalog_norm_idx ON catalog_mugs (norm);
+
+-- Multi-user: scope collections/subscriptions to a Google account (added later).
+ALTER TABLE mugs ADD COLUMN IF NOT EXISTS owner TEXT;
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS owner TEXT;
+CREATE INDEX IF NOT EXISTS mugs_owner_idx ON mugs (owner);
+CREATE INDEX IF NOT EXISTS push_owner_idx ON push_subscriptions (owner);
 `;
 
 let pool: Pool | null = null;
