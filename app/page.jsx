@@ -8,7 +8,7 @@ import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
-  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut,
+  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User,
 } from "lucide-react";
 
 /* ------------------------------- i18n --------------------------------- */
@@ -77,8 +77,22 @@ function downscaleImage(dataUrl, maxDim = 1400, quality = 0.84) {
     img.src = dataUrl;
   });
 }
+// A stable per-device id so an anonymous (not-signed-in) user still has a
+// collection. Lost if the browser storage is cleared or the device changes —
+// signing in with Google moves it to the account.
+function getDeviceId() {
+  if (typeof window === "undefined") return "";
+  try {
+    let id = localStorage.getItem("deviceId");
+    if (!id || !/^[a-zA-Z0-9_-]{8,64}$/.test(id)) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : "d" + Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^a-zA-Z0-9_-]/g, "");
+      localStorage.setItem("deviceId", id);
+    }
+    return id;
+  } catch { return ""; }
+}
 async function api(path, opts = {}) {
-  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  const r = await fetch(path, { ...opts, headers: { "Content-Type": "application/json", "x-device-id": getDeviceId(), ...(opts.headers || {}) } });
   let j = {};
   try { j = await r.json(); } catch { /* ignore */ }
   if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
@@ -193,8 +207,8 @@ function LangPicker({ lang, setLang }) {
     </div>
   );
 }
-/* Top-right avatar → menu with theme, language, and sign-out. */
-function AccountMenu({ user, theme, setTheme, lang, setLang }) {
+/* Top-right avatar → menu with account (or sign-in), theme, language. */
+function AccountMenu({ user, signedIn, theme, setTheme, lang, setLang }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [systemDark, setSystemDark] = useState(false);
@@ -214,12 +228,21 @@ function AccountMenu({ user, theme, setTheme, lang, setLang }) {
   const initial = (user?.name || user?.email || "?").trim().slice(0, 1).toUpperCase();
   return (
     <div className="langpick" ref={ref}>
-      <button type="button" className="avatarbtn" aria-haspopup="menu" aria-expanded={open} aria-label={t("account")} onClick={() => setOpen((o) => !o)}>
-        {user?.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" /> : <span>{initial}</span>}
+      <button type="button" className={"avatarbtn" + (signedIn ? "" : " anon")} aria-haspopup="menu" aria-expanded={open} aria-label={t("account")} onClick={() => setOpen((o) => !o)}>
+        {signedIn && user?.image ? <img src={user.image} alt="" referrerPolicy="no-referrer" /> : (signedIn ? <span>{initial}</span> : <User size={18} />)}
       </button>
       {open ? (
         <div className="accountmenu" role="menu">
-          {user ? <div className="accthead"><div className="mini">{t("signed_in_as")}</div><div className="acctemail" title={user.email || user.name}>{user.email || user.name}</div></div> : null}
+          {signedIn ? (
+            <div className="accthead"><div className="mini">{t("signed_in_as")}</div><div className="acctemail" title={user?.email || user?.name}>{user?.email || user?.name}</div></div>
+          ) : (
+            <div className="accthead">
+              <div style={{ fontWeight: 500 }}>{t("not_signed_in")}</div>
+              <div className="mini" style={{ marginTop: 4, whiteSpace: "normal", lineHeight: 1.35 }}>{t("anon_warning")}</div>
+              <button type="button" className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 10 }} onClick={() => signIn("google")}>{t("signin_google")}</button>
+            </div>
+          )}
+          <div className="menudiv" />
           <button type="button" className="langitem" role="menuitem" onClick={() => setTheme(isDark ? "light" : "dark")}>
             {isDark ? <Sun size={17} /> : <Moon size={17} />}<span>{isDark ? t("theme_light") : t("theme_dark")}</span>
           </button>
@@ -229,8 +252,10 @@ function AccountMenu({ user, theme, setTheme, lang, setLang }) {
               <span style={{ fontSize: 18 }}>{l.flag}</span><span>{l.label}</span>
             </button>
           ))}
-          <div className="menudiv" />
-          <button type="button" className="langitem" role="menuitem" onClick={() => signOut()}><LogOut size={17} /><span>{t("sign_out")}</span></button>
+          {signedIn ? (<>
+            <div className="menudiv" />
+            <button type="button" className="langitem" role="menuitem" onClick={() => signOut()}><LogOut size={17} /><span>{t("sign_out")}</span></button>
+          </>) : null}
         </div>
       ) : null}
     </div>
@@ -863,11 +888,11 @@ export default function App() {
   const [theme, setTheme] = useState("system"); // system | light | dark
   const t = useMemo(() => makeT(lang), [lang]);
 
-  // Auth: a signed-in Google account is required. NEXT_PUBLIC_DEV_OWNER is a
-  // local-only bypass (mirrors the server DEV_OWNER) so the app runs without creds.
+  // Auth is optional: signed-in users own by Google account, everyone else by a
+  // per-device id. NEXT_PUBLIC_DEV_OWNER is a local-only bypass for testing.
   const { data: session, status } = useSession();
   const devOwner = process.env.NEXT_PUBLIC_DEV_OWNER || "";
-  const authed = status === "authenticated" || !!devOwner;
+  const signedIn = status === "authenticated" || !!devOwner;
   const currentUser = session?.user || (devOwner ? { email: devOwner, name: devOwner } : null);
 
   const [mugs, setMugs] = useState([]);
@@ -880,6 +905,7 @@ export default function App() {
   const [sortBy, setSortBy] = useState("updated_desc");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState("table"); // table | grid
+  const [anonNoteHidden, setAnonNoteHidden] = useState(true); // hidden until we know sign-in state
 
   const [formInitial, setFormInitial] = useState(null);
   const [formMode, setFormMode] = useState("create");
@@ -930,11 +956,19 @@ export default function App() {
     try { const th = localStorage.getItem("theme"); if (th === "light" || th === "dark") setTheme(th); } catch { /* ignore */ }
     // Restore the saved list view mode (compact table by default).
     try { const vm = localStorage.getItem("viewMode"); if (vm === "grid" || vm === "table") setViewMode(vm); } catch { /* ignore */ }
+    // Show the "not signed in" note unless it was dismissed before.
+    try { setAnonNoteHidden(localStorage.getItem("anonNoteDismissed") === "1"); } catch { setAnonNoteHidden(false); }
     // Register the service worker so the app is an installable PWA.
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    load();
   }, []);
-  // Load the collection once the user is signed in.
-  useEffect(() => { if (authed) load(); }, [authed]);
+  // On sign-in, migrate this device's anonymous collection to the account, then resync.
+  const claimedRef = useRef(false);
+  useEffect(() => {
+    if (status !== "authenticated" || claimedRef.current) return;
+    claimedRef.current = true;
+    (async () => { try { const { moved } = await api("/api/claim", { method: "POST" }); await reload(); if (moved) setTab("collection"); } catch { reload(); } })();
+  }, [status]);
   useEffect(() => {
     try { localStorage.setItem("lang", lang); } catch { /* ignore */ }
     if (typeof document !== "undefined") document.documentElement.lang = lang;
@@ -1095,26 +1129,6 @@ export default function App() {
     { k: "stats", label: t("tab_stats") },
   ];
 
-  // Sign-in gate — the collection is per-account, so require Google sign-in first.
-  if (!authed) {
-    return (
-      <I18nContext.Provider value={t}>
-        <div className="wrap authgate">
-          <div className="signincard">
-            <div className="signinlogo"><MugMark size={40} /></div>
-            <h1>{t("app_title")}</h1>
-            <p className="sub" style={{ marginTop: 6 }}>{t("signin_sub")}</p>
-            <div style={{ marginTop: 22 }}>
-              {status === "loading"
-                ? <span className="spin" />
-                : <button className="primary big" onClick={() => signIn("google")} style={{ width: "100%", justifyContent: "center" }}>{t("signin_google")}</button>}
-            </div>
-          </div>
-        </div>
-      </I18nContext.Provider>
-    );
-  }
-
   return (
     <I18nContext.Provider value={t}>
     <LangContext.Provider value={lang}>
@@ -1127,11 +1141,21 @@ export default function App() {
           <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("scan")}</button>
           <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
           <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
-          <AccountMenu user={currentUser} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
+          <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
         </div>
       </div>
 
       {loadError ? <div className="note warn" style={{ marginBottom: 12 }}>{t("load_error", { msg: loadError })}</div> : null}
+
+      {!signedIn && status !== "loading" && !anonNoteHidden ? (
+        <div className="anonnote">
+          <div className="mini">{t("anon_warning")}</div>
+          <div className="anonnote-actions">
+            <button className="primary" onClick={() => signIn("google")}>{t("signin_google")}</button>
+            <button className="ghost icon" aria-label={t("dismiss")} title={t("dismiss")} onClick={() => { setAnonNoteHidden(true); try { localStorage.setItem("anonNoteDismissed", "1"); } catch { /* ignore */ } }}><X size={16} /></button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Collection / Wishlist are top-level tabs on every screen; Stats lives here on
           desktop and in the bottom nav on mobile. */}

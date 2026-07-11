@@ -21,11 +21,13 @@
   --shadow: 0 1px 3px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}
-/* Sign-in gate */
-.authgate{min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px}
-.signincard{width:100%; max-width:380px; text-align:center; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:36px 28px; box-shadow:0 12px 40px rgba(27,20,35,.10)}
-.signincard h1{font-size:26px; font-weight:300; margin-top:14px}
-.signinlogo{width:72px; height:72px; margin:0 auto; border-radius:18px; background:var(--lilac); color:var(--accent); display:flex; align-items:center; justify-content:center}
+/* "Not signed in" note */
+.anonnote{display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap;
+  background:var(--lilac); border:1px solid var(--border); border-radius:12px; padding:11px 12px 11px 15px; margin-bottom:12px}
+.anonnote .mini{flex:1; min-width:180px; color:var(--ink); line-height:1.4}
+.anonnote-actions{display:flex; align-items:center; gap:8px; flex:none}
+.avatarbtn.anon{background:var(--lilac); color:var(--accent); border-color:var(--border)}
+.avatarbtn.anon:hover{background:var(--lilac); border-color:var(--muted)}
 /* Top-right avatar button + its dropdown menu */
 .avatarbtn{width:40px; height:40px; padding:0; flex:none; border-radius:999px; overflow:hidden; border:1.5px solid var(--border);
   background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:500}
