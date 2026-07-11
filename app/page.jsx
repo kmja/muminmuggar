@@ -7,7 +7,7 @@ import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
-  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch,
+  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3,
 } from "lucide-react";
 
 /* ------------------------------- i18n --------------------------------- */
@@ -782,6 +782,37 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   );
 }
 
+/* ------------------------------- MugRow ------------------------------- */
+// Compact one-row layout: image · name/meta · actions.
+function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
+  const t = useT();
+  const lang = useLang();
+  const displayName = catName(m.name, lang);
+  const val = (m.estValueLow != null || m.estValueHigh != null)
+    ? `${formatMoney(m.estValueLow ?? m.estValueHigh, m.estValueCurrency || "SEK")}${m.estValueLow != null && m.estValueHigh != null ? "–" + formatMoney(m.estValueHigh, m.estValueCurrency || "SEK") : ""}`
+    : "";
+  const meta = [m.year, val ? "≈ " + val : null].filter(Boolean).join(" · ");
+  return (
+    <div className="mugrow">
+      <div className="mugrow-thumb">
+        {m.photoUrl ? <img src={mugImg(m.photoUrl)} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
+        {m.favorite ? <span className="mugrow-fav"><Star size={11} fill="currentColor" /></span> : null}
+      </div>
+      <div className="mugrow-main">
+        <div className="mugrow-name" title={displayName}>{displayName || t("card_untitled")}</div>
+        {meta ? <div className="mini">{meta}</div> : null}
+      </div>
+      <div className="mugrow-actions">
+        {m.status === "wishlist"
+          ? <button className="ghost icon" title={t("card_deals")} aria-label={t("card_deals")} onClick={() => onDeals(m)}><PackageSearch size={17} /></button>
+          : <button className="ghost icon" title={t("card_fav")} aria-label={t("card_fav")} onClick={() => onFav(m)}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>}
+        <button className="ghost icon" title={t("card_edit")} aria-label={t("card_edit")} onClick={() => onEdit(m)}><Pencil size={17} /></button>
+        <button className="ghost icon danger" title={t("card_delete")} aria-label={t("card_delete")} onClick={() => onDelete(m)}><Trash2 size={17} /></button>
+      </div>
+    </div>
+  );
+}
+
 /* -------------------------------- App --------------------------------- */
 export default function App() {
   const [lang, setLang] = useState("sv");
@@ -797,6 +828,7 @@ export default function App() {
   const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [sortBy, setSortBy] = useState("updated_desc");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("table"); // table | grid
 
   const [formInitial, setFormInitial] = useState(null);
   const [formMode, setFormMode] = useState("create");
@@ -846,6 +878,8 @@ export default function App() {
     try { const saved = localStorage.getItem("lang"); if (saved === "sv" || saved === "en") setLang(saved); } catch { /* ignore */ }
     // Restore the saved theme preference (follows the system by default).
     try { const th = localStorage.getItem("theme"); if (th === "light" || th === "dark") setTheme(th); } catch { /* ignore */ }
+    // Restore the saved list view mode (compact table by default).
+    try { const vm = localStorage.getItem("viewMode"); if (vm === "grid" || vm === "table") setViewMode(vm); } catch { /* ignore */ }
     // Register the service worker so the app is an installable PWA.
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
@@ -853,6 +887,7 @@ export default function App() {
     try { localStorage.setItem("lang", lang); } catch { /* ignore */ }
     if (typeof document !== "undefined") document.documentElement.lang = lang;
   }, [lang]);
+  useEffect(() => { try { localStorage.setItem("viewMode", viewMode); } catch { /* ignore */ } }, [viewMode]);
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
@@ -1041,6 +1076,10 @@ export default function App() {
                 <Search size={17} className="searchicon" aria-hidden="true" />
                 <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
               </div>
+              <div className="viewtoggle" role="group" aria-label={t("view_mode")}>
+                <button type="button" className={"ghost icon" + (viewMode === "table" ? " active" : "")} onClick={() => setViewMode("table")} aria-pressed={viewMode === "table"} aria-label={t("view_table")} title={t("view_table")}><Rows3 size={18} /></button>
+                <button type="button" className={"ghost icon" + (viewMode === "grid" ? " active" : "")} onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"} aria-label={t("view_grid")} title={t("view_grid")}><LayoutGrid size={18} /></button>
+              </div>
               <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}>
                 <SlidersHorizontal size={18} />
               </button>
@@ -1090,7 +1129,9 @@ export default function App() {
             <div className="card pad"><div className="muted">{t("no_match")}</div></div>
           ) : (
             <>
-              <div className="muggrid">{viewMugs.map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+              {viewMode === "grid"
+                ? <div className="muggrid">{viewMugs.map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+                : <div className="muglist">{viewMugs.map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>}
               {tab === "wishlist" ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
             </>
           )}
