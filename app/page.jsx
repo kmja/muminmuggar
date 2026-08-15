@@ -36,6 +36,14 @@ const CATALOG_NAMES = new Set(MASTER_CATALOG.map((e) => foldC(e.nameEn)));
 // catalogue matching); Swedish is applied only at render when lang === "sv".
 const SV_NAMES = new Map(MASTER_CATALOG.filter((e) => e.nameSv).map((e) => [foldC(e.nameEn), e.nameSv]));
 const catName = (name, lang) => (lang === "sv" && name ? (SV_NAMES.get(foldC(name)) || name) : name);
+// Images reused across differently-named catalogue entries are unreliable (data
+// gaps) — never prefer one of those over a user's own photo.
+const AMBIGUOUS_IMAGES = (() => {
+  const byImg = new Map();
+  for (const e of MASTER_CATALOG) { if (!e.image) continue; const s = byImg.get(e.image) || new Set(); s.add(e.nameEn.toLowerCase()); byImg.set(e.image, s); }
+  const out = new Set(); for (const [img, names] of byImg) if (names.size > 1) out.add(img); return out;
+})();
+const reliableImg = (u) => !!u && !AMBIGUOUS_IMAGES.has(u);
 // Catalogue photos are now transparent WebP; upgrade any older /mugs/*.jpg paths
 // stored on existing mugs so they still resolve.
 const mugImg = (u) => (typeof u === "string" ? u.replace(/^(\/mugs\/[^?]+)\.jpg$/i, "$1.webp") : u);
@@ -331,7 +339,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
     series: "Arabia Moomin",
     edition: "",
     capacity: e.capacity || d.capacity || "",
-    photoUrl: d.photoUrl || e.image || "",
+    photoUrl: (d.photoUrl && !reliableImg(e.image)) ? d.photoUrl : (e.image || ""),
     estValueLow: catSek(e.estLow),
     estValueHigh: catSek(e.estHigh),
     estValueCurrency: "SEK",
@@ -465,10 +473,11 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
       const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
       if (!drafts.length) { setError(t("scan_no_mugs")); return; }
       if (drafts.length === 1) {
-        // Single mug: open the review form pre-filled from the catalogue match (keep her photo).
+        // Single mug: open the review form pre-filled from the catalogue match. Use the
+        // official product image (not the camera snapshot) as the collection photo.
         const d0 = drafts[0], e = d0.catalog;
         const initial = e
-          ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence }
+          ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence }
           : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence };
         onAddOne(initial); onClose(); return;
       }
@@ -932,14 +941,15 @@ export default function App() {
   // Backfill product images for mugs that don't have a photo yet, one at a
   // time so we're gentle on the search sources. Saved server-side (quietly).
   const ensureImages = async (list) => {
-    const targets = (list || []).filter((m) => m && m.id && m.name && (!m.photoUrl || m.year == null || (m.estValueLow == null && m.estValueHigh == null)));
+    const isSnap = (u) => !u || (typeof u === "string" && u.startsWith("data:"));  // no photo, or a camera snapshot
+    const targets = (list || []).filter((m) => m && m.id && m.name && (isSnap(m.photoUrl) || m.year == null || (m.estValueLow == null && m.estValueHigh == null)));
     for (const m of targets) {
       try {
         const { imageUrl, year, value } = await api("/api/mug-image", { method: "POST", body: JSON.stringify({ id: m.id, name: m.name, series: m.series, year: m.year, edition: m.edition }) });
         setMugs((prev) => prev.map((x) => {
           if (x.id !== m.id) return x;
           const n = { ...x };
-          if (imageUrl && !n.photoUrl) n.photoUrl = imageUrl;
+          if (imageUrl && isSnap(n.photoUrl)) n.photoUrl = imageUrl;
           if (year && n.year == null) n.year = year;
           if (value && n.estValueLow == null && n.estValueHigh == null) { n.estValueLow = value.low; n.estValueHigh = value.high; n.estValueCurrency = value.cur; }
           return n;

@@ -135,9 +135,13 @@ export async function deleteMug(id: string, owner: string): Promise<void> {
   await query("DELETE FROM mugs WHERE id = $1 AND owner = $2", [id, owner]);
 }
 
-/** Set a mug's photo without touching updated_at (keeps collection order stable during image backfill). */
+/** Set a mug's official photo (when it has none, or only a camera snapshot) without
+ * touching updated_at (keeps collection order stable during image backfill). */
 export async function setMugPhoto(id: string, url: string): Promise<void> {
-  await query("UPDATE mugs SET photo_url = $1 WHERE id = $2 AND (photo_url IS NULL OR photo_url = '')", [url, id]);
+  await query(
+    "UPDATE mugs SET photo_url = $1 WHERE id = $2 AND (photo_url IS NULL OR photo_url = '' OR photo_url LIKE 'data:%')",
+    [url, id],
+  );
 }
 
 /** Fill a mug's production year (only if not already set), without touching updated_at. */

@@ -8,6 +8,25 @@ type MasterEntry = {
   estLow: number | null; estHigh: number | null; estCur: string; image: string | null; norm: string;
 };
 
+// Some catalogue entries lack a unique product image and reuse another mug's photo
+// (e.g. plain "Moomintroll" borrowing the "ABC Moomintroll" image). Such shared
+// images are unreliable — we don't force them onto a user's mug over their own photo.
+export const AMBIGUOUS_IMAGES: Set<string> = (() => {
+  const byImg = new Map<string, Set<string>>();
+  for (const e of masterCatalog as MasterEntry[]) {
+    if (!e.image) continue;
+    const names = byImg.get(e.image) || new Set<string>();
+    names.add(e.nameEn.toLowerCase());
+    byImg.set(e.image, names);
+  }
+  const out = new Set<string>();
+  for (const [img, names] of byImg) if (names.size > 1) out.add(img);
+  return out;
+})();
+export function isReliableImage(url: string | null | undefined): boolean {
+  return !!url && !AMBIGUOUS_IMAGES.has(url);
+}
+
 /**
  * A stored catalog of official Moomin product images. We populate it once from
  * the official shop's structured product feed and then serve mug images from
@@ -292,7 +311,8 @@ export async function catalogImage(mug: MugQ): Promise<string | null> {
       const s = scoreNorm(q, mug.year, r.norm, r.year);
       if (s > bs) { bs = s; best = r; }
     }
-    if (best) return best.imageUrl;
+    if (best) return isReliableImage(best.imageUrl) ? best.imageUrl : null;
   }
-  return matchByCharacter(mug)?.image ?? null;
+  const img = matchByCharacter(mug)?.image ?? null;
+  return isReliableImage(img) ? img : null;
 }
