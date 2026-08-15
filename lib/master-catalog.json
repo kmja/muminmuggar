@@ -866,7 +866,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/moominpappa-grey.webp",
+    "image": "/mugs/moominpappa-dark-blue.webp",
     "norm": "moominpappa",
     "nameSv": "Muminpappan"
   },
@@ -996,7 +996,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/tooticky.webp",
+    "image": "/mugs/tooticky-violet.webp",
     "norm": "too ticky",
     "nameSv": "Too-Ticki"
   },
@@ -1789,7 +1789,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/little-my-sliding.webp",
+    "image": "/mugs/sliding-winter-mug.webp",
     "norm": "sliding",
     "nameSv": "Åka kana"
   },
@@ -1815,7 +1815,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.webp",
+    "image": "/mugs/abc-a-04.webp",
     "norm": "abc a",
     "nameSv": "ABC A"
   },
@@ -2218,7 +2218,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.webp",
+    "image": "/mugs/abc-x-04.webp",
     "norm": "abc x",
     "nameSv": "ABC X"
   },
