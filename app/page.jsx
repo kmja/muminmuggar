@@ -428,9 +428,15 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
   );
 }
 
-/* ------------------------------ ScanModal ----------------------------- */
-function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
+/* ------------------------------ AddMugModal --------------------------- */
+// One dialog for adding a mug: search the catalogue (newest shortlisted) and
+// quick-add with +, or open the camera to scan a whole shelf.
+function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const t = useT();
+  const lang = useLang();
+  const [screen, setScreen] = useState("browse"); // browse | camera
+  const [q, setQ] = useState("");
+  const [added, setAdded] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
@@ -455,17 +461,17 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
     } catch { setCamLive(false); }
   };
 
-  // Reset on open; start the viewfinder when we're on the capture screen; always release the camera on close.
+  // Reset on open; start the viewfinder only while the camera screen is up; always release the camera on close.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setPhotoUrl(""); setCamTried(false); }
+    if (open) { setBusy(false); setError(""); setItems([]); setPhotoUrl(""); setCamTried(false); setScreen("browse"); setQ(""); setAdded(new Set()); }
     else stopCam();
     return () => stopCam();
   }, [open]);
   useEffect(() => {
-    if (open && !items.length && !busy) startCam();
+    if (open && screen === "camera" && !items.length && !busy) startCam();
     else stopCam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, items.length, busy]);
+  }, [open, screen, items.length, busy]);
   const process = async (small) => {
     setBusy(true); setItems([]); setPhotoUrl(small);
     try {
@@ -503,9 +509,29 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
     await process(await downscaleImage(dataUrl, 1400, 0.85));
   };
 
+  // Browse list: newest catalogue mugs first, filtered to ones not already owned.
+  const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
+  const newest = useMemo(() => [...CATALOG_UNIQUE].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0)), []);
+  const results = useMemo(() => {
+    const f = foldC(q);
+    const base = f ? CATALOG_UNIQUE.filter((e) => foldC(e.nameEn + " " + (e.nameSv || "") + " " + e.years).includes(f)) : newest.slice(0, 12);
+    return base.filter((e) => {
+      const k = ownKey(e.nameEn);
+      if (k && ownedKeys.has(k)) return false;             // already in the collection
+      if (added.has(e.nameEn)) return false;                // just added this session
+      return true;
+    }).slice(0, 80);
+  }, [q, ownedKeys, added, newest]);
+
+  const add = (e) => {
+    setAdded((s) => new Set(s).add(e.nameEn));
+    onQuickAdd({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status: "owned",
+      capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
+  };
+
   const setEntry = (i, entry) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, entry, checked: it.checked || !!entry } : it)));
   const chosen = items.filter((it) => it.checked && it.entry).length;
-  const footer = items.length ? (
+  const reviewFooter = (
     <>
       <button onClick={() => { setItems([]); setPhotoUrl(""); }}>{t("scan_rescan")}</button>
       <button className="primary" disabled={!chosen} onClick={() => {
@@ -518,11 +544,40 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
         onClose();
       }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
     </>
-  ) : null;
+  );
+  const browseFooter = (
+    <div className="formactions">
+      {added.size ? <span className="help" style={{ marginRight: "auto" }}>{t("form_added_count", { n: added.size })}</span> : null}
+      <button className="primary big" onClick={onClose}>{t("add_done")}</button>
+    </div>
+  );
+  const footer = items.length ? reviewFooter : (screen === "browse" ? browseFooter : null);
 
   return (
     <Modal open={open} onClose={onClose} wide title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
-      {!items.length && !busy ? (
+      {!items.length && !busy && screen === "browse" ? (
+        <div className="grid" style={{ gap: 12 }}>
+          <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
+          </div>
+          <button className="primary big" style={{ justifyContent: "center" }} onClick={() => setScreen("camera")}><Camera size={18} /> {t("add_open_camera")}</button>
+          <div className="help">{q ? t("add_search_hint") : t("add_newest_hint")}</div>
+          {results.length === 0 ? (
+            <div className="card pad"><div className="muted">{q ? t("no_match") : t("add_mugs_none")}</div></div>
+          ) : results.map((e) => (
+            <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
+              <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
+                <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null)].filter(Boolean).join(" · ")}</div>
+              </div>
+              <button className="addbtn" aria-label={t("add")} onClick={() => add(e)}><Plus size={20} /></button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!items.length && !busy && screen === "camera" ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="vfwrap">
             <video ref={videoRef} className="viewfinder" playsInline muted autoPlay style={{ display: camLive ? "block" : "none" }} />
@@ -538,7 +593,7 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
           <div className="row">
             {!camLive ? <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => camRef.current?.click()}><Camera size={16} /> {t("scan_take_photo")}</button> : null}
             <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => fileRef.current?.click()}><ImagePlus size={16} /> {t("scan_choose_image")}</button>
-            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => { stopCam(); onManual(); }}><Pencil size={16} /> {t("scan_add_manual")}</button>
+            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => { stopCam(); setScreen("browse"); }}><Search size={16} /> {t("scan_back_to_search")}</button>
           </div>
           <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
           <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
@@ -586,64 +641,6 @@ function ScanModal({ open, onClose, onAddOne, onAddMany, onManual, mugs }) {
           <div className="help">{t("scan_found", { n: items.length })}</div>
         </div>
       ) : null}
-    </Modal>
-  );
-}
-
-/* ------------------------------- AddModal ----------------------------- */
-// Manual add = a searchable list of mugs you don't own yet; each row has a +
-// for instant adding (as owned). Details are filled in later by editing the card.
-function AddModal({ open, onClose, mugs, onAdd }) {
-  const t = useT();
-  const lang = useLang();
-  const [q, setQ] = useState("");
-  const [added, setAdded] = useState(() => new Set());
-  useEffect(() => { if (open) { setQ(""); setAdded(new Set()); } }, [open]);
-
-  const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
-  const results = useMemo(() => {
-    const f = foldC(q);
-    return CATALOG_UNIQUE.filter((e) => {
-      const k = ownKey(e.nameEn);
-      if (k && ownedKeys.has(k)) return false;            // already in the collection
-      if (added.has(e.nameEn)) return false;               // just added this session
-      if (!f) return true;
-      return foldC(e.nameEn + " " + (e.nameSv || "") + " " + e.years).includes(f);
-    });
-  }, [q, ownedKeys, added]);
-
-  const add = (e) => {
-    setAdded((s) => new Set(s).add(e.nameEn));
-    onAdd({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status: "owned",
-      capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
-  };
-
-  const footer = (
-    <div className="formactions">
-      {added.size ? <span className="help" style={{ marginRight: "auto" }}>{t("form_added_count", { n: added.size })}</span> : null}
-      <button className="primary big" onClick={onClose}>{t("add_done")}</button>
-    </div>
-  );
-
-  return (
-    <Modal open={open} wide title={t("add_mugs_title")} subtitle={t("add_mugs_sub")} onClose={onClose} footer={footer}>
-      <div className="grid" style={{ gap: 10 }}>
-        <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
-        </div>
-        {added.size ? <div className="help">{t("add_mugs_edit_hint")}</div> : null}
-        {results.length === 0 ? <div className="card pad"><div className="muted">{t("add_mugs_none")}</div></div>
-          : results.map((e) => (
-            <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
-              <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
-                <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null)].filter(Boolean).join(" · ")}</div>
-              </div>
-              <button className="addbtn" aria-label={t("add")} onClick={() => add(e)}><Plus size={20} /></button>
-            </div>
-          ))}
-      </div>
     </Modal>
   );
 }
@@ -921,7 +918,6 @@ export default function App() {
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dealsMug, setDealsMug] = useState(null);
@@ -1148,7 +1144,7 @@ export default function App() {
           <div className="title"><h1>{t("app_title")}</h1><span className="ver">v{APP_VERSION}</span></div>
         </div>
         <div className="actions">
-          <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("scan")}</button>
+          <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
           <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
           <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
           <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
@@ -1226,8 +1222,7 @@ export default function App() {
               <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("empty_title")}</div>
               <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
               <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                <button className="primary" onClick={() => setScanOpen(true)}><Camera size={16} /> {t("empty_scan")}</button>
-                <button onClick={() => setAddOpen(true)}><Plus size={16} /> {t("empty_add_manual")}</button>
+                <button className="primary" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
               </div>
             </div>
           ) : viewMugs.length === 0 ? (
@@ -1286,8 +1281,7 @@ export default function App() {
       </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mode={formMode} mugs={mugs} onSave={saveMug} saving={saving} />
-      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onManual={() => { setScanOpen(false); setAddOpen(true); }} />
-      <AddModal open={addOpen} onClose={() => setAddOpen(false)} mugs={mugs} onAdd={quickAdd} />
+      <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onQuickAdd={quickAdd} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
 
