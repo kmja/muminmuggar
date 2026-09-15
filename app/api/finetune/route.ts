@@ -31,25 +31,30 @@ export async function POST(req: Request) {
   const owner = await currentOwner();
   if (!owner) return unauthorized();
   try {
-    const b = await req.json().catch(() => ({}));
-    const weight = Number(b.weight) > 0 ? Number(b.weight) : 10;
     const samples = await loadSamples(owner);
     if (samples.length < 4) return NextResponse.json({ error: "Need at least 4 labeled photos." }, { status: 400 });
 
-    // Cross-validate the fine-tune on the real labels.
+    // Cross-validate the fine-tune on the real labels, tuning how strongly they
+    // override the synthetic prior (a handful of real photos shouldn't be
+    // over-weighted, but should be able to move the probe).
     const k = samples.length <= 25 ? samples.length : 5;
     const shuffled = [...samples].sort(() => Math.random() - 0.5);
     const folds: LabelSample[][] = Array.from({ length: k }, () => []);
     shuffled.forEach((s, i) => folds[i % k].push(s));
-    let ct1 = 0, ct5 = 0;
-    for (let f = 0; f < k; f++) {
-      const train = folds.filter((_, g) => g !== f).flat();
-      const ev = evaluate(solveWithLabels(train, weight, base.lambda), folds[f]);
-      ct1 += ev.top1; ct5 += ev.top5;
+
+    let best = { weight: 10, top1: -1, top5: -1 };
+    for (const w of [5, 10, 25, 50, 100]) {
+      let ct1 = 0, ct5 = 0;
+      for (let f = 0; f < k; f++) {
+        const train = folds.filter((_, g) => g !== f).flat();
+        const ev = evaluate(solveWithLabels(train, w, base.lambda), folds[f]);
+        ct1 += ev.top1; ct5 += ev.top5;
+      }
+      if (ct1 > best.top1 || (ct1 === best.top1 && ct5 > best.top5)) best = { weight: w, top1: ct1, top5: ct5 };
     }
 
-    // Fit on everything and store.
-    const W = solveWithLabels(samples, weight, base.lambda);
+    // Fit on everything with the chosen weight and store.
+    const W = solveWithLabels(samples, best.weight, base.lambda);
     const ev = evaluate(W, samples);
     const uniq = [...new Set(ev.margins.map((m) => m.m))].sort((a, b) => b - a);
     let autoMargin = base.autoMargin;
@@ -64,7 +69,7 @@ export async function POST(req: Request) {
          weights = EXCLUDED.weights, auto_margin = EXCLUDED.auto_margin, temperature = EXCLUDED.temperature, updated_at = now()`,
       [owner, encodeF32(W), autoMargin, base.temperature],
     );
-    return NextResponse.json({ ok: true, n: samples.length, cv: { top1: ct1, top5: ct5 }, autoMargin });
+    return NextResponse.json({ ok: true, n: samples.length, weight: best.weight, cv: { top1: best.top1, top5: best.top5 }, autoMargin });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
