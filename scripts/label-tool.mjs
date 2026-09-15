@@ -34,6 +34,16 @@ for (let i = 0; i < files.length; i++) {
 process.stdout.write("\n");
 
 const labels = new Map(); // file -> { chosenNum, chosenName, ts }
+// Resume from a previous run.
+try {
+  const txt = await readFile(OUT, "utf8");
+  for (const line of txt.split("\n")) {
+    if (!line.trim()) continue;
+    const j = JSON.parse(line);
+    if (j.file) labels.set(j.file, { chosenNum: j.chosenNum, chosenName: j.chosenName, ts: j.ts });
+  }
+  if (labels.size) console.log(`Resumed ${labels.size} existing label(s) from ${path.relative(ROOT, OUT)}.`);
+} catch { /* none yet */ }
 
 async function persist() {
   const lines = [];
@@ -57,7 +67,7 @@ const server = http.createServer(async (req, res) => {
   const p = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
   try {
     if (p === "/") return send(res, 200, "text/html; charset=utf-8", HTML);
-    if (p === "/data") return send(res, 200, "application/json", JSON.stringify({ total: items.length, items: items.map(({ file, candidates }) => ({ file, candidates })) }));
+    if (p === "/data") return send(res, 200, "application/json", JSON.stringify({ total: items.length, items: items.map(({ file, candidates }) => ({ file, candidates, labeled: labels.has(file) })) }));
     if (p === "/catalog") return send(res, 200, "application/json", JSON.stringify(catalog.map((e) => ({ num: e.num, nameEn: e.nameEn, nameSv: e.nameSv, year: e.year, image: e.image }))));
     if (p === "/status") return send(res, 200, "application/json", JSON.stringify({ total: items.length, labeled: labels.size }));
     if (p.startsWith("/photo/")) {
@@ -161,5 +171,5 @@ $('noneBtn').onclick=function(){$('noneWrap').hidden=false;$('search').focus();}
 $('search').oninput=renderAll;
 $('skipBtn').onclick=skip;
 $('backBtn').onclick=back;
-fetch('/data').then(function(r){return r.json();}).then(function(d){items=d.items;return fetch('/catalog');}).then(function(r){return r.json();}).then(function(c){catalog=c;render();});
+fetch('/data').then(function(r){return r.json();}).then(function(d){items=d.items;idx=items.findIndex(function(it){return !it.labeled;});if(idx<0)idx=items.length;return fetch('/catalog');}).then(function(r){return r.json();}).then(function(c){catalog=c;render();});
 </script></body></html>`;
