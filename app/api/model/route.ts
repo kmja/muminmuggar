@@ -27,8 +27,11 @@ export async function GET() {
   const owner = await currentOwner();
   if (!owner) return unauthorized();
   const { rows } = await query("SELECT weights, auto_margin, temperature FROM mug_models WHERE owner = $1", [owner]);
-  const custom = rows.length > 0;
-  const W = custom ? decodeF32(String(rows[0].weights)) : decodeF32(base.weights);
+  const expected = (base.dim + 1) * base.count;
+  const stored = rows.length ? decodeF32(String(rows[0].weights)) : null;
+  // Ignore a model trained against an older catalogue size.
+  const custom = !!(stored && stored.length === expected);
+  const W = custom ? (stored as Float32Array) : decodeF32(base.weights);
   const ev = evaluate(W, await loadSamples(owner));
   return NextResponse.json({
     custom,
