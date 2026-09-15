@@ -22,5 +22,9 @@
   augmentation in `scripts/build-mug-embeddings.mjs`.
 - `npm run label -- <folder>` starts a local tool to label real mug photos
   (top-4 picker), writing `labels.jsonl` for later fine-tuning.
+- In-app labeling: put photos in `label-images/` (gitignored), `npm run dev`, and
+  open http://localhost:3000/label — same top-4 picker, saves `labels.jsonl`.
+- Evaluate/fine-tune on those labels: `npm run eval:labels` (add `-- --train` to
+  cross-validate a fine-tune, `--write` to replace the probe).
 - The app collects confirmed/corrected matches into the `match_feedback` table
   (`POST/GET /api/match-feedback`) to accumulate a real-photo dataset.
