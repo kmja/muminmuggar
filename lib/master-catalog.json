@@ -775,7 +775,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-moomintroll.webp",
+    "image": "/mugs/moomintroll-turquoise.webp",
     "norm": "moomintroll",
     "nameSv": "Mumintrollet"
   },
@@ -1815,7 +1815,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.webp",
+    "image": "/mugs/abc-a-04.webp",
     "norm": "abc a",
     "nameSv": "ABC A"
   },
@@ -2218,7 +2218,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.webp",
+    "image": "/mugs/abc-x-04.webp",
     "norm": "abc x",
     "nameSv": "ABC X"
   },

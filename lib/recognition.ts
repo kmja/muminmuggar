@@ -9,7 +9,7 @@ export interface Recognition {
   confidence: number | null;
   /** True when the match was confirmed against the catalogue image. */
   verified: boolean;
-  reason: "verified" | "no-match" | "uncertain" | "ambiguous" | "unverified" | "no-candidates";
+  reason: "verified" | "ambiguous" | "unverified" | "no-candidates";
 }
 
 const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
@@ -41,13 +41,12 @@ export async function recognizeMug(ai: AiMug, photoDataUrl: string, opts: { veri
     if (refs.length) {
       try {
         const vr = await verifyMug(photoDataUrl, refs.map((r) => ({ name: r.entry.nameEn, year: r.entry.year, imageDataUrl: r.imageDataUrl })));
-        if (vr) {
-          if (vr.index >= 0 && vr.index < refs.length && vr.confidence >= 0.5) {
-            const vConf = clamp(vr.confidence);
-            return { catalog: resolveCandidate(refs[vr.index].entry), confidence: clamp(0.35 + 0.35 * vConf + 0.25 * aiConf, 0, 0.95), verified: true, reason: "verified" };
-          }
-          return { catalog: null, confidence: null, verified: true, reason: vr.index < 0 ? "no-match" : "uncertain" };
+        if (vr && vr.index >= 0 && vr.index < refs.length && vr.confidence >= 0.5) {
+          const vConf = clamp(vr.confidence);
+          return { catalog: resolveCandidate(refs[vr.index].entry), confidence: clamp(0.35 + 0.35 * vConf + 0.25 * aiConf, 0, 0.95), verified: true, reason: "verified" };
         }
+        // The model couldn't confirm a design — fall through to the conservative
+        // name-match path rather than hard-blocking (real photos are noisy).
       } catch {
         /* fall through to the conservative, unverified path */
       }
