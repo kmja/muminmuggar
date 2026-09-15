@@ -40,7 +40,7 @@ const MUG_PROPS = {
 const IDENTIFY_SYSTEM =
   "You are an expert on Moomin ceramics — especially Arabia (Finland) Moomin mugs, plus seasonal, limited and anniversary editions. " +
   "Identify Moomin mugs precisely from photographs. Read the artwork, character(s), illustration style, and any text/stamps. " +
-  "Put the specific design/motif in `edition` when it is a named edition (e.g. \"Midsummer\", \"ABC\"); `character` is just the character or mug name. " +
+  "Put the specific design/motif in `edition` when it is a named edition (e.g. \"Midsummer\", \"Home at Last\"); `character` is just the character or mug name. " +
   "Estimate secondhand market value as a low–high range in the requested currency, and note visible condition (chips, cracks, crazing, gilding wear, fading). " +
   "Confidence must reflect certainty of the EXACT design, not merely that the item is a Moomin mug: many mugs share a character but differ in artwork and background colour. " +
   "When two designs are plausible, or the artwork/colour is unclear, use a low confidence (below 0.5). Never return 1.0. " +
@@ -159,14 +159,15 @@ export interface VerifyCandidate {
   imageDataUrl: string;
 }
 export interface VerifyResult {
-  index: number; // 0-based candidate index, or -1 for no match
+  /** 1-based number of the matching reference, or 0 for no match. */
+  match: number;
   confidence: number;
   reason: string;
 }
 
 /**
  * Compare a photographed mug to candidate catalogue product photos with Gemini
- * and return the best-matching candidate (or -1). This is the accuracy backstop:
+ * and return the best-matching candidate (or 0). This is the accuracy backstop:
  * a fuzzy name match is never trusted on its own.
  */
 export async function verifyMug(photoDataUrl: string, candidates: VerifyCandidate[]): Promise<VerifyResult | null> {
@@ -175,9 +176,10 @@ export async function verifyMug(photoDataUrl: string, candidates: VerifyCandidat
   const { mime, data } = dataUrlParts(photoDataUrl);
   const prompt =
     `Image 1 is a photo of the mug to identify. Images 2-${list.length + 1} are Arabia Moomin reference product photos, in this order:\n` +
-    `${list.map((c, i) => `${i + 1}. ${c.name}${c.year ? ` (${c.year})` : ""}`).join("\n")}\n\n` +
-    `Which reference image, if any, shows the SAME mug design as image 1? Compare the artwork, characters, colours and background. ` +
-    `If none clearly match, use index -1. Return JSON only.`;
+    `${list.map((c, i) => `Reference ${i + 1}: ${c.name}${c.year ? ` (${c.year})` : ""}`).join("\n")}\n\n` +
+    `Compare image 1 against each reference (artwork, characters, pose, colours, background). ` +
+    `Return the number (1-${list.length}) of the ONE reference that shows the exact same design as image 1. ` +
+    `Do NOT pick a reference that merely shares the character — the artwork must match. If none match, return 0. Return JSON only.`;
   const parts: Part[] = [{ text: prompt }, { inline_data: { mime_type: mime, data } }];
   for (const c of list) {
     const p = dataUrlParts(c.imageDataUrl);
@@ -185,13 +187,13 @@ export async function verifyMug(photoDataUrl: string, candidates: VerifyCandidat
   }
   const schema = {
     type: "OBJECT",
-    properties: { index: { type: "INTEGER" }, confidence: { type: "NUMBER" }, reason: { type: "STRING" } },
-    required: ["index", "confidence"],
+    properties: { match: { type: "INTEGER" }, confidence: { type: "NUMBER" }, reason: { type: "STRING" } },
+    required: ["match", "confidence"],
   };
   const { text } = await generate({ system: VERIFY_SYSTEM, schema, parts });
-  const obj = parseJson<{ index?: number; confidence?: number; reason?: string }>(text);
-  if (!obj || typeof obj.index !== "number") return null;
-  return { index: obj.index, confidence: Number(obj.confidence) || 0, reason: obj.reason || "" };
+  const obj = parseJson<{ match?: number; confidence?: number; reason?: string }>(text);
+  if (!obj || typeof obj.match !== "number") return null;
+  return { match: obj.match, confidence: Number(obj.confidence) || 0, reason: obj.reason || "" };
 }
 
 export interface CatalogEntry {

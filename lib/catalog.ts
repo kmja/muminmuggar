@@ -304,11 +304,11 @@ export interface Candidate {
  * shared images are a data gap (e.g. plain "Moomintroll" reusing the "ABC
  * Moomintroll" photo), so they must never be used to auto-identify a mug.
  */
-export function catalogCandidates(mug: MugQ, limit = 5): Candidate[] {
+export function catalogCandidates(mug: MugQ, limit = 8): Candidate[] {
   const byNum = new Map<number, Candidate>();
-  for (const q of candidates(mug)) {
+  const add = (q: string) => {
     const toks = fold(q).split(" ").filter((t) => t && !STOP.has(t));
-    if (!toks.length) continue;
+    if (!toks.length) return;
     for (const e of masterCatalog as MasterEntry[]) {
       if (!isReliableImage(e.image)) continue;
       const nw = words(e.norm);
@@ -317,6 +317,13 @@ export function catalogCandidates(mug: MugQ, limit = 5): Candidate[] {
       const prev = byNum.get(e.num);
       if (!prev || s > prev.score) byNum.set(e.num, { entry: e, score: s });
     }
+  };
+  const queries = candidates(mug);
+  for (const q of queries) add(q);
+  // Safety net: a wrong or multi-word guess (e.g. "ABC Moomintroll") must not
+  // hide the right entry, so also try each distinctive word on its own.
+  if (byNum.size < 3) {
+    for (const q of queries) for (const tok of fold(q).split(" ").filter((t) => t && !STOP.has(t) && t.length >= 4)) add(tok);
   }
   return [...byNum.values()].sort((a, b) => b.score - a.score).slice(0, limit);
 }
