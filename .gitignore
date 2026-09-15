@@ -9,3 +9,5 @@ out
 .vercel
 next-env.d.ts
 *.tsbuildinfo
+labels.jsonl
+label-images/

@@ -13,3 +13,14 @@
 ## Verify before pushing
 - `npx tsc --noEmit`
 - `npm run build`
+
+## On-device mug recognition
+- Matching is free and runs in the browser: DINOv2-small (from a CDN) + a ridge
+  linear probe over the catalogue, with a top-4 picker and a Gemini fallback.
+- `npm run build:embeddings` regenerates `public/mug-embeddings.json` (probe
+  weights + calibration). Run it after changing `lib/master-catalog.json` or the
+  augmentation in `scripts/build-mug-embeddings.mjs`.
+- `npm run label -- <folder>` starts a local tool to label real mug photos
+  (top-4 picker), writing `labels.jsonl` for later fine-tuning.
+- The app collects confirmed/corrected matches into the `match_feedback` table
+  (`POST/GET /api/match-feedback`) to accumulate a real-photo dataset.
