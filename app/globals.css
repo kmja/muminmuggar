@@ -203,6 +203,11 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .vfcapture:active::after{background: var(--lilac)}
 .scanrow{display:flex; gap:13px; align-items:flex-start; padding:13px; border:1px solid var(--border); border-radius:10px}
 .scanthumb{width:54px; height:54px; flex:none; border-radius:8px; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
+/* On-device match candidates: the top hit is emphasised, rows are tappable. */
+.scanrow.matchtop{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+.scanrow[role="button"]{transition:background .15s, border-color .15s}
+.scanrow[role="button"]:hover{background:var(--lilac)}
+.scanrow[role="button"]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 /* Quick-add "+" on each row of the add-mugs list. */
 .addbtn{flex:none; width:46px; height:46px; padding:0; justify-content:center; border-radius:999px; border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}

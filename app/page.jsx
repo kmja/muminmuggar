@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
+import { matchMug, warmUp, isReady } from "../lib/image-match";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -134,6 +135,14 @@ function blankMug() {
     conditionNotes: "", location: "", acquiredDate: "", price: "", currency: "SEK", favorite: false,
     photoUrl: "", estValueLow: null, estValueHigh: null, estValueCurrency: "SEK", notes: "", tags: [], aiConfidence: null };
 }
+// A ready-to-save draft from a catalogue entry (used by the on-device matcher).
+function catalogDraft(e) {
+  return { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status: "owned",
+    capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" };
+}
+// Auto-accept an on-device match only when it is clearly ahead of the runner-up.
+const AUTO_MATCH_SCORE = 0.86;
+const AUTO_MATCH_MARGIN = 0.06;
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
@@ -439,12 +448,13 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const t = useT();
   const lang = useLang();
-  const [screen, setScreen] = useState("browse"); // browse | camera
+  const [screen, setScreen] = useState("browse"); // browse | camera | match
   const [q, setQ] = useState("");
   const [added, setAdded] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
+  const [matches, setMatches] = useState(null); // on-device match candidates
   const [photoUrl, setPhotoUrl] = useState("");
   const [camLive, setCamLive] = useState(false);
   const [camTried, setCamTried] = useState(false);
@@ -468,7 +478,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
 
   // Reset on open; start the viewfinder only while the camera screen is up; always release the camera on close.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setPhotoUrl(""); setCamTried(false); setScreen("browse"); setQ(""); setAdded(new Set()); }
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setPhotoUrl(""); setCamTried(false); setScreen("browse"); setQ(""); setAdded(new Set()); }
     else stopCam();
     return () => stopCam();
   }, [open]);
@@ -477,30 +487,55 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     else stopCam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, screen, items.length, busy]);
-  const process = async (small) => {
-    setBusy(true); setItems([]); setPhotoUrl(small);
+  // Prefetch the on-device model as soon as the camera opens, so it's ready.
+  useEffect(() => { if (open && screen === "camera") warmUp(); }, [open, screen]);
+
+  // Server-side detection + verification (used when the on-device matcher can't
+  // run, or for a shelf photo with several mugs).
+  const processServer = async (small) => {
+    const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
+    if (!drafts.length) { setError(t("scan_no_mugs")); return; }
+    if (drafts.length === 1) {
+      const d0 = drafts[0], e = d0.catalog;
+      const initial = e
+        ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
+        : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
+      onAddOne(initial); onClose(); return;
+    }
+    setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
+  };
+
+  // Match a photo: free on-device retrieval first, server fallback if unavailable.
+  const processImage = async (small) => {
+    setBusy(true); setError(""); setItems([]); setMatches(null); setPhotoUrl(small);
     try {
-      // Detect every mug in the photo; each is resolved to a catalogue entry server-side.
-      const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
-      if (!drafts.length) { setError(t("scan_no_mugs")); return; }
-      if (drafts.length === 1) {
-        // Single mug: open the review form pre-filled from the catalogue match. Use the
-        // official product image (not the camera snapshot) as the collection photo.
-        const d0 = drafts[0], e = d0.catalog;
-        const initial = e
-          ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
-          : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
-        onAddOne(initial); onClose(); return;
-      }
-      setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
+      try {
+        const top = await matchMug(small, { topK: 5 });
+        if (top.length) {
+          setMatches(top);
+          const [best, second] = top;
+          if (best.score >= AUTO_MATCH_SCORE && (!second || best.score - second.score >= AUTO_MATCH_MARGIN)) {
+            const e = MASTER_CATALOG.find((x) => x.num === best.num);
+            if (e) { onAddOne(catalogDraft(e)); onClose(); return; }
+          }
+          setScreen("match");
+          return;
+        }
+      } catch { /* model unavailable → fall back to the server */ }
+      await processServer(small);
     } catch (err) { setError(err.message || String(err)); }
     finally { setBusy(false); }
+  };
+  const chooseMatch = (m) => {
+    const e = MASTER_CATALOG.find((x) => x.num === m.num);
+    if (!e) return;
+    onAddOne(catalogDraft(e)); onClose();
   };
   const run = async (file) => {
     setError("");
     if (!file) return;
     const raw = await fileToDataUrl(file);
-    await process(await downscaleImage(raw, 1400, 0.85));
+    await processImage(await downscaleImage(raw, 1400, 0.85));
   };
   const capture = async () => {
     const v = videoRef.current;
@@ -511,7 +546,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     c.getContext("2d").drawImage(v, 0, 0);
     let dataUrl; try { dataUrl = c.toDataURL("image/jpeg", 0.9); } catch { return; }
     stopCam();
-    await process(await downscaleImage(dataUrl, 1400, 0.85));
+    await processImage(await downscaleImage(dataUrl, 1400, 0.85));
   };
 
   // Browse list: newest catalogue mugs first, filtered to ones not already owned.
@@ -556,7 +591,13 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
       <button className="primary big" onClick={onClose}>{t("add_done")}</button>
     </div>
   );
-  const footer = items.length ? reviewFooter : (screen === "browse" ? browseFooter : null);
+  const matchFooter = (
+    <div className="formactions">
+      <button className="linkbtn" onClick={() => setScreen("browse")}>{t("match_search_all")}</button>
+      <button onClick={onClose}>{t("cancel")}</button>
+    </div>
+  );
+  const footer = items.length ? reviewFooter : screen === "browse" ? browseFooter : screen === "match" ? matchFooter : null;
 
   return (
     <Modal open={open} onClose={onClose} wide title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
@@ -606,7 +647,32 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
         </div>
       ) : null}
 
-      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>{t("scan_looking")}</div></div> : null}
+      {!items.length && !busy && screen === "match" && matches ? (
+        <div className="grid" style={{ gap: 10 }}>
+          <div className="row" style={{ gap: 12, alignItems: "center" }}>
+            {photoUrl ? <img src={photoUrl} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, flex: "none" }} /> : null}
+            <div className="help">{t("match_hint")}</div>
+          </div>
+          {matches.map((m, i) => {
+            const e = MASTER_CATALOG.find((x) => x.num === m.num);
+            return (
+              <div className={"scanrow" + (i === 0 ? " matchtop" : "")} key={m.num} role="button" tabIndex={0}
+                style={{ alignItems: "center", cursor: "pointer" }}
+                onClick={() => chooseMatch(m)}
+                onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); chooseMatch(m); } }}>
+                <div className="scanthumb">{m.image ? <img src={m.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="mugname" style={{ fontSize: 14 }}>{catName(m.nameEn, lang)}</div>
+                  <div className="mini">{[m.year, e?.capacity].filter(Boolean).join(" · ")}</div>
+                </div>
+                {i === 0 ? <Badge kind="owned">{t("match_best")}</Badge> : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>{t("scan_looking")}</div>{!isReady() ? <div className="help" style={{ marginTop: 8 }}>{t("match_first_time")}</div> : null}</div> : null}
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
 
       {items.length && !busy ? (
