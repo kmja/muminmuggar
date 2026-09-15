@@ -47,6 +47,10 @@ const reliableImg = (u) => !!u && !AMBIGUOUS_IMAGES.has(u);
 // Catalogue photos are now transparent WebP; upgrade any older /mugs/*.jpg paths
 // stored on existing mugs so they still resolve.
 const mugImg = (u) => (typeof u === "string" ? u.replace(/^(\/mugs\/[^?]+)\.jpg$/i, "$1.webp") : u);
+// The stored catalogue image is a mug's default face; a user's own photo (camera
+// snapshot or upload) is only a fallback when the name has no catalogue image.
+const CATALOG_IMAGE_BY_NAME = new Map(MASTER_CATALOG.filter((e) => e.image).map((e) => [foldC(e.nameEn), e.image]));
+const displayImg = (m) => CATALOG_IMAGE_BY_NAME.get(foldC(m?.name)) || mugImg(m?.photoUrl);
 // Ownership key: fold + drop filler words + ignore spacing, so "Snufkin" matches
 // but "POP Snufkin" doesn't. Stored mugs are keyed by name, so same-named catalogue
 // variants share a key — the "add to collection" list shows one entry per name.
@@ -825,10 +829,11 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
     ? `${formatMoney(m.estValueLow ?? m.estValueHigh, m.estValueCurrency || "SEK")}${m.estValueLow != null && m.estValueHigh != null ? "–" + formatMoney(m.estValueHigh, m.estValueCurrency || "SEK") : ""}`
     : "";
   const dealCount = m.listings?.length || 0;
+  const img = displayImg(m);
   return (
     <div className="card mug">
       <div className="mugphoto">
-        {m.photoUrl ? <img src={mugImg(m.photoUrl)} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
+        {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <div className="abschip">
           <Badge kind={m.status}>{t("status_" + m.status)}</Badge>
           {m.favorite ? <Badge kind="fav"><Star size={12} fill="currentColor" /></Badge> : null}
@@ -867,10 +872,11 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
     ? `${formatMoney(m.estValueLow ?? m.estValueHigh, m.estValueCurrency || "SEK")}${m.estValueLow != null && m.estValueHigh != null ? "–" + formatMoney(m.estValueHigh, m.estValueCurrency || "SEK") : ""}`
     : "";
   const meta = [m.year, val ? "≈ " + val : null].filter(Boolean).join(" · ");
+  const img = displayImg(m);
   return (
     <div className="mugrow">
       <div className="mugrow-thumb">
-        {m.photoUrl ? <img src={mugImg(m.photoUrl)} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
+        {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
         {m.favorite ? <span className="mugrow-fav"><Star size={11} fill="currentColor" /></span> : null}
       </div>
       <div className="mugrow-main">
