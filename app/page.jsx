@@ -140,9 +140,6 @@ function catalogDraft(e) {
   return { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status: "owned",
     capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" };
 }
-// Auto-accept an on-device match only when it is clearly ahead of the runner-up.
-const AUTO_MATCH_SCORE = 0.86;
-const AUTO_MATCH_MARGIN = 0.06;
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
@@ -510,11 +507,11 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     setBusy(true); setError(""); setItems([]); setMatches(null); setPhotoUrl(small);
     try {
       try {
-        const top = await matchMug(small, { topK: 5 });
-        if (top.length) {
-          setMatches(top);
-          const [best, second] = top;
-          if (best.score >= AUTO_MATCH_SCORE && (!second || best.score - second.score >= AUTO_MATCH_MARGIN)) {
+        const { candidates, autoMargin } = await matchMug(small, { topK: 5 });
+        if (candidates.length) {
+          setMatches(candidates);
+          const [best, second] = candidates;
+          if (autoMargin != null && best.logit - second.logit >= autoMargin) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
             if (e) { onAddOne(catalogDraft(e)); onClose(); return; }
           }
