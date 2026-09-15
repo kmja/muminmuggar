@@ -397,6 +397,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 
         {d.photoUrl ? <div className="formphoto"><img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /></div> : null}
         {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
+        {mode === "create" && d.verifyReason && !["verified", "unverified"].includes(d.verifyReason) ? <div className="note warn">{t("form_verify_failed")}</div> : null}
 
         {/* Everything personal is optional and tucked away. */}
         <details className="moredetails">
@@ -487,8 +488,8 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
         // official product image (not the camera snapshot) as the collection photo.
         const d0 = drafts[0], e = d0.catalog;
         const initial = e
-          ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence }
-          : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence };
+          ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
+          : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
         onAddOne(initial); onClose(); return;
       }
       setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));

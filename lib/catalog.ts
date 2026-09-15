@@ -1,3 +1,5 @@
+import { readFile } from "fs/promises";
+import { join } from "path";
 import { query } from "./db";
 import type { Mug } from "./types";
 import seed from "./catalog-seed.json";
@@ -284,6 +286,52 @@ export function resolveMug(mug: MugQ): ResolvedMug | null {
   const m = matchMaster(mug);
   if (!m) return null;
   return { num: m.num, nameEn: m.nameEn, year: m.year, capacity: m.capacity, image: m.image, estLow: toSek(m.estLow), estHigh: toSek(m.estHigh), estCur: "SEK" };
+}
+
+/** Turn a master-catalogue entry into the resolved shape the app consumes. */
+export function resolveCandidate(e: MasterEntry): ResolvedMug {
+  return { num: e.num, nameEn: e.nameEn, year: e.year, capacity: e.capacity, image: e.image, estLow: toSek(e.estLow), estHigh: toSek(e.estHigh), estCur: "SEK" };
+}
+
+export interface Candidate {
+  entry: MasterEntry;
+  score: number;
+}
+
+/**
+ * Plausible catalogue entries for a mug, best first — the shortlist a photographed
+ * mug is checked against. Only entries with a unique product image are returned:
+ * shared images are a data gap (e.g. plain "Moomintroll" reusing the "ABC
+ * Moomintroll" photo), so they must never be used to auto-identify a mug.
+ */
+export function catalogCandidates(mug: MugQ, limit = 5): Candidate[] {
+  const byNum = new Map<number, Candidate>();
+  for (const q of candidates(mug)) {
+    const toks = fold(q).split(" ").filter((t) => t && !STOP.has(t));
+    if (!toks.length) continue;
+    for (const e of masterCatalog as MasterEntry[]) {
+      if (!isReliableImage(e.image)) continue;
+      const nw = words(e.norm);
+      if (!toks.every((t) => nw.includes(words(t)))) continue;
+      const s = scoreNorm(q, mug.year, e.norm, e.year);
+      const prev = byNum.get(e.num);
+      if (!prev || s > prev.score) byNum.set(e.num, { entry: e, score: s });
+    }
+  }
+  return [...byNum.values()].sort((a, b) => b.score - a.score).slice(0, limit);
+}
+
+/** Read a self-hosted catalogue image (/mugs/*.webp) as a data URL, for vision checks. */
+export async function readCatalogImage(imagePath: string): Promise<string | null> {
+  if (!/^\/mugs\/[A-Za-z0-9._-]+$/.test(imagePath || "")) return null;
+  try {
+    const buf = await readFile(join(process.cwd(), "public", imagePath));
+    const ext = imagePath.split(".").pop()?.toLowerCase();
+    const mime = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
+    return `data:${mime};base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
 }
 
 /** Authoritative production year for a mug (for filling in missing years). */

@@ -40,8 +40,11 @@ const MUG_PROPS = {
 const IDENTIFY_SYSTEM =
   "You are an expert on Moomin ceramics — especially Arabia (Finland) Moomin mugs, plus seasonal, limited and anniversary editions. " +
   "Identify Moomin mugs precisely from photographs. Read the artwork, character(s), illustration style, and any text/stamps. " +
+  "Put the specific design/motif in `edition` when it is a named edition (e.g. \"Midsummer\", \"ABC\"); `character` is just the character or mug name. " +
   "Estimate secondhand market value as a low–high range in the requested currency, and note visible condition (chips, cracks, crazing, gilding wear, fading). " +
-  "Give a confidence between 0 and 1. If the item is clearly not a Moomin mug, set isMoominMug=false. Never invent a year you cannot support — use null when unsure.";
+  "Confidence must reflect certainty of the EXACT design, not merely that the item is a Moomin mug: many mugs share a character but differ in artwork and background colour. " +
+  "When two designs are plausible, or the artwork/colour is unclear, use a low confidence (below 0.5). Never return 1.0. " +
+  "If the item is clearly not a Moomin mug, set isMoominMug=false. Never invent a year you cannot support — use null when unsure.";
 
 interface GenOpts {
   parts: Part[];
@@ -143,6 +146,52 @@ export async function identifyShelf(imageDataUrl: string): Promise<AiMug[]> {
   });
   const obj = parseJson<{ mugs?: AiMug[] }>(text);
   return obj?.mugs || [];
+}
+
+const VERIFY_SYSTEM =
+  "You are a meticulous verifier for Arabia Moomin mug designs. You compare a photographed mug against reference product photos " +
+  "and decide whether any reference shows the EXACT same design. Be strict and conservative: different artwork, character pose, " +
+  "background colour or layout means it is NOT a match. When in doubt, report no match.";
+
+export interface VerifyCandidate {
+  name: string;
+  year: number | null;
+  imageDataUrl: string;
+}
+export interface VerifyResult {
+  index: number; // 0-based candidate index, or -1 for no match
+  confidence: number;
+  reason: string;
+}
+
+/**
+ * Compare a photographed mug to candidate catalogue product photos with Gemini
+ * and return the best-matching candidate (or -1). This is the accuracy backstop:
+ * a fuzzy name match is never trusted on its own.
+ */
+export async function verifyMug(photoDataUrl: string, candidates: VerifyCandidate[]): Promise<VerifyResult | null> {
+  const list = candidates.filter((c) => c.imageDataUrl);
+  if (!list.length) return null;
+  const { mime, data } = dataUrlParts(photoDataUrl);
+  const prompt =
+    `Image 1 is a photo of the mug to identify. Images 2-${list.length + 1} are Arabia Moomin reference product photos, in this order:\n` +
+    `${list.map((c, i) => `${i + 1}. ${c.name}${c.year ? ` (${c.year})` : ""}`).join("\n")}\n\n` +
+    `Which reference image, if any, shows the SAME mug design as image 1? Compare the artwork, characters, colours and background. ` +
+    `If none clearly match, use index -1. Return JSON only.`;
+  const parts: Part[] = [{ text: prompt }, { inline_data: { mime_type: mime, data } }];
+  for (const c of list) {
+    const p = dataUrlParts(c.imageDataUrl);
+    parts.push({ inline_data: { mime_type: p.mime, data: p.data } });
+  }
+  const schema = {
+    type: "OBJECT",
+    properties: { index: { type: "INTEGER" }, confidence: { type: "NUMBER" }, reason: { type: "STRING" } },
+    required: ["index", "confidence"],
+  };
+  const { text } = await generate({ system: VERIFY_SYSTEM, schema, parts });
+  const obj = parseJson<{ index?: number; confidence?: number; reason?: string }>(text);
+  if (!obj || typeof obj.index !== "number") return null;
+  return { index: obj.index, confidence: Number(obj.confidence) || 0, reason: obj.reason || "" };
 }
 
 export interface CatalogEntry {
