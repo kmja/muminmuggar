@@ -1,76 +1,118 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MASTER_CATALOG from "../../lib/master-catalog.json";
 import { matchMug, warmUp, isReady, getProgress } from "../../lib/image-match";
+import { getDeviceId } from "../../lib/device";
 
-/* Local-only labeling page: click through a folder of real photos and record the
- * correct catalogue mug for each. Saves to labels.jsonl (via /api/labels) for the
- * fine-tuning script. Reachable at /label when running the app locally. */
+/* On-site labeling + fine-tuning. Upload real mug photos, click through the
+ * model's top-4, and record the correct catalogue mug. Everything is stored in
+ * the database (owner-scoped), and the probe can be fine-tuned here. */
 
-const imgSrc = (name) => `/api/label-images/${encodeURIComponent(name)}`;
-const svName = (num, fallback) => (MASTER_CATALOG.find((e) => e.num === num)?.nameSv) || fallback;
+const svName = (num, fallback) => MASTER_CATALOG.find((e) => e.num === num)?.nameSv || fallback;
+const fileToDataUrl = (file) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(String(r.result || ""));
+  r.onerror = () => rej(new Error("read failed"));
+  r.readAsDataURL(file);
+});
 
 export default function LabelPage() {
-  const [files, setFiles] = useState(null);
+  const dev = useMemo(() => getDeviceId(), []);
+  const jfetch = useCallback((url, opts = {}) => fetch(url, { ...opts, headers: { "Content-Type": "application/json", "x-device-id": dev, ...(opts.headers || {}) } }), [dev]);
+  const imgSrc = (id) => `/api/label-images/${id}?d=${encodeURIComponent(dev)}`;
+
+  const [images, setImages] = useState(null);
   const [labels, setLabels] = useState({});
   const [idx, setIdx] = useState(0);
-  const [match, setMatch] = useState(null); // { candidates, embedding, model }
+  const [match, setMatch] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [search, setSearch] = useState("");
   const [pct, setPct] = useState(0);
+  const [model, setModel] = useState(null);
+  const [uploading, setUploading] = useState("");
+  const [ftMsg, setFtMsg] = useState("");
+  const fileRef = useRef(null);
 
-  useEffect(() => { warmUp(); }, []);
-  useEffect(() => {
-    const id = setInterval(() => setPct(getProgress()), 500);
-    return () => clearInterval(id);
-  }, []);
+  const loadAll = useCallback(async () => {
+    try {
+      const [a, b, m] = await Promise.all([
+        jfetch("/api/label-images").then((r) => r.json()),
+        jfetch("/api/labels").then((r) => r.json()),
+        jfetch("/api/model").then((r) => (r.ok ? r.json() : null)),
+      ]);
+      const list = a.images || [];
+      const map = {};
+      for (const r of b.rows || []) if (r.imageId != null) map[r.imageId] = r;
+      setImages(list);
+      setLabels(map);
+      setModel(m);
+      const first = list.findIndex((im) => !map[im.id]);
+      setIdx(first < 0 ? list.length : first);
+    } catch (e) { setError(String(e)); setImages([]); }
+  }, [jfetch]);
+
+  useEffect(() => { warmUp(); loadAll(); }, [loadAll]);
+  useEffect(() => { const id = setInterval(() => setPct(getProgress()), 500); return () => clearInterval(id); }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const a = await (await fetch("/api/label-images")).json();
-        const list = a.files || [];
-        setFiles(list);
-        if (a.error) setError(a.error);
-        const b = await (await fetch("/api/labels")).json();
-        const map = {};
-        for (const r of b.rows || []) map[r.file] = r;
-        setLabels(map);
-        const first = list.findIndex((f) => !map[f]);
-        setIdx(first < 0 ? list.length : first);
-      } catch (e) { setError(String(e)); setFiles([]); }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!files || idx >= files.length) return;
+    if (!images || idx >= images.length) return;
     let cancelled = false;
     (async () => {
       setBusy(true); setError(""); setMatch(null); setShowAll(false); setSearch("");
       try {
-        const r = await matchMug(imgSrc(files[idx]), { topK: 4 });
+        const r = await matchMug(imgSrc(images[idx].id), { topK: 4 });
         if (!cancelled) setMatch(r);
       } catch (e) { if (!cancelled) setError("Match failed: " + String(e)); }
       finally { if (!cancelled) setBusy(false); }
     })();
     return () => { cancelled = true; };
-  }, [files, idx]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images, idx]);
 
-  const choose = async (num, nameEn) => {
-    const file = files[idx];
+  const choose = (num, nameEn) => {
+    const im = images[idx];
     const candidates = (match?.candidates || []).map((c) => c.num);
-    setLabels((m) => ({ ...m, [file]: { file, chosenNum: num } }));
-    fetch("/api/labels", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ file, chosenNum: num, chosenName: nameEn, candidates, embedding: match?.embedding }),
-    }).catch(() => {});
+    setLabels((m) => ({ ...m, [im.id]: { imageId: im.id, chosenNum: num } }));
+    jfetch("/api/labels", { method: "POST", body: JSON.stringify({ imageId: im.id, name: im.name, chosenNum: num, chosenName: nameEn, candidates, embedding: match?.embedding }) })
+      .then((r) => r.json()).then((r) => { if (r.error) setError(r.error); }).catch(() => {});
     setIdx((i) => i + 1);
   };
   const skip = () => setIdx((i) => i + 1);
   const back = () => setIdx((i) => Math.max(0, i - 1));
+
+  const upload = async (files) => {
+    if (!files?.length) return;
+    setError("");
+    let n = 0;
+    for (const f of files) {
+      setUploading(`${++n}/${files.length}`);
+      try {
+        const url = await fileToDataUrl(f);
+        const [meta, b64] = url.split(",");
+        const mime = meta.slice(5).split(";")[0] || "image/jpeg";
+        await jfetch("/api/label-images", { method: "POST", body: JSON.stringify({ name: f.name, mime, data: b64 }) });
+      } catch (e) { setError(`Upload failed for ${f.name}: ${String(e)}`); }
+    }
+    setUploading("");
+    await loadAll();
+  };
+
+  const finetune = async () => {
+    setFtMsg("Fine-tuning…");
+    try {
+      const r = await jfetch("/api/finetune", { method: "POST", body: JSON.stringify({}) }).then((x) => x.json());
+      if (r.error) setFtMsg(r.error);
+      else { setFtMsg(`Fine-tuned on ${r.n} photos — cross-validated top-1 ${r.cv.top1}/${r.n}, top-5 ${r.cv.top5}/${r.n}. Applied.`); await loadAll(); }
+    } catch (e) { setFtMsg(String(e)); }
+  };
+  const resetModel = async () => {
+    setFtMsg("");
+    await jfetch("/api/model", { method: "DELETE" });
+    await loadAll();
+  };
 
   useEffect(() => {
     const h = (e) => {
@@ -87,36 +129,54 @@ export default function LabelPage() {
 
   const allList = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const list = MASTER_CATALOG.filter((e) => !q || `${e.nameEn} ${e.nameSv || ""} ${e.year}`.toLowerCase().includes(q));
-    return list.slice(0, 80);
+    return MASTER_CATALOG.filter((e) => !q || `${e.nameEn} ${e.nameSv || ""} ${e.year}`.toLowerCase().includes(q)).slice(0, 80);
   }, [search]);
 
-  const done = files && idx >= files.length;
+  const done = images && idx >= images.length;
   const labeled = Object.keys(labels).length;
+  const acc = model?.accuracy;
 
   return (
     <div className="wrap" style={{ maxWidth: 760, paddingBottom: 40 }}>
       <div className="top">
-        <div className="title"><h1>Label mugs</h1><span className="ver">{files ? `${Math.min(idx + 1, files.length)} / ${files.length} · ${labeled} labeled` : "loading…"}</span></div>
+        <div className="title"><h1>Label mugs</h1><span className="ver">{images ? `${Math.min(idx + 1, images.length)} / ${images.length} · ${labeled} labeled` : "loading…"}</span></div>
         <div className="actions"><a className="ghost icon" href="/" title="Back to app" style={{ textDecoration: "none" }}>×</a></div>
       </div>
 
+      <div className="card pad" style={{ marginBottom: 12 }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontWeight: 500 }}>{model?.custom ? "Custom model (fine-tuned on your photos)" : "Default model"}</div>
+            <div className="mini" style={{ marginTop: 4 }}>{acc && acc.n ? `Accuracy on your ${acc.n} labels: top-1 ${acc.top1}/${acc.n}, top-5 ${acc.top5}/${acc.n}` : "Label some photos to measure accuracy."}</div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <button onClick={finetune} disabled={!labeled}>Fine-tune</button>
+            {model?.custom ? <button onClick={resetModel}>Reset</button> : null}
+            <a className="btn" href={`/api/labels/export?d=${encodeURIComponent(dev)}`} download style={{ textDecoration: "none" }}>Export</a>
+          </div>
+        </div>
+        {ftMsg ? <div className="note" style={{ marginTop: 10 }}>{ftMsg}</div> : null}
+      </div>
+
+      <div className="row" style={{ marginBottom: 12 }}>
+        <button onClick={() => fileRef.current?.click()} disabled={!!uploading}>{uploading ? `Uploading ${uploading}…` : "Upload photos"}</button>
+        <input ref={fileRef} className="sr-only" type="file" accept="image/*" multiple onChange={(e) => { upload([...e.target.files]); e.target.value = ""; }} />
+      </div>
+
       {error ? <div className="note warn" style={{ marginBottom: 12 }}>{error}</div> : null}
-      {files && files.length === 0 ? <div className="note">Put photos in <code>label-images/</code> at the project root and reload.</div> : null}
+      {images && images.length === 0 ? <div className="note">No photos yet — upload some above.</div> : null}
 
       {done ? (
         <div className="card pad" style={{ textAlign: "center" }}>
           <div style={{ fontSize: 20 }}>All done</div>
-          <div className="sub" style={{ marginTop: 6 }}>{labeled} labeled → saved to <code>labels.jsonl</code>.</div>
-          <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-            <button onClick={() => setIdx(0)}>Review from start</button>
-          </div>
+          <div className="sub" style={{ marginTop: 6 }}>{labeled} labeled. Fine-tune above to apply them.</div>
+          <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setIdx(0)}>Review from start</button></div>
         </div>
       ) : null}
 
-      {!done && files && files.length ? (
+      {!done && images && images.length ? (
         <>
-          <img src={imgSrc(files[idx])} alt="" style={{ width: "100%", maxHeight: "46vh", objectFit: "contain", borderRadius: 12, background: "var(--bg2)" }} />
+          <img src={imgSrc(images[idx].id)} alt="" style={{ width: "100%", maxHeight: "46vh", objectFit: "contain", borderRadius: 12, background: "var(--bg2)" }} />
 
           {busy ? <div className="drop" style={{ marginTop: 12 }}><span className="spin" /> <div style={{ marginTop: 8 }}>Matching…</div>{!isReady() ? <div className="help" style={{ marginTop: 8 }}>{pct > 0 ? `Loading image model… ${Math.round(pct)}%` : "Loading image model (first time can take a moment)…"}</div> : null}</div> : null}
 

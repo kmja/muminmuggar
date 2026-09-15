@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
+import { getDeviceId } from "../lib/device";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -93,17 +94,7 @@ function downscaleImage(dataUrl, maxDim = 1400, quality = 0.84) {
 // A stable per-device id so an anonymous (not-signed-in) user still has a
 // collection. Lost if the browser storage is cleared or the device changes —
 // signing in with Google moves it to the account.
-function getDeviceId() {
-  if (typeof window === "undefined") return "";
-  try {
-    let id = localStorage.getItem("deviceId");
-    if (!id || !/^[a-zA-Z0-9_-]{8,64}$/.test(id)) {
-      id = (crypto.randomUUID ? crypto.randomUUID() : "d" + Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^a-zA-Z0-9_-]/g, "");
-      localStorage.setItem("deviceId", id);
-    }
-    return id;
-  } catch { return ""; }
-}
+// (see lib/device.js)
 async function api(path, opts = {}) {
   const r = await fetch(path, { ...opts, headers: { "Content-Type": "application/json", "x-device-id": getDeviceId(), ...(opts.headers || {}) } });
   let j = {};

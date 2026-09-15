@@ -33,3 +33,14 @@ export function unauthorized(): Response {
     headers: { "content-type": "application/json" },
   });
 }
+
+/**
+ * Owner for a route handler that may be hit by a plain <img>/<a> request, which
+ * can't carry the x-device-id header — falls back to a `?d=` query param.
+ */
+export async function ownerFromRequest(req: Request): Promise<string | null> {
+  const o = await currentOwner();
+  if (o) return o;
+  const d = new URL(req.url).searchParams.get("d");
+  return d && /^[a-zA-Z0-9_-]{8,64}$/.test(d) ? "anon:" + d : null;
+}

@@ -18,13 +18,13 @@
 - Matching is free and runs in the browser: DINOv2-small (from a CDN) + a ridge
   linear probe over the catalogue, with a top-4 picker and a Gemini fallback.
 - `npm run build:embeddings` regenerates `public/mug-embeddings.json` (probe
-  weights + calibration). Run it after changing `lib/master-catalog.json` or the
-  augmentation in `scripts/build-mug-embeddings.mjs`.
-- `npm run label -- <folder>` starts a local tool to label real mug photos
-  (top-4 picker), writing `labels.jsonl` for later fine-tuning.
-- In-app labeling: put photos in `label-images/` (gitignored), `npm run dev`, and
-  open http://localhost:3000/label — same top-4 picker, saves `labels.jsonl`.
-- Evaluate/fine-tune on those labels: `npm run eval:labels` (add `-- --train` to
-  cross-validate a fine-tune, `--write` to replace the probe).
+  weights + calibration) **and** `lib/probe-base.json` (the synthetic normal
+  equations used for on-site fine-tuning). Run it after changing
+  `lib/master-catalog.json` or the augmentation in `scripts/lib/augment.mjs`.
+- On-site labeling: open `/label` on the deployed site, upload photos, and click
+  through the top-4. Images + labels live in Postgres (`label_images`, `labels`);
+  the per-owner fine-tuned probe is in `mug_models` (`/api/finetune`, `/api/model`).
+  `eval:labels` / `label-tool` still work locally against a downloaded
+  `labels.jsonl` (`/api/labels/export`).
 - The app collects confirmed/corrected matches into the `match_feedback` table
   (`POST/GET /api/match-feedback`) to accumulate a real-photo dataset.

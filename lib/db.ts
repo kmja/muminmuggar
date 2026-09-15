@@ -86,6 +86,41 @@ CREATE TABLE IF NOT EXISTS match_feedback (
 
 CREATE INDEX IF NOT EXISTS match_feedback_owner_idx ON match_feedback (owner);
 
+-- On-site labeling: uploaded photos and their confirmed catalogue mug, plus a
+-- per-owner fine-tuned probe (weights) derived from the labels.
+CREATE TABLE IF NOT EXISTS label_images (
+  id         SERIAL PRIMARY KEY,
+  owner      TEXT,
+  name       TEXT NOT NULL,
+  mime       TEXT,
+  data       TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS label_images_owner_idx ON label_images (owner);
+
+CREATE TABLE IF NOT EXISTS labels (
+  id          SERIAL PRIMARY KEY,
+  owner       TEXT,
+  image_id    INTEGER REFERENCES label_images(id) ON DELETE CASCADE,
+  name        TEXT,
+  chosen_num  INTEGER,
+  chosen_name TEXT,
+  candidates  INTEGER[] NOT NULL DEFAULT '{}',
+  embedding   TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (owner, image_id)
+);
+CREATE INDEX IF NOT EXISTS labels_owner_idx ON labels (owner);
+
+CREATE TABLE IF NOT EXISTS mug_models (
+  owner       TEXT PRIMARY KEY,
+  weights     TEXT NOT NULL,
+  auto_margin NUMERIC,
+  temperature NUMERIC,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Multi-user: scope collections/subscriptions to a Google account (added later).
 ALTER TABLE mugs ADD COLUMN IF NOT EXISTS owner TEXT;
 ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS owner TEXT;

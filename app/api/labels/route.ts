@@ -1,52 +1,59 @@
 import { NextResponse } from "next/server";
-import { readFile, writeFile } from "fs/promises";
-import path from "path";
+import { query } from "@/lib/db";
+import { currentOwner, unauthorized } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const OUT = path.join(process.cwd(), "labels.jsonl");
-
-interface LabelRow { file: string; chosenNum: number | null; chosenName?: string | null; candidates?: number[]; embedding?: string; ts?: string }
-
-async function readAll(): Promise<Record<string, LabelRow>> {
-  try {
-    const txt = await readFile(OUT, "utf8");
-    const map: Record<string, LabelRow> = {};
-    for (const line of txt.split("\n")) {
-      if (!line.trim()) continue;
-      try { const j = JSON.parse(line) as LabelRow; if (j.file) map[j.file] = j; } catch { /* skip */ }
-    }
-    return map;
-  } catch { return {}; }
-}
-
-/** Existing labels (so the page can resume where you left off). */
+/** The owner's labels (used to resume labeling and to compute accuracy). */
 export async function GET() {
-  const map = await readAll();
-  const rows = Object.values(map);
-  return NextResponse.json({ count: rows.length, rows });
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
+  const { rows } = await query(
+    `SELECT l.id, l.image_id, l.name, l.chosen_num, l.chosen_name, l.candidates, l.embedding, i.name AS image_name
+     FROM labels l LEFT JOIN label_images i ON i.id = l.image_id
+     WHERE l.owner = $1 ORDER BY l.id`,
+    [owner],
+  );
+  return NextResponse.json({
+    count: rows.length,
+    rows: rows.map((r) => ({
+      id: Number(r.id),
+      imageId: r.image_id == null ? null : Number(r.image_id),
+      name: r.name,
+      imageName: r.image_name,
+      chosenNum: r.chosen_num == null ? null : Number(r.chosen_num),
+      chosenName: r.chosen_name,
+      candidates: r.candidates || [],
+      embedding: r.embedding,
+    })),
+  });
 }
 
-/** Record (or clear) one label. Writes labels.jsonl next to the project root. */
+/** Record (or clear) one label for an uploaded image. */
 export async function POST(req: Request) {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
   try {
     const b = await req.json();
-    if (!b.file || typeof b.file !== "string") return NextResponse.json({ error: "file required" }, { status: 400 });
-    const map = await readAll();
-    if (b.chosenNum == null) delete map[b.file];
-    else map[b.file] = {
-      file: b.file,
-      chosenNum: Number.isInteger(b.chosenNum) ? b.chosenNum : null,
-      chosenName: typeof b.chosenName === "string" ? b.chosenName : null,
-      candidates: Array.isArray(b.candidates) ? b.candidates.map(Number).filter(Number.isInteger) : [],
-      embedding: typeof b.embedding === "string" ? b.embedding : undefined,
-      ts: new Date().toISOString(),
-    };
-    const lines = Object.values(map).map((r) => JSON.stringify(r));
-    await writeFile(OUT, lines.length ? lines.join("\n") + "\n" : "");
-    return NextResponse.json({ ok: true, count: lines.length });
+    if (!Number.isInteger(b.imageId)) return NextResponse.json({ error: "imageId required" }, { status: 400 });
+    const candidates = Array.isArray(b.candidates) ? b.candidates.map(Number).filter(Number.isInteger).slice(0, 20) : [];
+    const embedding = typeof b.embedding === "string" ? b.embedding.slice(0, 20000) : null;
+    if (b.chosenNum == null) {
+      await query("DELETE FROM labels WHERE owner = $1 AND image_id = $2", [owner, b.imageId]);
+    } else {
+      await query(
+        `INSERT INTO labels (owner, image_id, name, chosen_num, chosen_name, candidates, embedding, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7, now())
+         ON CONFLICT (owner, image_id) DO UPDATE SET
+           chosen_num = EXCLUDED.chosen_num, chosen_name = EXCLUDED.chosen_name,
+           candidates = EXCLUDED.candidates, embedding = EXCLUDED.embedding, updated_at = now()`,
+        [owner, b.imageId, typeof b.name === "string" ? b.name.slice(0, 200) : null, b.chosenNum, typeof b.chosenName === "string" ? b.chosenName.slice(0, 200) : null, candidates, embedding],
+      );
+    }
+    const { rows } = await query("SELECT count(*)::int AS n FROM labels WHERE owner = $1 AND chosen_num IS NOT NULL", [owner]);
+    return NextResponse.json({ ok: true, count: rows[0].n });
   } catch (e) {
-    return NextResponse.json({ error: `Cannot write labels.jsonl here (labeling runs locally). ${(e as Error).message}` }, { status: 500 });
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

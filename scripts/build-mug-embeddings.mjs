@@ -60,6 +60,9 @@ for (const { c, x } of train) {
   for (let a = 0; a < Dp; a++) { const va = xa[a]; for (let b = a; b < Dp; b++) XtX[a * Dp + b] += va * xa[b]; XtY[a * C + c] += va; }
 }
 for (let a = 0; a < Dp; a++) for (let b = 0; b < a; b++) XtX[a * Dp + b] = XtX[b * Dp + a];
+// Keep the unregularised normal equations so the server can add real labels and
+// re-solve (see app/api/finetune). Regularise a copy for this build.
+const XtXbase = Float64Array.from(XtX);
 for (let a = 0; a < Dp; a++) XtX[a * Dp + a] += LAMBDA;
 const inv = invert(XtX, Dp);
 const W = new Float64Array(Dp * C);
@@ -112,6 +115,12 @@ const payload = { model: MODEL, dim: D, count: C, temperature: bestT, autoMargin
 await writeFile(path.join(ROOT, "public/mug-embeddings.json"), JSON.stringify(payload));
 const bytes = (await readFile(path.join(ROOT, "public/mug-embeddings.json"))).length;
 console.log(`Wrote public/mug-embeddings.json — ${C} classes, dim ${D}, ${(bytes / 1024).toFixed(0)} KB.`);
+
+// Server-only prior for on-site fine-tuning (added to real labels, then re-solved).
+const base = { dim: D, count: C, lambda: LAMBDA, temperature: bestT, autoMargin, entries, weights: b64(W), xtx: b64(XtXbase), xty: b64(XtY) };
+await writeFile(path.join(ROOT, "lib/probe-base.json"), JSON.stringify(base));
+const bbytes = (await readFile(path.join(ROOT, "lib/probe-base.json"))).length;
+console.log(`Wrote lib/probe-base.json — ${(bbytes / 1024).toFixed(0)} KB.`);
 
 function invert(A, n) {
   const M = Float64Array.from(A);

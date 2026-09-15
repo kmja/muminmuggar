@@ -1,21 +1,33 @@
 import { NextResponse } from "next/server";
-import { readdir } from "fs/promises";
-import path from "path";
+import { query } from "@/lib/db";
+import { currentOwner, unauthorized } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const DIR = path.join(process.cwd(), "label-images");
-const EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".tif", ".tiff", ".bmp"]);
-
-/** List the local labeling photos. Labeling is a local-only workflow. */
+/** The owner's uploaded labeling photos. */
 export async function GET() {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
+  const { rows } = await query("SELECT id, name FROM label_images WHERE owner = $1 ORDER BY id", [owner]);
+  return NextResponse.json({ images: rows.map((r) => ({ id: Number(r.id), name: String(r.name) })) });
+}
+
+/** Upload one photo (base64, no data: prefix). */
+export async function POST(req: Request) {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
   try {
-    const files = (await readdir(DIR))
-      .filter((f) => EXTS.has(path.extname(f).toLowerCase()))
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-    return NextResponse.json({ dir: "label-images", files });
-  } catch {
-    return NextResponse.json({ dir: "label-images", files: [], error: "No label-images folder on this server — labeling runs locally." });
+    const b = await req.json();
+    const data = typeof b.data === "string" ? b.data : "";
+    if (!data) return NextResponse.json({ error: "data required" }, { status: 400 });
+    if (data.length > 3_000_000) return NextResponse.json({ error: "image too large" }, { status: 413 });
+    const { rows } = await query(
+      "INSERT INTO label_images (owner, name, mime, data) VALUES ($1,$2,$3,$4) RETURNING id",
+      [owner, String(b.name || "photo").slice(0, 200), typeof b.mime === "string" ? b.mime.slice(0, 60) : null, data],
+    );
+    return NextResponse.json({ id: Number(rows[0].id) });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }
