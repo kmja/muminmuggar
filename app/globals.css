@@ -203,11 +203,15 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .vfcapture:active::after{background: var(--lilac)}
 .scanrow{display:flex; gap:13px; align-items:flex-start; padding:13px; border:1px solid var(--border); border-radius:10px}
 .scanthumb{width:54px; height:54px; flex:none; border-radius:8px; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
-/* On-device match candidates: the top hit is emphasised, rows are tappable. */
-.scanrow.matchtop{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
-.scanrow[role="button"]{transition:background .15s, border-color .15s}
-.scanrow[role="button"]:hover{background:var(--lilac)}
-.scanrow[role="button"]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* On-device match candidates: a 2x2 grid of large product images. */
+.matchgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.matchcard{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;text-align:center;transition:background .15s, border-color .15s}
+.matchcard:hover{background:var(--lilac);border-color:var(--muted)}
+.matchcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.matchcard.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.matchcard img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.matchcard .mname{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.matchcard .mmeta{font-size:12px;color:var(--muted)}
 /* Quick-add "+" on each row of the add-mugs list. */
 .addbtn{flex:none; width:46px; height:46px; padding:0; justify-content:center; border-radius:999px; border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}

@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
-import { matchMug, warmUp, isReady } from "../lib/image-match";
+import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -452,6 +452,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
   const [matches, setMatches] = useState(null); // on-device match candidates
+  const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const [camLive, setCamLive] = useState(false);
   const [camTried, setCamTried] = useState(false);
@@ -484,8 +485,14 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     else stopCam();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, screen, items.length, busy]);
-  // Prefetch the on-device model as soon as the camera opens, so it's ready.
-  useEffect(() => { if (open && screen === "camera") warmUp(); }, [open, screen]);
+  // Prefetch the on-device model as soon as the dialog opens, so it's ready by
+  // the time a photo is taken (first use downloads ~30 MB, then it's cached).
+  useEffect(() => { if (open) warmUp(); }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const id = setInterval(() => setModelPct(getProgress()), 500);
+    return () => clearInterval(id);
+  }, [open]);
 
   // Server-side detection + verification (used when the on-device matcher can't
   // run, or for a shelf photo with several mugs).
@@ -507,7 +514,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     setBusy(true); setError(""); setItems([]); setMatches(null); setPhotoUrl(small);
     try {
       try {
-        const { candidates, autoMargin } = await matchMug(small, { topK: 5 });
+        const { candidates, autoMargin } = await matchMug(small, { topK: 4 });
         if (candidates.length) {
           setMatches(candidates);
           const [best, second] = candidates;
@@ -645,31 +652,30 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
       ) : null}
 
       {!items.length && !busy && screen === "match" && matches ? (
-        <div className="grid" style={{ gap: 10 }}>
+        <div className="grid" style={{ gap: 12 }}>
           <div className="row" style={{ gap: 12, alignItems: "center" }}>
-            {photoUrl ? <img src={photoUrl} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, flex: "none" }} /> : null}
+            {photoUrl ? <img src={photoUrl} alt="" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, flex: "none" }} /> : null}
             <div className="help">{t("match_hint")}</div>
           </div>
-          {matches.map((m, i) => {
-            const e = MASTER_CATALOG.find((x) => x.num === m.num);
-            return (
-              <div className={"scanrow" + (i === 0 ? " matchtop" : "")} key={m.num} role="button" tabIndex={0}
-                style={{ alignItems: "center", cursor: "pointer" }}
-                onClick={() => chooseMatch(m)}
-                onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); chooseMatch(m); } }}>
-                <div className="scanthumb">{m.image ? <img src={m.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="mugname" style={{ fontSize: 14 }}>{catName(m.nameEn, lang)}</div>
-                  <div className="mini">{[m.year, e?.capacity].filter(Boolean).join(" · ")}</div>
+          <div className="matchgrid">
+            {matches.map((m, i) => {
+              const e = MASTER_CATALOG.find((x) => x.num === m.num);
+              return (
+                <div className={"matchcard" + (i === 0 ? " best" : "")} key={m.num} role="button" tabIndex={0}
+                  onClick={() => chooseMatch(m)}
+                  onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); chooseMatch(m); } }}>
+                  {m.image ? <img src={m.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={40} />}
+                  <div className="mname" title={catName(m.nameEn, lang)}>{catName(m.nameEn, lang)}</div>
+                  <div className="mmeta">{[m.year, e?.capacity].filter(Boolean).join(" · ")}</div>
+                  {i === 0 ? <Badge kind="owned">{t("match_best")}</Badge> : null}
                 </div>
-                {i === 0 ? <Badge kind="owned">{t("match_best")}</Badge> : null}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       ) : null}
 
-      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>{t("scan_looking")}</div>{!isReady() ? <div className="help" style={{ marginTop: 8 }}>{t("match_first_time")}</div> : null}</div> : null}
+      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>{t("scan_looking")}</div>{!isReady() ? <div className="help" style={{ marginTop: 8 }}>{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}</div> : null}
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
 
       {items.length && !busy ? (
