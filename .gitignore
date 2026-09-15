@@ -10,4 +10,4 @@ out
 next-env.d.ts
 *.tsbuildinfo
 labels.jsonl
-label-images/
+/label-images/
