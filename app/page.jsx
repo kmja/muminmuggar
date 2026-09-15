@@ -452,6 +452,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
   const [matches, setMatches] = useState(null); // on-device match candidates
+  const [matchData, setMatchData] = useState(null); // { embedding, model, candidates } for feedback
   const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const [camLive, setCamLive] = useState(false);
@@ -476,7 +477,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
 
   // Reset on open; start the viewfinder only while the camera screen is up; always release the camera on close.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setPhotoUrl(""); setCamTried(false); setScreen("browse"); setQ(""); setAdded(new Set()); }
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setCamTried(false); setScreen("browse"); setQ(""); setAdded(new Set()); }
     else stopCam();
     return () => stopCam();
   }, [open]);
@@ -509,18 +510,34 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
   };
 
+  // Log a confirmed/corrected match so we accumulate real-photo labels for later
+  // fine-tuning. Best-effort and non-blocking.
+  const logMatch = (chosen, auto, data, photo) => {
+    if (!data || !chosen) return;
+    const src = photo || photoUrl;
+    (async () => {
+      try {
+        const thumb = src ? await downscaleImage(src, 256, 0.7) : null;
+        await api("/api/match-feedback", { method: "POST", body: JSON.stringify({
+          thumb, embedding: data.embedding, model: data.model,
+          chosenNum: chosen.num, chosenName: chosen.nameEn, auto, candidates: data.candidates,
+        }) });
+      } catch { /* best-effort */ }
+    })();
+  };
   // Match a photo: free on-device retrieval first, server fallback if unavailable.
   const processImage = async (small) => {
-    setBusy(true); setError(""); setItems([]); setMatches(null); setPhotoUrl(small);
+    setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
       try {
-        const { candidates, autoMargin } = await matchMug(small, { topK: 4 });
+        const { candidates, autoMargin, embedding, model } = await matchMug(small, { topK: 4 });
         if (candidates.length) {
-          setMatches(candidates);
+          const data = { embedding, model, candidates: candidates.map((c) => c.num) };
+          setMatches(candidates); setMatchData(data);
           const [best, second] = candidates;
           if (autoMargin != null && best.logit - second.logit >= autoMargin) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
-            if (e) { onAddOne(catalogDraft(e)); onClose(); return; }
+            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); onClose(); return; }
           }
           setScreen("match");
           return;
@@ -533,6 +550,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const chooseMatch = (m) => {
     const e = MASTER_CATALOG.find((x) => x.num === m.num);
     if (!e) return;
+    logMatch(m, false, matchData);
     onAddOne(catalogDraft(e)); onClose();
   };
   const run = async (file) => {

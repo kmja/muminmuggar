@@ -68,6 +68,24 @@ CREATE TABLE IF NOT EXISTS catalog_mugs (
 
 CREATE INDEX IF NOT EXISTS catalog_norm_idx ON catalog_mugs (norm);
 
+-- Real-photo labels collected from user-confirmed matches, to later fine-tune or
+-- distil the on-device matcher. The embedding is the model's query feature; the
+-- thumb is a small JPEG of the query photo (owner-scoped, best-effort).
+CREATE TABLE IF NOT EXISTS match_feedback (
+  id          SERIAL PRIMARY KEY,
+  owner       TEXT,
+  model       TEXT,
+  embedding   TEXT NOT NULL,
+  thumb       TEXT,
+  chosen_num  INTEGER,
+  chosen_name TEXT,
+  auto        BOOLEAN NOT NULL DEFAULT FALSE,
+  candidates  INTEGER[] NOT NULL DEFAULT '{}',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS match_feedback_owner_idx ON match_feedback (owner);
+
 -- Multi-user: scope collections/subscriptions to a Google account (added later).
 ALTER TABLE mugs ADD COLUMN IF NOT EXISTS owner TEXT;
 ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS owner TEXT;
