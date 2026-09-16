@@ -268,7 +268,7 @@
     "estLow": 60,
     "estHigh": 90,
     "estCur": "EUR",
-    "image": "/mugs/sniff-blue.webp",
+    "image": "/mugs/sniff-brown.webp",
     "norm": "sniff",
     "nameSv": "Sniff"
   },
@@ -762,7 +762,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden.webp",
+    "image": "/mugs/snorkmaiden-pink.webp",
     "norm": "snorkmaiden",
     "nameSv": "Snorkfröken"
   },
@@ -944,7 +944,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/little-my.webp",
+    "image": "/mugs/little-my-red.webp",
     "norm": "little my",
     "nameSv": "Lilla My"
   },
@@ -1100,7 +1100,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/thingumy-and-bob.webp",
+    "image": "/mugs/thingumy-and-bob-green.webp",
     "norm": "thingumy and bob",
     "nameSv": "Tofslan och Vifslan"
   },
@@ -1308,7 +1308,7 @@
     "estLow": 5,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/snorkmaiden.webp",
+    "image": "/mugs/snorkmaiden-lila.webp",
     "norm": "snorkmaiden",
     "nameSv": "Snorkfröken"
   },
@@ -1399,7 +1399,7 @@
     "estLow": 5,
     "estHigh": 10,
     "estCur": "EUR",
-    "image": "/mugs/fillyjonk.webp",
+    "image": "/mugs/fillyjonk-arabia-6411801009279.webp",
     "norm": "fillyjonk",
     "nameSv": "Filifjonkan"
   },
@@ -2561,32 +2561,6 @@
     "nameSv": "Harpa"
   },
   {
-    "num": 202,
-    "nameEn": "Little My Red",
-    "year": null,
-    "years": "",
-    "capacity": "0.3L",
-    "estLow": null,
-    "estHigh": null,
-    "estCur": "EUR",
-    "image": "/mugs/little-my-red.webp",
-    "norm": "little my red",
-    "nameSv": "Lilla My Röd"
-  },
-  {
-    "num": 203,
-    "nameEn": "Fillyjonk Arabia",
-    "year": null,
-    "years": "",
-    "capacity": "0.3L",
-    "estLow": null,
-    "estHigh": null,
-    "estCur": "EUR",
-    "image": "/mugs/fillyjonk-arabia-6411801009279.webp",
-    "norm": "fillyjonk arabia",
-    "nameSv": "Filifjonkan Arabia"
-  },
-  {
     "num": 204,
     "nameEn": "Moomin Arabia Fall 2025",
     "year": null,
@@ -2637,57 +2611,5 @@
     "image": "/mugs/moomins-day-mug.webp",
     "norm": "moomins day blue",
     "nameSv": "Mumindagen Blå"
-  },
-  {
-    "num": 208,
-    "nameEn": "Sniff Brown",
-    "year": null,
-    "years": "",
-    "capacity": "0.3L",
-    "estLow": null,
-    "estHigh": null,
-    "estCur": "EUR",
-    "image": "/mugs/sniff-brown.webp",
-    "norm": "sniff brown",
-    "nameSv": "Sniff Brun"
-  },
-  {
-    "num": 209,
-    "nameEn": "Snorkmaiden Pink",
-    "year": null,
-    "years": "",
-    "capacity": "0.3L",
-    "estLow": null,
-    "estHigh": null,
-    "estCur": "EUR",
-    "image": "/mugs/snorkmaiden-pink.webp",
-    "norm": "snorkmaiden pink",
-    "nameSv": "Snorkfröken Rosa"
-  },
-  {
-    "num": 210,
-    "nameEn": "Snorkmaiden Lilac",
-    "year": null,
-    "years": "",
-    "capacity": "0.3L",
-    "estLow": null,
-    "estHigh": null,
-    "estCur": "EUR",
-    "image": "/mugs/snorkmaiden-lila.webp",
-    "norm": "snorkmaiden lilac",
-    "nameSv": "Snorkfröken Lila"
-  },
-  {
-    "num": 211,
-    "nameEn": "Thingumy and Bob Green",
-    "year": null,
-    "years": "",
-    "capacity": "0.3L",
-    "estLow": null,
-    "estHigh": null,
-    "estCur": "EUR",
-    "image": "/mugs/thingumy-and-bob-green.webp",
-    "norm": "thingumy and bob green",
-    "nameSv": "Tofslan och Vifslan Grön"
   }
 ]
