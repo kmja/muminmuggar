@@ -135,12 +135,21 @@ function catalogDraft(e) {
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
-function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
+function Modal({ open, title, subtitle, children, onClose, footer, wide, drawer }) {
   const t = useT();
+  const [drag, setDrag] = useState(0);
+  const dragRef = useRef(null);
+  useEffect(() => { setDrag(0); dragRef.current = null; }, [open]);
   if (!open) return null;
+  const down = (e) => { dragRef.current = { y: e.clientY }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignore */ } };
+  const move = (e) => { if (!dragRef.current) return; setDrag(Math.max(0, e.clientY - dragRef.current.y)); };
+  const up = () => { const shouldClose = dragRef.current && drag > 120; dragRef.current = null; setDrag(0); if (shouldClose) onClose?.(); };
   return (
-    <div className="overlay" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
-      <div className={"modal" + (wide ? " wide" : "")} onMouseDown={(e) => e.stopPropagation()}>
+    <div className={"overlay" + (drawer ? " drawer-overlay" : "")} role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
+      <div className={"modal" + (wide ? " wide" : "") + (drawer ? " drawer" : "")}
+        style={drawer && drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
+        onMouseDown={(e) => e.stopPropagation()}>
+        {drawer ? <div className="drawer-handle" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} /> : null}
         <div className="head">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
@@ -449,37 +458,12 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const [matchData, setMatchData] = useState(null); // { embedding, model, candidates } for feedback
   const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
-  const [camLive, setCamLive] = useState(false);
-  const [camTried, setCamTried] = useState(false);
-  const camRef = useRef(null), fileRef = useRef(null), videoRef = useRef(null), streamRef = useRef(null);
+  const camRef = useRef(null), fileRef = useRef(null);
 
-  const stopCam = () => {
-    if (streamRef.current) { streamRef.current.getTracks().forEach((tr) => tr.stop()); streamRef.current = null; }
-    if (videoRef.current) videoRef.current.srcObject = null;
-    setCamLive(false);
-  };
-  const startCam = async () => {
-    setCamTried(true);
-    if (!navigator.mediaDevices?.getUserMedia) { setCamLive(false); return; }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
-      streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
-      setCamLive(true);
-    } catch { setCamLive(false); }
-  };
-
-  // Reset on open; start the viewfinder only while the camera screen is up; always release the camera on close.
+  // Reset on open.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setCamTried(false); setScreen("browse"); setQ(""); setAdded(new Set()); }
-    else stopCam();
-    return () => stopCam();
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse"); setQ(""); setAdded(new Set()); }
   }, [open]);
-  useEffect(() => {
-    if (open && screen === "camera" && !items.length && !busy) startCam();
-    else stopCam();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, screen, items.length, busy]);
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
   useEffect(() => { if (open) warmUp(); }, [open]);
@@ -553,31 +537,23 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     const raw = await fileToDataUrl(file);
     await processImage(await downscaleImage(raw, 1400, 0.85));
   };
-  const capture = async () => {
-    const v = videoRef.current;
-    if (!v || !v.videoWidth) return;
-    setError("");
-    const c = document.createElement("canvas");
-    c.width = v.videoWidth; c.height = v.videoHeight;
-    c.getContext("2d").drawImage(v, 0, 0);
-    let dataUrl; try { dataUrl = c.toDataURL("image/jpeg", 0.9); } catch { return; }
-    stopCam();
-    await processImage(await downscaleImage(dataUrl, 1400, 0.85));
-  };
 
   // Browse list: newest catalogue mugs first, filtered to ones not already owned.
   const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
   const newest = useMemo(() => [...CATALOG_UNIQUE].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0)), []);
   const results = useMemo(() => {
+    // Mugs added this session stay visible (marked) and pinned to the top.
+    const pinned = CATALOG_UNIQUE.filter((e) => added.has(e.nameEn));
     const base = q.trim()
       ? CATALOG_UNIQUE.map((e) => ({ e, s: fuzzyScore(q, e.nameEn, e.nameSv, e.years) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).map((x) => x.e)
       : newest.slice(0, 12);
-    return base.filter((e) => {
+    const rest = base.filter((e) => {
+      if (added.has(e.nameEn)) return false;               // already pinned
       const k = ownKey(e.nameEn);
       if (k && ownedKeys.has(k)) return false;             // already in the collection
-      if (added.has(e.nameEn)) return false;                // just added this session
       return true;
-    }).slice(0, 80);
+    });
+    return [...pinned, ...rest].slice(0, 80);
   }, [q, ownedKeys, added, newest]);
 
   const add = (e) => {
@@ -617,46 +593,39 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const footer = items.length ? reviewFooter : screen === "browse" ? browseFooter : screen === "match" ? matchFooter : null;
 
   return (
-    <Modal open={open} onClose={onClose} wide title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
+    <Modal open={open} onClose={onClose} wide drawer title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
       {!items.length && !busy && screen === "browse" ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
           </div>
           <button className="primary big" style={{ justifyContent: "center" }} onClick={() => setScreen("camera")}><Camera size={18} /> {t("add_open_camera")}</button>
           <div className="help">{q ? t("add_search_hint") : t("add_newest_hint")}</div>
           {results.length === 0 ? (
             <div className="card pad"><div className="muted">{q ? t("no_match") : t("add_mugs_none")}</div></div>
-          ) : results.map((e) => (
-            <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
-              <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
-                <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null)].filter(Boolean).join(" · ")}</div>
+          ) : results.map((e) => {
+            const isAdded = added.has(e.nameEn);
+            return (
+              <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
+                <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
+                  <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null)].filter(Boolean).join(" · ")}</div>
+                </div>
+                {isAdded
+                  ? <Badge kind="owned"><CheckCircle2 size={14} /> {t("added")}</Badge>
+                  : <button className="addbtn" aria-label={t("add")} onClick={() => add(e)}><Plus size={20} /></button>}
               </div>
-              <button className="addbtn" aria-label={t("add")} onClick={() => add(e)}><Plus size={20} /></button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
 
       {!items.length && !busy && screen === "camera" ? (
         <div className="grid" style={{ gap: 12 }}>
-          <div className="vfwrap">
-            <video ref={videoRef} className="viewfinder" playsInline muted autoPlay style={{ display: camLive ? "block" : "none" }} />
-            {camLive ? (
-              <button className="vfcapture" onClick={capture} aria-label={t("scan_capture_aria")} />
-            ) : (
-              <div className="vfplaceholder">
-                {!camTried ? <span className="spin" /> : <MugMark size={40} />}
-                <div className="help" style={{ marginTop: 10 }}>{!camTried ? t("scan_starting_cam") : t("scan_cam_blocked")}</div>
-              </div>
-            )}
-          </div>
-          <div className="row">
-            {!camLive ? <button className="primary" style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => camRef.current?.click()}><Camera size={16} /> {t("scan_take_photo")}</button> : null}
-            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => fileRef.current?.click()}><ImagePlus size={16} /> {t("scan_choose_image")}</button>
-            <button style={{ flex: 1, justifyContent: "center", padding: "13px" }} onClick={() => { stopCam(); setScreen("browse"); }}><Search size={16} /> {t("scan_back_to_search")}</button>
+          <div className="row" style={{ gap: 10 }}>
+            <button className="primary big" style={{ flex: 1, justifyContent: "center", padding: "18px 16px" }} onClick={() => camRef.current?.click()}><Camera size={20} /> {t("scan_take_photo")}</button>
+            <button className="big" style={{ flex: 1, justifyContent: "center", padding: "18px 16px" }} onClick={() => fileRef.current?.click()}><ImagePlus size={20} /> {t("scan_choose_image")}</button>
           </div>
           <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
           <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
@@ -1259,6 +1228,14 @@ export default function App() {
       <div className="tabpanel" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
       {tab !== "stats" ? (
         <>
+          {tab === "collection" && collectionCount > 0 ? (
+            <div className="card pad" style={{ marginBottom: 12 }}>
+              <div className="row" style={{ gap: 28 }}>
+                <div><div className="kpilabel">{t("kpi_owned")}</div><div className="summary-val">{collectionCount}</div></div>
+                <div><div className="kpilabel">{t("stats_est_value")}</div><div className="summary-val">{formatMoney(stats.value, stats.valueCur)}</div></div>
+              </div>
+            </div>
+          ) : null}
           {tabHasItems ? (
           <div className="card pad" style={{ marginBottom: 12 }}>
             <div className="row" style={{ alignItems: "center" }}>
