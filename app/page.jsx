@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import useEmblaCarousel from "embla-carousel-react";
+import { Drawer } from "vaul";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
@@ -138,21 +140,12 @@ function catalogDraft(e) {
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
-function Modal({ open, title, subtitle, children, onClose, footer, wide, drawer }) {
+function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
   const t = useT();
-  const [drag, setDrag] = useState(0);
-  const dragRef = useRef(null);
-  useEffect(() => { setDrag(0); dragRef.current = null; }, [open]);
   if (!open) return null;
-  const down = (e) => { dragRef.current = { y: e.clientY }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignore */ } };
-  const move = (e) => { if (!dragRef.current) return; setDrag(Math.max(0, e.clientY - dragRef.current.y)); };
-  const up = () => { const shouldClose = dragRef.current && drag > 120; dragRef.current = null; setDrag(0); if (shouldClose) onClose?.(); };
   return (
-    <div className={"overlay" + (drawer ? " drawer-overlay" : "")} role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
-      <div className={"modal" + (wide ? " wide" : "") + (drawer ? " drawer" : "")}
-        style={drawer && drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
-        onMouseDown={(e) => e.stopPropagation()}>
-        {drawer ? <div className="drawer-handle" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} /> : null}
+    <div className="overlay" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
+      <div className={"modal" + (wide ? " wide" : "")} onMouseDown={(e) => e.stopPropagation()}>
         <div className="head">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
@@ -163,6 +156,28 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide, drawer 
         {footer ? <div className="foot">{footer}</div> : null}
       </div>
     </div>
+  );
+}
+// Bottom-sheet drawer (vaul) used by the add-mug dialog.
+function DrawerModal({ open, title, subtitle, children, onClose, footer }) {
+  const t = useT();
+  return (
+    <Drawer.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
+      <Drawer.Portal>
+        <Drawer.Overlay className="drawer-overlay" />
+        <Drawer.Content className="modal drawer" aria-describedby={undefined}>
+          <Drawer.Handle className="drawer-handle" />
+          <div className="head">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
+              <Drawer.Close asChild><button className="ghost icon" aria-label={t("close")}><X size={18} /></button></Drawer.Close>
+            </div>
+          </div>
+          <div className="body">{children}</div>
+          {footer ? <div className="foot">{footer}</div> : null}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }
 function Confidence({ v }) {
@@ -588,7 +603,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const footer = items.length ? reviewFooter : screen === "browse" ? browseFooter : screen === "match" ? matchFooter : null;
 
   return (
-    <Modal open={open} onClose={onClose} wide drawer title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
+    <DrawerModal open={open} onClose={onClose} title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
       {!items.length && !busy && screen === "browse" ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
@@ -692,7 +707,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
           <div className="help">{t("scan_found", { n: items.length })}</div>
         </div>
       ) : null}
-    </Modal>
+    </DrawerModal>
   );
 }
 
@@ -1161,35 +1176,18 @@ export default function App() {
   // Owned/sold mugs (the collection); wishlist has its own tab.
   const collectionCount = useMemo(() => mugs.filter((m) => m.status !== "wishlist").length, [mugs]);
 
-  // Drag/swipe between the top-level tabs: the page follows the finger and snaps
-  // to the next/previous tab on release.
+  // Swipeable tabs via Embla: dragging the panel moves between collection,
+  // wishlist and stats, and the active tab follows the snap point.
   const TAB_ORDER = ["collection", "wishlist", "stats"];
-  const swipe = useRef(null);
-  const [dragX, setDragX] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const onTouchStart = (e) => { const t = e.changedTouches[0]; swipe.current = { x: t.clientX, y: t.clientY, horizontal: null }; };
-  const onTouchMove = (e) => {
-    const s = swipe.current; if (!s) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - s.x, dy = t.clientY - s.y;
-    if (s.horizontal == null) s.horizontal = Math.abs(dx) > Math.abs(dy) + 4;
-    if (!s.horizontal) return;
-    const i = TAB_ORDER.indexOf(tab);
-    const d = ((i <= 0 && dx > 0) || (i >= TAB_ORDER.length - 1 && dx < 0)) ? dx * 0.35 : dx;
-    setDragging(true); setDragX(d);
-  };
-  const onTouchEnd = () => {
-    const s = swipe.current; swipe.current = null;
-    if (!s || !s.horizontal) { setDragX(0); setDragging(false); return; }
-    const dx = dragX;
-    setDragX(0); setDragging(false);
-    const w = typeof window !== "undefined" ? window.innerWidth : 360;
-    if (Math.abs(dx) < w * 0.2) return;  // too small — snap back
-    const i = TAB_ORDER.indexOf(tab);
-    if (i < 0) return;
-    const next = dx < 0 ? Math.min(i + 1, TAB_ORDER.length - 1) : Math.max(i - 1, 0);
-    if (next !== i) setTab(TAB_ORDER[next]);
-  };
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: false, duration: 22, skipSnaps: false });
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setTab(TAB_ORDER[emblaApi.selectedScrollSnap()] || "collection");
+    emblaApi.on("select", onSelect);
+    return () => { emblaApi.off("select", onSelect); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emblaApi]);
+  useEffect(() => { if (emblaApi) emblaApi.scrollTo(Math.max(0, TAB_ORDER.indexOf(tab))); }, [tab, emblaApi]);
 
   const stats = useMemo(() => {
     const owned = mugs.filter((m) => m.status === "owned");
@@ -1245,8 +1243,8 @@ export default function App() {
           desktop and in the bottom nav on mobile. */}
       <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tb.k === "stats" ? "hide-mobile " : "") + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
-      <div className="pager" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
-        <div className="track" style={{ transform: `translateX(calc(${-TAB_ORDER.indexOf(tab) * (100 / TAB_ORDER.length)}% + ${dragX}px))`, transition: dragging ? "none" : "transform .28s cubic-bezier(.2,.8,.2,1)" }}>
+      <div className="pager" ref={emblaRef}>
+        <div className="track">
           {TAB_ORDER.map((k) => (
             <section className="panel" key={k} aria-hidden={tab !== k}>
               {k === "stats" ? (

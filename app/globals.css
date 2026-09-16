@@ -302,13 +302,10 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   padding:17px 18px 36px; color:var(--muted); font-size:var(--fs-label); letter-spacing:.02em}
 .footmark{color:var(--accent); display:inline-flex}
 
-/* Vaul-style bottom drawer (the add-mug dialog). */
-.overlay.drawer-overlay{align-items:flex-end; padding:0}
-.modal.drawer{width:100%; max-width:760px; border-radius:20px 20px 0 0; max-height:92vh;
-  animation:drawerup .28s cubic-bezier(.2,.8,.2,1); will-change:transform}
-@keyframes drawerup{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.drawer-handle{width:44px; height:5px; border-radius:999px; background:var(--border); margin:10px auto 2px; flex:none; cursor:grab; touch-action:none}
-.drawer-handle:active{cursor:grabbing}
+/* Bottom-sheet drawer (vaul) for the add-mug dialog. */
+.drawer-overlay{position:fixed; inset:0; background:rgba(27,20,35,.5); backdrop-filter:blur(2px); z-index:50}
+.modal.drawer{width:100%; max-width:760px; margin:0 auto; border-radius:20px 20px 0 0; max-height:92vh}
+.drawer-handle{width:44px; height:5px; border-radius:999px; background:var(--border); margin:10px auto 2px}
 /* Collection summary strip */
 .summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}
 
@@ -318,7 +315,7 @@ body{overflow:hidden}
 .wrap{display:flex; flex-direction:column; height:100dvh; max-width:1120px; margin:0 auto; padding:0 18px}
 .top,.tabs{flex:none}
 .pager{flex:1; min-height:0; position:relative; overflow:hidden}
-.track{display:flex; height:100%; will-change:transform}
+.track{display:flex; height:100%}
 .panel{flex:0 0 100%; min-width:0; height:100%; display:flex; flex-direction:column}
 .panel-scroll{flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:112px}
 @media (min-width: 720px){ .panel-scroll{padding-bottom:24px} }
