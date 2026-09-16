@@ -9,7 +9,7 @@ export interface LabelSample { c: number; x: number[] }
 
 export function decodeF32(b64: string): Float32Array {
   const buf = Buffer.from(b64, "base64");
-  return new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
+  return new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.byteLength / 4));
 }
 export function encodeF32(arr: Float32Array | Float64Array): string {
   return Buffer.from(new Float32Array(arr).buffer).toString("base64");
