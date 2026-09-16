@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { query, rowToMug } from "@/lib/db";
 import { sourcesAvailable, searchMarketplaces } from "@/lib/marketplaces";
 import { traderaConfigured } from "@/lib/tradera";
-import { ebayConfigured } from "@/lib/ebay";
-import { geminiConfigured } from "@/lib/gemini";
 import { syncCatalogOnce } from "@/lib/catalog";
 import { sendToOwner, pushConfigured } from "@/lib/push";
 import type { Listing } from "@/lib/types";
@@ -39,11 +37,7 @@ async function run(opts: RunOptions = {}) {
     newListings: 0,
     notified: 0,
     sources: sourcesAvailable(),
-    sourcesDetail: {
-      tradera: traderaConfigured(),
-      ebay: ebayConfigured(),
-      gemini: geminiConfigured(),
-    },
+    tradera: traderaConfigured(),
     push: pushConfigured(),
   };
   if (!summary.sources) return summary; // no sources configured (need Tradera, eBay and/or Gemini)

@@ -1,7 +1,5 @@
 import type { Listing, Mug } from "./types";
-import { ebayConfigured, searchEbay } from "./ebay";
 import { traderaConfigured, searchTradera } from "./tradera";
-import { geminiConfigured, searchSiteListings } from "./gemini";
 import MASTER_CATALOG from "./master-catalog.json";
 
 /**
@@ -80,19 +78,14 @@ export function mugQuery(mug: Pick<Mug, "name" | "series" | "year">, lang: "sv" 
  * de-duplicated by URL.
  */
 export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "year">): Promise<Listing[]> {
-  const structured: Listing[] = [];
+  const results: Listing[] = [];
 
-  if (ebayConfigured()) {
-    try {
-      structured.push(...(await searchEbay(mugQuery(mug, "en"))));
-    } catch (e) {
-      console.error("eBay search error:", e);
-    }
-  }
-
+  // Tradera only for now: structured, app-authenticated and quota-free. eBay and
+  // the Gemini-grounded web search still live in ./ebay and ./gemini, but are not
+  // polled until we re-enable them here.
   if (traderaConfigured()) {
     try {
-      structured.push(...(await searchTradera(mugQuery(mug, "sv"))));
+      results.push(...(await searchTradera(mugQuery(mug, "sv"))));
     } catch (e) {
       console.error("Tradera search error:", e);
     }
@@ -101,28 +94,13 @@ export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "yea
   // Tradera's keyword search is broad (a generic name can return dozens of
   // unrelated mugs), so keep only titles that actually name this mug.
   const svName = localizedName(mug.name, "sv");
-  const relevant = structured.filter((l) => listingMatches(l.title, mug.name) || listingMatches(l.title, svName));
-
-  // Domain-restricted web search — already scoped, so no title filter.
-  const web: Listing[] = [];
-  if (geminiConfigured()) {
-    const q = mugQuery(mug, "sv");
-    const perSite = await Promise.all(
-      SITE_SOURCES.map((s) =>
-        searchSiteListings(q, s.domain, s.name).catch((e) => {
-          console.error(`${s.name} search error:`, e);
-          return [] as Listing[];
-        }),
-      ),
-    );
-    for (const list of perSite) web.push(...list);
-  }
-
   const seen = new Set<string>();
-  return [...relevant, ...web].filter((l) => (seen.has(l.url) ? false : (seen.add(l.url), true)));
+  return results
+    .filter((l) => listingMatches(l.title, mug.name) || listingMatches(l.title, svName))
+    .filter((l) => (seen.has(l.url) ? false : (seen.add(l.url), true)));
 }
 
 /** True if we have at least one source to poll for the notifier. */
 export function sourcesAvailable(): boolean {
-  return ebayConfigured() || traderaConfigured() || geminiConfigured();
+  return traderaConfigured();
 }

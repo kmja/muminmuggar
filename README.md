@@ -39,6 +39,10 @@ Tradera is the recommended first source: it has a free, app-authenticated API
    `GET /api/cron/check-wishlist?owner=<you>&notify=0` (add
    `Authorization: Bearer $CRON_SECRET` when it's set).
 
+> **Currently only Tradera is polled.** eBay and the Gemini-grounded web search
+> are implemented but disabled in `lib/marketplaces.ts` (`searchMarketplaces`),
+> so no Gemini quota is used for marketplace searches. Re-enable them there.
+
 Tradera and eBay use their official APIs (structured, reliable). The remaining
 sites have no public listing API, so they're searched via Gemini web search
 rather than scraping (which their terms forbid). Grounded coverage depends on

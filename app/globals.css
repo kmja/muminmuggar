@@ -259,6 +259,10 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* Catalogue product shot: show the whole mug, modestly sized. */
 .formphoto{display:flex; justify-content:center; align-items:center; background:transparent; border-radius:10px; padding:12px}
 .formphoto img{max-height:160px; max-width:100%; object-fit:contain; display:block}
+/* Edit dialog: read-only mug identity (name/catalogue can't be changed). */
+.editident{display:flex; gap:14px; align-items:center}
+.editident-photo{width:72px; height:72px; flex:none; display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.editident-photo img{width:100%; height:100%; object-fit:contain; display:block}
 /* Form footer actions — big, mobile-first, with a quiet cancel. */
 .formactions{display:flex; gap:10px; width:100%; align-items:center; justify-content:flex-end; flex-wrap:wrap}
 .formactions .linkbtn{margin-right:auto}   /* quiet cancel, far left on desktop */
