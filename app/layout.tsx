@@ -27,6 +27,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Let the on-screen keyboard overlay the page instead of resizing it, so the
+  // add-mug bottom sheet keeps its height and the search field stays put.
+  interactiveWidget: "overlays-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

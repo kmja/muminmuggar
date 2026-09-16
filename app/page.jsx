@@ -15,7 +15,7 @@ import { createSearch } from "../lib/search";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
-  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
+  Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
   ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User,
 } from "lucide-react";
 
@@ -191,7 +191,7 @@ function DeleteDialog({ mug, onCancel, onConfirm }) {
 function DrawerModal({ open, title, subtitle, children, onClose, footer, tall }) {
   const t = useT();
   return (
-    <Drawer.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
+    <Drawer.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }} repositionInputs={false}>
       <Drawer.Portal>
         <Drawer.Overlay className="drawer-overlay" />
         <Drawer.Content className={"modal drawer" + (tall ? " drawer-tall" : "")} aria-describedby={undefined}>
@@ -1085,6 +1085,17 @@ export default function App() {
     else root.setAttribute("data-theme", theme);
     try { if (theme === "system") localStorage.removeItem("theme"); else localStorage.setItem("theme", theme); } catch { /* ignore */ }
   }, [theme]);
+  // Reflect an existing push subscription so we don't nudge users who already enabled it.
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub && Notification.permission === "granted") setNotifState("on");
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const saveMug = async (next, opts = {}) => {
     setSaving(true);
@@ -1246,21 +1257,27 @@ export default function App() {
     { k: "stats", label: t("tab_stats") },
   ];
 
+  // One shared search + filter bar for the list tabs (Collection / Wishlist).
+  const showSearchBar = tab === "collection" ? collectionCount > 0 : tab === "wishlist" ? stats.wishlist > 0 : false;
+
   return (
     <I18nContext.Provider value={t}>
     <LangContext.Provider value={lang}>
     <div className="wrap">
-      <div className="top">
-        <div className="brand" role="button" tabIndex={0} onClick={() => setTab("collection")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setTab("collection"); }} aria-label={t("nav_collection")}>
-          <div className="title"><h1>{t("app_title")}</h1><span className="ver">v{APP_VERSION}</span></div>
+      <header className="top">
+        <div className="topbar">
+          <div className="brand" role="button" tabIndex={0} onClick={() => setTab("collection")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setTab("collection"); }} aria-label={t("nav_collection")}>
+            <div className="title"><h1>{t("app_title")}</h1><span className="ver">v{APP_VERSION}</span></div>
+          </div>
+          <div className="actions">
+            <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
+            <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
+            <button className="ghost icon" title={t("notif_about_aria")} aria-label={t("about_title")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
+            <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
+          </div>
         </div>
-        <div className="actions">
-          <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
-          <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
-          <button className="ghost icon hide-mobile" title={t("notif_about_aria")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
-          <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
-        </div>
-      </div>
+        <svg className="topwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,0 L0,0 Z" /></svg>
+      </header>
 
       {loadError ? <div className="note warn" style={{ marginBottom: 12 }}>{t("load_error", { msg: loadError })}</div> : null}
 
@@ -1274,9 +1291,42 @@ export default function App() {
         </div>
       ) : null}
 
-      {/* Collection / Wishlist are top-level tabs on every screen; Stats lives here on
-          desktop and in the bottom nav on mobile. */}
-      <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tb.k === "stats" ? "hide-mobile " : "") + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
+      {/* Shared search + filters — one section for both Collection and Wishlist. */}
+      {showSearchBar ? (
+        <div className="card pad" style={{ marginBottom: 12 }}>
+          <div className="row" style={{ alignItems: "center" }}>
+            <div className="field searchfield" style={{ flex: 1 }}>
+              <Search size={17} className="searchicon" aria-hidden="true" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
+            </div>
+            <div className="viewtoggle" role="group" aria-label={t("view_mode")}>
+              <button type="button" className={"ghost icon" + (viewMode === "table" ? " active" : "")} onClick={() => setViewMode("table")} aria-pressed={viewMode === "table"} aria-label={t("view_table")} title={t("view_table")}><Rows3 size={18} /></button>
+              <button type="button" className={"ghost icon" + (viewMode === "grid" ? " active" : "")} onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"} aria-label={t("view_grid")} title={t("view_grid")}><LayoutGrid size={18} /></button>
+            </div>
+            <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}><SlidersHorizontal size={18} /></button>
+          </div>
+          {filtersOpen ? (
+            <div className="row" style={{ marginTop: 12 }}>
+              {tab === "collection" ? (
+                <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+              ) : null}
+              <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="updated_desc">{t("sort_updated")}</option>
+                  <option value="year_desc">{t("sort_year_desc")}</option>
+                  <option value="year_asc">{t("sort_year_asc")}</option>
+                  <option value="value_desc">{t("sort_value_desc")}</option>
+                  <option value="name">{t("sort_name")}</option>
+                </select>
+              </div>
+              <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Collection / Wishlist / Stats are all top-level tabs, on every screen. */}
+      <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
       <div className="pager" ref={emblaRef}>
         <div className="track">
@@ -1317,39 +1367,18 @@ export default function App() {
                       </div>
                     </div>
                   ) : null}
-                  {(k === "wishlist" ? mugs.some((m) => m.status === "wishlist") : collectionCount > 0) ? (
-                    <div className="card pad" style={{ marginBottom: 12 }}>
-                      <div className="row" style={{ alignItems: "center" }}>
-                        <div className="field searchfield" style={{ flex: 1 }}>
-                          <Search size={17} className="searchicon" aria-hidden="true" />
-                          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
-                        </div>
-                        <div className="viewtoggle" role="group" aria-label={t("view_mode")}>
-                          <button type="button" className={"ghost icon" + (viewMode === "table" ? " active" : "")} onClick={() => setViewMode("table")} aria-pressed={viewMode === "table"} aria-label={t("view_table")} title={t("view_table")}><Rows3 size={18} /></button>
-                          <button type="button" className={"ghost icon" + (viewMode === "grid" ? " active" : "")} onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"} aria-label={t("view_grid")} title={t("view_grid")}><LayoutGrid size={18} /></button>
-                        </div>
-                        <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}><SlidersHorizontal size={18} /></button>
-                      </div>
-                      {filtersOpen ? (
-                        <div className="row" style={{ marginTop: 12 }}>
-                          {k === "collection" ? (
-                            <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
-                          ) : null}
-                          <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
-                            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                              <option value="updated_desc">{t("sort_updated")}</option>
-                              <option value="year_desc">{t("sort_year_desc")}</option>
-                              <option value="year_asc">{t("sort_year_asc")}</option>
-                              <option value="value_desc">{t("sort_value_desc")}</option>
-                              <option value="name">{t("sort_name")}</option>
-                            </select>
-                          </div>
-                          <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
                   <div className="panel-scroll">
+                    {k === "wishlist" && stats.wishlist > 0 && notifState !== "on" ? (
+                      <div className="card pad notifblurb">
+                        <div className="nbicon"><Bell size={26} /></div>
+                        <div className="nbtext">
+                          <div className="t-h3">{t("wishlist_notif_title")}</div>
+                          <div className="sub" style={{ marginTop: 4 }}>{t("wishlist_notif_body")}</div>
+                          {notifMsg && notifState !== "on" ? <div className="help" style={{ marginTop: 6 }}>{notifMsg}</div> : null}
+                        </div>
+                        <button className="primary" onClick={enableNotifications} disabled={notifState === "unsupported"}><Bell size={16} /> {notifState === "error" ? t("wishlist_notif_retry") : t("about_enable")}</button>
+                      </div>
+                    ) : null}
                     {loading ? (
                       <div className="card pad"><span className="spin" /> {t("loading")}</div>
                     ) : k === "wishlist" && panels.wishlist.length === 0 ? (
@@ -1377,7 +1406,6 @@ export default function App() {
                         ? <div className="muggrid">{panels[k].map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
                         : <div className="muglist">{panels[k].map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
                     )}
-                    {k === "wishlist" ? <div className="help" style={{ marginTop: 12 }}>{t("wishlist_tip")}</div> : null}
                     {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
                   </div>
                 </>
@@ -1387,14 +1415,7 @@ export default function App() {
         </div>
       </div>
 
-      <nav className="bottomnav">
-        <svg className="navwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,40 L0,40 Z" /></svg>
-        <div className="navrow">
-          <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><BarChart3 size={22} /><span>{t("nav_stats")}</span></button>
-          <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="bn-addic"><Plus size={26} /></span><span>{t("nav_add")}</span></button>
-          <button className="bn" onClick={() => setAboutOpen(true)}><Bell size={22} /><span>{t("nav_alerts")}</span></button>
-        </div>
-      </nav>
+      <button className="fab" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")} title={t("nav_add")}><Plus size={28} /></button>
 
       <footer className="sitefoot hide-mobile">
         <svg className="wave" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0,26 C180,48 360,6 720,20 C1080,34 1260,48 1440,18 L1440,48 L0,48 Z" /></svg>
