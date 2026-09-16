@@ -16,7 +16,13 @@ export async function GET() {
     app: "moomin-mug-collection",
     commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || "local",
     branch: process.env.VERCEL_GIT_COMMIT_REF || null,
-    env: { db: hasDb, gemini: Boolean(process.env.GEMINI_API_KEY) },
+    env: {
+      db: hasDb,
+      gemini: Boolean(process.env.GEMINI_API_KEY),
+      tradera: Boolean(process.env.TRADERA_APP_ID && process.env.TRADERA_APP_KEY),
+      ebay: Boolean(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET),
+      push: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
+    },
     deployedAt: process.env.VERCEL_DEPLOYMENT_ID || null,
   });
 }

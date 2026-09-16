@@ -313,9 +313,9 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* vaul sets the closed transform via CSS and animates in; pin the open state. */
 .modal.drawer[data-state="open"]{transform:translate3d(0,0,0)}
 /* Search screen: a tall sheet so the input sits at the top, above the keyboard.
-   Use vh (not dvh) so it doesn't shrink and get pushed when the keyboard opens —
-   with interactive-widget:overlays-content the keyboard draws over the sheet. */
-.modal.drawer.drawer-tall{height:90vh; max-height:90vh}
+   dvh adapts to the mobile URL bar; with interactive-widget:overlays-content the
+   keyboard draws over the sheet instead of resizing it. */
+.modal.drawer.drawer-tall{height:90dvh; max-height:90dvh}
 .drawer-handle{width:44px; height:5px; border-radius:999px; background:var(--border); margin:10px auto 2px}
 /* Collection summary strip */
 .summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}

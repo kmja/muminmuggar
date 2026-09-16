@@ -15,7 +15,7 @@ import { createSearch } from "../lib/search";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
-  Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
+  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
   ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User,
 } from "lucide-react";
 
@@ -1017,6 +1017,7 @@ export default function App() {
   const [scanOpen, setScanOpen] = useState(false);
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [dealsMug, setDealsMug] = useState(null);
   const [confirmMug, setConfirmMug] = useState(null);
   const [notifState, setNotifState] = useState("idle"); // idle | on | error | unsupported
@@ -1175,6 +1176,14 @@ export default function App() {
       setNotifState("on"); setNotifMsg(t("notif_enabled_msg"));
     } catch (e) { setNotifState("error"); setNotifMsg(e.message || String(e)); }
   };
+  // Fire a one-off push to this owner's devices to confirm the pipeline works.
+  const testNotif = async () => {
+    try {
+      const { sent } = await api("/api/push/test", { method: "POST" });
+      if (sent > 0) toast.success(t("notif_test_sent"));
+      else toast.error(t("notif_test_none"));
+    } catch (e) { toast.error(t("notif_test_failed", { msg: e.message || e })); }
+  };
 
   const mugSearch = useMemo(() => createSearch(mugs, {
     name: (m) => m.name,
@@ -1222,9 +1231,9 @@ export default function App() {
   // Owned/sold mugs (the collection); wishlist has its own tab.
   const collectionCount = useMemo(() => mugs.filter((m) => m.status !== "wishlist").length, [mugs]);
 
-  // Swipeable tabs via Embla: dragging the panel moves between collection,
-  // wishlist and stats, and the active tab follows the snap point.
-  const TAB_ORDER = ["collection", "wishlist", "stats"];
+  // Swipeable tabs via Embla: dragging the panel moves between collection and
+  // wishlist, and the active tab follows the snap point.
+  const TAB_ORDER = ["collection", "wishlist"];
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: false, duration: 22, skipSnaps: false });
   useEffect(() => {
     if (!emblaApi) return;
@@ -1254,7 +1263,6 @@ export default function App() {
   const TABS = [
     { k: "collection", label: t("tab_collection") },
     { k: "wishlist", label: `${t("tab_wishlist")}${stats.wishlist ? ` (${stats.wishlist})` : ""}` },
-    { k: "stats", label: t("tab_stats") },
   ];
 
   // One shared search + filter bar for the list tabs (Collection / Wishlist).
@@ -1272,6 +1280,7 @@ export default function App() {
           <div className="actions">
             <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
             <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
+            <button className="ghost icon" title={t("tab_stats")} aria-label={t("tab_stats")} onClick={() => setStatsOpen(true)}><BarChart3 size={18} /></button>
             <button className="ghost icon" title={t("notif_about_aria")} aria-label={t("about_title")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
             <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
           </div>
@@ -1325,91 +1334,54 @@ export default function App() {
         </div>
       ) : null}
 
-      {/* Collection / Wishlist / Stats are all top-level tabs, on every screen. */}
+      {/* Collection and Wishlist are the top-level tabs; Stats opens from the header. */}
       <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
       <div className="pager" ref={emblaRef}>
         <div className="track">
           {TAB_ORDER.map((k) => (
             <section className="panel" key={k} aria-hidden={tab !== k}>
-              {k === "stats" ? (
-                <div className="panel-scroll">
-                  <div className="kpi">
-                    <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue">{stats.owned}</div></div>
-                    <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue">{stats.wishlist}</div></div>
-                    <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue">{stats.favorites}</div></div>
-                    <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue">{stats.sold}</div></div>
+              <div className="panel-scroll">
+                {k === "wishlist" && stats.wishlist > 0 && notifState !== "on" ? (
+                  <div className="card pad notifblurb">
+                    <div className="nbicon"><Bell size={26} /></div>
+                    <div className="nbtext">
+                      <div className="t-h3">{t("wishlist_notif_title")}</div>
+                      <div className="sub" style={{ marginTop: 4 }}>{t("wishlist_notif_body")}</div>
+                      {notifMsg && notifState !== "on" ? <div className="help" style={{ marginTop: 6 }}>{notifMsg}</div> : null}
+                    </div>
+                    <button className="primary" onClick={enableNotifications} disabled={notifState === "unsupported"}><Bell size={16} /> {notifState === "error" ? t("wishlist_notif_retry") : t("about_enable")}</button>
                   </div>
-                  <div className="grid" style={{ gap: 12, marginTop: 12 }}>
-                    <div className="row" style={{ gap: 12 }}>
-                      <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
-                      <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
-                    </div>
-                    <div className="card pad">
-                      <div style={{ fontWeight: 500 }}>{t("stats_by_year")}</div><div className="divider" />
-                      {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r) => (
-                        <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%` }} /></div><span className="pill">{r.count}</span></div>
-                      ))}</div> : <div className="muted">{t("stats_by_year_empty")}</div>}
-                    </div>
-                    <div className="card pad">
-                      <div style={{ fontWeight: 500 }}>{t("stats_top_chars")}</div><div className="divider" />
-                      {stats.topChars.length ? <div className="list">{stats.topChars.map((tc) => <div key={tc.name} className="listrow"><div>{tc.name}</div><span className="pill">{tc.count}</span></div>)}</div> : <div className="muted">{t("stats_top_chars_empty")}</div>}
+                ) : null}
+                {loading ? (
+                  <div className="card pad"><span className="spin" /> {t("loading")}</div>
+                ) : k === "wishlist" && panels.wishlist.length === 0 ? (
+                  <div className="card pad" style={{ textAlign: "center" }}>
+                    <div className="emptyicon"><Heart size={34} /></div>
+                    <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("wishlist_empty_title")}</div>
+                    <div className="sub" style={{ marginTop: 6 }}>{t("wishlist_empty_sub")}</div>
+                    <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
+                      <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  {k === "collection" && collectionCount > 0 ? (
-                    <div className="card pad" style={{ marginBottom: 12 }}>
-                      <div className="row" style={{ gap: 28 }}>
-                        <div><div className="kpilabel">{t("kpi_owned")}</div><div className="summary-val">{collectionCount}</div></div>
-                        <div><div className="kpilabel">{t("stats_est_value")}</div><div className="summary-val">{formatMoney(stats.value, stats.valueCur)}</div></div>
-                      </div>
+                ) : k === "collection" && collectionCount === 0 ? (
+                  <div className="card pad" style={{ textAlign: "center" }}>
+                    <div className="emptyicon"><Camera size={34} /></div>
+                    <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("empty_title")}</div>
+                    <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
+                    <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
+                      <button className="primary" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
                     </div>
-                  ) : null}
-                  <div className="panel-scroll">
-                    {k === "wishlist" && stats.wishlist > 0 && notifState !== "on" ? (
-                      <div className="card pad notifblurb">
-                        <div className="nbicon"><Bell size={26} /></div>
-                        <div className="nbtext">
-                          <div className="t-h3">{t("wishlist_notif_title")}</div>
-                          <div className="sub" style={{ marginTop: 4 }}>{t("wishlist_notif_body")}</div>
-                          {notifMsg && notifState !== "on" ? <div className="help" style={{ marginTop: 6 }}>{notifMsg}</div> : null}
-                        </div>
-                        <button className="primary" onClick={enableNotifications} disabled={notifState === "unsupported"}><Bell size={16} /> {notifState === "error" ? t("wishlist_notif_retry") : t("about_enable")}</button>
-                      </div>
-                    ) : null}
-                    {loading ? (
-                      <div className="card pad"><span className="spin" /> {t("loading")}</div>
-                    ) : k === "wishlist" && panels.wishlist.length === 0 ? (
-                      <div className="card pad" style={{ textAlign: "center" }}>
-                        <div className="emptyicon"><Heart size={34} /></div>
-                        <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("wishlist_empty_title")}</div>
-                        <div className="sub" style={{ marginTop: 6 }}>{t("wishlist_empty_sub")}</div>
-                        <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                          <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
-                        </div>
-                      </div>
-                    ) : k === "collection" && collectionCount === 0 ? (
-                      <div className="card pad" style={{ textAlign: "center" }}>
-                        <div className="emptyicon"><Camera size={34} /></div>
-                        <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("empty_title")}</div>
-                        <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
-                        <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                          <button className="primary" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
-                        </div>
-                      </div>
-                    ) : panels[k].length === 0 ? (
-                      <div className="card pad"><div className="muted">{t("no_match")}</div></div>
-                    ) : (
-                      viewMode === "grid"
-                        ? <div className="muggrid">{panels[k].map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
-                        : <div className="muglist">{panels[k].map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
-                    )}
-                    {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
                   </div>
-                </>
-              )}
+                ) : panels[k].length === 0 ? (
+                  <div className="card pad"><div className="muted">{t("no_match")}</div></div>
+                ) : (
+                  viewMode === "grid"
+                    ? <div className="muggrid">{panels[k].map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+                    : <div className="muglist">{panels[k].map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+                )}
+                {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
+              </div>
             </section>
           ))}
         </div>
@@ -1429,10 +1401,36 @@ export default function App() {
       <DeleteDialog mug={confirmMug} onCancel={() => setConfirmMug(null)} onConfirm={doDelete} />
       <Toaster position="top-center" richColors closeButton />
 
+      <Modal open={statsOpen} onClose={() => setStatsOpen(false)} title={t("tab_stats")} subtitle={t("stats_subtitle")} wide>
+        <div className="grid" style={{ gap: 12 }}>
+          <div className="kpi">
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue">{stats.owned}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue">{stats.wishlist}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue">{stats.favorites}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue">{stats.sold}</div></div>
+          </div>
+          <div className="row" style={{ gap: 12 }}>
+            <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
+            <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
+          </div>
+          <div className="card pad">
+            <div style={{ fontWeight: 500 }}>{t("stats_by_year")}</div><div className="divider" />
+            {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r) => (
+              <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%` }} /></div><span className="pill">{r.count}</span></div>
+            ))}</div> : <div className="muted">{t("stats_by_year_empty")}</div>}
+          </div>
+          <div className="card pad">
+            <div style={{ fontWeight: 500 }}>{t("stats_top_chars")}</div><div className="divider" />
+            {stats.topChars.length ? <div className="list">{stats.topChars.map((tc) => <div key={tc.name} className="listrow"><div>{tc.name}</div><span className="pill">{tc.count}</span></div>)}</div> : <div className="muted">{t("stats_top_chars_empty")}</div>}
+          </div>
+        </div>
+      </Modal>
+
       <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title={t("about_title")} subtitle={t("about_subtitle")}>
         <div className="grid" style={{ gap: 12 }}>
           <div className="note">{t("about_body")}</div>
           <button className="primary" onClick={enableNotifications} disabled={notifState === "on"}>{notifState === "on" ? <CheckCircle2 size={16} /> : <Bell size={16} />} {notifState === "on" ? t("about_enabled") : t("about_enable")}</button>
+          {notifState === "on" ? <button onClick={testNotif}><Bell size={16} /> {t("notif_test")}</button> : null}
           {notifMsg ? <div className={"note " + (notifState === "on" ? "good" : "warn")}>{notifMsg}</div> : null}
           <div className="help">{t("about_help")}</div>
           <div className="divider" />

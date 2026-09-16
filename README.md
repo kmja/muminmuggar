@@ -23,6 +23,22 @@ sale**.
 | Blocket, Facebook Marketplace | Gemini Google-Search grounding, restricted per domain |
 | Arabia, Cervera (retailers) | Gemini Google-Search grounding, restricted per domain |
 
+### Turning on notifications (Tradera first)
+
+Tradera is the recommended first source: it has a free, app-authenticated API
+(no user token) and returns real prices, images and URLs.
+
+1. Register a developer app at <https://api.tradera.com/register> and set
+   `TRADERA_APP_ID` + `TRADERA_APP_KEY`. Generate push keys with `npm run gen-vapid`
+   and set `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`.
+2. Confirm the server sees them: `GET /api/health` → `env.tradera` and `env.push` are `true`.
+3. Run a live search: `GET /api/tradera?q=mumin%20mugg` (returns normalized listings).
+4. In the app open **Notifications → Enable**, then **Send test notification**
+   (`POST /api/push/test`) to confirm a push arrives on this device.
+5. Trigger the notifier without sending pushes, scoped to one owner:
+   `GET /api/cron/check-wishlist?owner=<you>&notify=0` (add
+   `Authorization: Bearer $CRON_SECRET` when it's set).
+
 Tradera and eBay use their official APIs (structured, reliable). The remaining
 sites have no public listing API, so they're searched via Gemini web search
 rather than scraping (which their terms forbid). Grounded coverage depends on
