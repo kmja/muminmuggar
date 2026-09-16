@@ -629,15 +629,20 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
 
   // Browse list: newest catalogue mugs first, filtered to ones not already owned.
   const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
+  const wishKeys = useMemo(() => new Set(mugs.filter((m) => m.status === "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
+  const isOwned = (nameEn) => { const k = ownKey(nameEn); return !!k && ownedKeys.has(k); };
+  const isWished = (nameEn) => { const k = ownKey(nameEn); return !!k && wishKeys.has(k); };
   const newest = useMemo(() => [...CATALOG_UNIQUE].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0)), []);
   const results = useMemo(() => {
     // Mugs added this session stay visible (marked) and pinned to the top.
     const pinned = CATALOG_UNIQUE.filter((e) => added.has(e.nameEn));
-    const base = q.trim() ? searchCatalogUnique(q) : newest.slice(0, 12);
+    const searching = !!q.trim();
+    const base = searching ? searchCatalogUnique(q) : newest.slice(0, 12);
     const rest = base.filter((e) => {
       if (added.has(e.nameEn)) return false;               // already pinned
-      const k = ownKey(e.nameEn);
-      if (k && ownedKeys.has(k)) return false;             // already in the collection
+      // Hide already-owned mugs from the default list — but keep them when the
+      // user searches, so a mug they own is still findable (shown as owned).
+      if (!searching && isOwned(e.nameEn)) return false;
       return true;
     });
     return [...pinned, ...rest].slice(0, 80);
@@ -704,8 +709,10 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
             <div className="card pad"><div className="muted">{q ? t("no_match") : t("add_mugs_none")}</div></div>
           ) : results.map((e) => {
             const status = added.get(e.nameEn);
+            const owned = isOwned(e.nameEn);
+            const wished = !owned && isWished(e.nameEn);
             return (
-              <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
+              <div className="scanrow" key={e.nameEn} style={{ alignItems: "center", opacity: (owned || wished) ? 0.55 : 1 }}>
                 <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="mugname t-label">{catName(e.nameEn, lang)}</div>
@@ -713,10 +720,14 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
                 </div>
                 {status
                   ? <Badge kind={status === "wishlist" ? "wishlist" : "owned"}><CheckCircle2 size={14} /> {t(status === "wishlist" ? "added_wishlist" : "added")}</Badge>
-                  : <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
-                      <button className="addbtn" aria-label={t("add_to_collection")} title={t("add_to_collection")} onClick={() => add(e, "owned")}><Plus size={20} /></button>
-                      <button className="addbtn wish" aria-label={t("add_to_wishlist")} title={t("add_to_wishlist")} onClick={() => add(e, "wishlist")}><Heart size={20} /></button>
-                    </div>}
+                  : owned
+                    ? <Badge kind="owned"><CheckCircle2 size={14} /> {t("gap_in_collection")}</Badge>
+                    : wished
+                      ? <Badge kind="wishlist"><Heart size={14} /> {t("status_wishlist")}</Badge>
+                      : <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
+                          <button className="addbtn" aria-label={t("add_to_collection")} title={t("add_to_collection")} onClick={() => add(e, "owned")}><Plus size={20} /></button>
+                          <button className="addbtn wish" aria-label={t("add_to_wishlist")} title={t("add_to_wishlist")} onClick={() => add(e, "wishlist")}><Heart size={20} /></button>
+                        </div>}
               </div>
             );
           })}
