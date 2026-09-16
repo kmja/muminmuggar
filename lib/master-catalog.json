@@ -8,7 +8,7 @@
     "estLow": 600,
     "estHigh": 900,
     "estCur": "EUR",
-    "image": "/mugs/dark-green.webp",
+    "image": "/mugs/mug-green.webp",
     "norm": "mug green",
     "nameSv": "Mugg Grön"
   },
@@ -151,7 +151,7 @@
     "estLow": 10,
     "estHigh": 15,
     "estCur": "EUR",
-    "image": "/mugs/love-blue.webp",
+    "image": "/mugs/love-pink.webp",
     "norm": "love",
     "nameSv": "Kärlek"
   },
@@ -2439,7 +2439,7 @@
     "estLow": 10,
     "estHigh": 20,
     "estCur": "EUR",
-    "image": "/mugs/abc-l-04.webp",
+    "image": "/mugs/abc-ae.webp",
     "norm": "abc a",
     "nameSv": "ABC Ä"
   },
