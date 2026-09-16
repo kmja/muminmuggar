@@ -4,6 +4,9 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useSession, signIn, signOut } from "next-auth/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { Drawer } from "vaul";
+import * as Dialog from "@radix-ui/react-dialog";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import { Toaster, toast } from "sonner";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
@@ -142,20 +145,46 @@ function catalogDraft(e) {
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
 function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
   const t = useT();
-  if (!open) return null;
   return (
-    <div className="overlay" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
-      <div className={"modal" + (wide ? " wide" : "")} onMouseDown={(e) => e.stopPropagation()}>
-        <div className="head">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-            <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
-            <button className="ghost icon" onClick={onClose} aria-label={t("close")}><X size={18} /></button>
+    <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="overlay" />
+        <Dialog.Content className={"modal" + (wide ? " wide" : "")}>
+          <div className="head">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div>
+                <Dialog.Title asChild><h2>{title}</h2></Dialog.Title>
+                {subtitle
+                  ? <Dialog.Description asChild><div className="help" style={{ marginTop: 6 }}>{subtitle}</div></Dialog.Description>
+                  : <Dialog.Description className="sr-only">{title}</Dialog.Description>}
+              </div>
+              <Dialog.Close asChild><button className="ghost icon" aria-label={t("close")}><X size={18} /></button></Dialog.Close>
+            </div>
           </div>
-        </div>
-        <div className="body">{children}</div>
-        {footer ? <div className="foot">{footer}</div> : null}
-      </div>
-    </div>
+          <div className="body">{children}</div>
+          {footer ? <div className="foot">{footer}</div> : null}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+// Confirm-delete dialog (Radix AlertDialog).
+function DeleteDialog({ mug, onCancel, onConfirm }) {
+  const t = useT();
+  return (
+    <AlertDialog.Root open={!!mug} onOpenChange={(o) => { if (!o) onCancel(); }}>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="overlay" />
+        <AlertDialog.Content className="modal" style={{ width: "min(420px, calc(100vw - 24px))", padding: 20 }}>
+          <AlertDialog.Title asChild><h2>{t("card_delete")}</h2></AlertDialog.Title>
+          <AlertDialog.Description asChild><div className="help" style={{ marginTop: 8 }}>{t("confirm_delete", { name: mug?.name || "" })}</div></AlertDialog.Description>
+          <div className="row" style={{ justifyContent: "flex-end", marginTop: 18 }}>
+            <AlertDialog.Cancel asChild><button>{t("cancel")}</button></AlertDialog.Cancel>
+            <AlertDialog.Action asChild><button className="danger" onClick={onConfirm}>{t("card_delete")}</button></AlertDialog.Action>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 }
 // Bottom-sheet drawer (vaul) used by the add-mug dialog.
@@ -986,6 +1015,7 @@ export default function App() {
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dealsMug, setDealsMug] = useState(null);
+  const [confirmMug, setConfirmMug] = useState(null);
   const [notifState, setNotifState] = useState("idle"); // idle | on | error | unsupported
   const [notifMsg, setNotifMsg] = useState("");
   const [catalogBusy, setCatalogBusy] = useState(false);
@@ -1066,7 +1096,7 @@ export default function App() {
       }
       if (!opts.keepOpen) setFormOpen(false);
       return true;
-    } catch (e) { alert(t("save_failed", { msg: e.message || e })); return false; }
+    } catch (e) { toast.error(t("save_failed", { msg: e.message || e })); return false; }
     finally { setSaving(false); }
   };
   const addMany = async (drafts) => {
@@ -1075,7 +1105,7 @@ export default function App() {
       for (const d of drafts) { const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(d) }); created.push(mug); }
       setMugs((prev) => [...created, ...prev]);
       ensureImages(created);
-    } catch (e) { alert(t("add_failed", { msg: e.message || e })); }
+    } catch (e) { toast.error(t("add_failed", { msg: e.message || e })); }
   };
   // Quick-add a single mug (from the "add mugs" list) — optimistic, no dialog.
   const quickAdd = async (draft) => {
@@ -1083,12 +1113,14 @@ export default function App() {
       const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(draft) });
       setMugs((prev) => [mug, ...prev]);
       if (!mug.photoUrl) ensureImages([mug]);
-    } catch (e) { alert(t("add_failed", { msg: e.message || e })); }
+    } catch (e) { toast.error(t("add_failed", { msg: e.message || e })); }
   };
-  const del = async (m) => {
-    if (!confirm(t("confirm_delete", { name: m.name }))) return;
+  const del = (m) => setConfirmMug(m);
+  const doDelete = async () => {
+    const m = confirmMug; setConfirmMug(null);
+    if (!m) return;
     try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); setMugs((prev) => prev.filter((x) => x.id !== m.id)); }
-    catch (e) { alert(t("delete_failed", { msg: e.message || e })); }
+    catch (e) { toast.error(t("delete_failed", { msg: e.message || e })); }
   };
   const fav = async (m) => {
     const optimistic = !m.favorite;
@@ -1370,6 +1402,8 @@ export default function App() {
       <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onQuickAdd={quickAdd} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
+      <DeleteDialog mug={confirmMug} onCancel={() => setConfirmMug(null)} onConfirm={doDelete} />
+      <Toaster position="top-center" richColors closeButton />
 
       <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title={t("about_title")} subtitle={t("about_subtitle")}>
         <div className="grid" style={{ gap: 12 }}>
