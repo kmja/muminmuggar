@@ -391,7 +391,7 @@
   },
   {
     "num": 31,
-    "nameEn": "Tooticky",
+    "nameEn": "Too-Ticky",
     "year": 2006,
     "years": "2006-2015",
     "capacity": "0.3L",
@@ -399,8 +399,8 @@
     "estHigh": 25,
     "estCur": "EUR",
     "image": "/mugs/tooticky.webp",
-    "norm": "tooticky",
-    "nameSv": "Too-ticki"
+    "norm": "too ticky",
+    "nameSv": "Tooticki"
   },
   {
     "num": 32,
@@ -534,7 +534,7 @@
   },
   {
     "num": 41,
-    "nameEn": "Winter Bonfire",
+    "nameEn": "Bonfire",
     "year": 2008,
     "years": "2008",
     "capacity": "0.3L",
@@ -542,7 +542,7 @@
     "estHigh": 65,
     "estCur": "EUR",
     "image": "/mugs/winter-bonfire.webp",
-    "norm": "winter bonfire",
+    "norm": "bonfire",
     "nameSv": "Vinterbrasa"
   },
   {
@@ -699,7 +699,7 @@
     "estCur": "EUR",
     "image": "/mugs/hurray.webp",
     "norm": "hurray",
-    "nameSv": "Hurraa!"
+    "nameSv": "Hurra!"
   },
   {
     "num": 54,
@@ -872,7 +872,7 @@
   },
   {
     "num": 66,
-    "nameEn": "Sailing with Nibling and Too-ticky",
+    "nameEn": "Sailing with Nibling and Tooticky",
     "year": 2014,
     "years": "2014",
     "capacity": "0.3L",
@@ -880,8 +880,8 @@
     "estHigh": 25,
     "estCur": "EUR",
     "image": "/mugs/sailing-with-nibling-and-tooticky.webp",
-    "norm": "sailing with nibling and too ticky",
-    "nameSv": "Segling med Klippdassen och Too-ticki"
+    "norm": "sailing with nibling and tooticky",
+    "nameSv": "Segla med klippdassen och Too-ticki"
   },
   {
     "num": 67,
@@ -989,7 +989,7 @@
   },
   {
     "num": 75,
-    "nameEn": "Too-Ticky",
+    "nameEn": "Too-ticky",
     "year": 2016,
     "years": "2016-",
     "capacity": "0.3L",
@@ -998,7 +998,7 @@
     "estCur": "EUR",
     "image": "/mugs/tooticky-violet.webp",
     "norm": "too ticky",
-    "nameSv": "Too-Ticki"
+    "nameSv": "Tooticki"
   },
   {
     "num": 76,
@@ -1037,7 +1037,7 @@
     "estCur": "EUR",
     "image": "/mugs/snow-horse.webp",
     "norm": "snow horse",
-    "nameSv": "Snöhästen"
+    "nameSv": "Snöhäst"
   },
   {
     "num": 79,
@@ -1297,7 +1297,7 @@
     "estCur": "EUR",
     "image": "/mugs/crown-snow-load.webp",
     "norm": "crown snow load",
-    "nameSv": "Djupsnö"
+    "nameSv": "Tung snö"
   },
   {
     "num": 99,
@@ -1388,7 +1388,7 @@
     "estCur": "EUR",
     "image": "/mugs/moominmamma-marmelade.webp",
     "norm": "moominmamma marmelade",
-    "nameSv": "Muminmammans marmelad"
+    "nameSv": "Muminmamma Marmelad"
   },
   {
     "num": 106,
@@ -1899,7 +1899,7 @@
   },
   {
     "num": 145,
-    "nameEn": "Muskrat In a Cave",
+    "nameEn": "The Muskrat",
     "year": 2024,
     "years": "2024-",
     "capacity": "0.3L",
@@ -1907,8 +1907,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/muskrat-beige.webp",
-    "norm": "muskrat in a cave",
-    "nameSv": "Bisamråttan i grottan"
+    "norm": "the muskrat",
+    "nameSv": "Bisamråttan"
   },
   {
     "num": 146,
