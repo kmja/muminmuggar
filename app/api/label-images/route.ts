@@ -31,3 +31,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }
+
+/** Remove all of the owner's uploaded photos (and their labels, via cascade). */
+export async function DELETE() {
+  const owner = await currentOwner();
+  if (!owner) return unauthorized();
+  try {
+    await query("DELETE FROM label_images WHERE owner = $1", [owner]);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}

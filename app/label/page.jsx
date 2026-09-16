@@ -101,6 +101,19 @@ export default function LabelPage() {
     await loadAll();
   };
 
+  const removeCurrent = async () => {
+    const im = images[idx];
+    if (!im || !window.confirm("Remove this photo? Its label (if any) is deleted too.")) return;
+    await jfetch(`/api/label-images/${im.id}`, { method: "DELETE" });
+    setImages((list) => list.filter((x) => x.id !== im.id));
+    setLabels((m) => { const n = { ...m }; delete n[im.id]; return n; });
+  };
+  const clearAll = async () => {
+    if (!window.confirm("Delete ALL uploaded photos and their labels? This cannot be undone.")) return;
+    await jfetch("/api/label-images", { method: "DELETE" });
+    setLabels({}); setImages([]); setIdx(0); setMatch(null);
+    await loadAll();
+  };
   const finetune = async () => {
     setFtMsg("Fine-tuning…");
     try {
@@ -165,6 +178,7 @@ export default function LabelPage() {
 
       <div className="row" style={{ marginBottom: 12 }}>
         <button onClick={() => fileRef.current?.click()} disabled={!!uploading}>{uploading ? `Uploading ${uploading}…` : "Upload photos"}</button>
+        {images && images.length ? <button onClick={clearAll}>Clear all</button> : null}
         <input ref={fileRef} className="sr-only" type="file" accept="image/*" multiple onChange={(e) => { upload([...e.target.files]); e.target.value = ""; }} />
       </div>
 
@@ -207,6 +221,7 @@ export default function LabelPage() {
             <button onClick={() => setShowAll((v) => !v)}>None / search</button>
             <button onClick={back} disabled={idx === 0}>Back</button>
             <button onClick={skip}>Skip</button>
+            <button onClick={removeCurrent} className="danger">Remove photo</button>
           </div>
 
           {showAll ? (
