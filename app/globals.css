@@ -229,6 +229,8 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* Quick-add "+" on each row of the add-mugs list. */
 .addbtn{flex:none; width:46px; height:46px; padding:0; justify-content:center; border-radius:999px; border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}
+.addbtn.wish{border-color:var(--accent2); color:var(--accent2)}
+.addbtn.wish:hover{background:var(--accent2); color:#fff; border-color:var(--accent2)}
 .scanthumb img{width:100%; height:100%; object-fit:contain; display:block}
 .spin{width:16px;height:16px;border-radius:999px;border:2px solid color-mix(in srgb,var(--accent) 30%, transparent);border-top-color: var(--accent);animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -307,6 +309,8 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .modal.drawer{left:0; right:0; top:auto; bottom:0; width:100%; max-width:760px; margin:0 auto; border-radius:20px 20px 0 0; max-height:92vh; border-bottom:none; z-index:60}
 /* vaul sets the closed transform via CSS and animates in; pin the open state. */
 .modal.drawer[data-state="open"]{transform:translate3d(0,0,0)}
+/* Search screen: a tall sheet so the input sits at the top, above the keyboard. */
+.modal.drawer.drawer-tall{height:90dvh; max-height:90dvh}
 .drawer-handle{width:44px; height:5px; border-radius:999px; background:var(--border); margin:10px auto 2px}
 /* Collection summary strip */
 .summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}
