@@ -4,12 +4,27 @@ export interface Listing {
   id?: number;
   source: string;
   title: string;
+  /** Headline price: current bid, else buy-now, else start price. */
   price: number | null;
   currency: string | null;
   url: string;
   imageUrl: string | null;
   condition: string | null;
   foundAt?: string;
+  /** Auction deadline (ISO). */
+  endDate?: string | null;
+  /** Number of bids so far. */
+  bidCount?: number | null;
+  /** Highest bid (null when there are no bids yet). */
+  currentBid?: number | null;
+  /** Buy-now price, when the listing offers one. */
+  buyItNow?: number | null;
+  /** Starting/asking price when there are no bids. */
+  startPrice?: number | null;
+  /** Seller alias. */
+  seller?: string | null;
+  /** Marketplace item type, e.g. "Auction", "PureBuyItNow". */
+  itemType?: string | null;
 }
 
 export interface Mug {

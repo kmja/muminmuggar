@@ -15,7 +15,7 @@ import { createSearch } from "../lib/search";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
-  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
+  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X, Clock, ExternalLink,
   ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User,
 } from "lucide-react";
 
@@ -76,6 +76,27 @@ function formatMoney(amount, currency = "SEK") {
   if (!Number.isFinite(n)) return "";
   try { return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(n); }
   catch { return `${Math.round(n)} ${currency}`; }
+}
+// Relative time until a listing ends, e.g. "om 2 d".
+function timeLeft(iso, t) {
+  if (!iso) return "";
+  const ms = Date.parse(iso) - Date.now();
+  if (!Number.isFinite(ms)) return "";
+  if (ms <= 0) return t("deal_ended");
+  const mins = Math.max(1, Math.round(ms / 60000));
+  if (mins < 60) return t("deal_ends_min", { n: mins });
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return t("deal_ends_hour", { n: hours });
+  return t("deal_ends_day", { n: Math.round(hours / 24) });
+}
+function itemTypeLabel(it, t) {
+  switch (it) {
+    case "Auction": return t("deal_type_auction");
+    case "AuctionWithBuyItNow": return t("deal_type_auction_bin");
+    case "PureBuyItNow": return t("deal_type_bin");
+    case "ShopItem": return t("deal_type_shop");
+    default: return it || "";
+  }
 }
 function fileToDataUrl(file) {
   return new Promise((res, rej) => {
@@ -931,15 +952,32 @@ function DealsModal({ open, onClose, mug }) {
       {listings.length ? (
         <div className="grid" style={{ gap: 8 }}>
           <div className="help">{t("deals_live_count", { n: listings.length, noun: listings.length === 1 ? t("listing_one") : t("listing_other") })}</div>
-          {listings.map((l, i) => (
-            <a className="srcitem" key={i} href={l.url} target="_blank" rel="noopener noreferrer">
-              {l.imageUrl ? <img src={l.imageUrl} alt="" /> : null}
-              <div style={{ minWidth: 0 }}>
-                <div className="link" style={{ fontWeight: 700 }}>{l.title}</div>
-                <div className="mini">{[l.source, l.condition, l.price != null ? formatMoney(l.price, l.currency || "") : null].filter(Boolean).join(" · ")}</div>
-              </div>
-            </a>
-          ))}
+          {listings.map((l, i) => {
+            const cur = l.currency || "SEK";
+            const primary = l.currentBid != null ? { kind: "bid", amount: l.currentBid }
+              : l.buyItNow != null ? { kind: "buy", amount: l.buyItNow }
+              : l.startPrice != null ? { kind: "start", amount: l.startPrice }
+              : l.price != null ? { kind: "price", amount: l.price } : null;
+            return (
+              <a className="dealrow" key={i} href={l.url} target="_blank" rel="noopener noreferrer">
+                <div className="dealrow-thumb">
+                  {l.imageUrl ? <img src={l.imageUrl} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
+                </div>
+                <div className="dealrow-main">
+                  <div className="dealrow-title" title={l.title}>{l.title}</div>
+                  <div className="badges">
+                    {primary ? <Badge kind={primary.kind === "bid" ? "deal" : ""}><Coins size={12} /> {t("deal_" + primary.kind)} {formatMoney(primary.amount, cur)}</Badge> : null}
+                    {l.currentBid != null && l.buyItNow != null ? <Badge><Tag size={12} /> {t("deal_buy")} {formatMoney(l.buyItNow, cur)}</Badge> : null}
+                    {l.bidCount ? <Badge>{t("deal_bids_count", { n: l.bidCount })}</Badge> : null}
+                    {l.endDate ? <Badge><Clock size={12} /> {timeLeft(l.endDate, t)}</Badge> : null}
+                    {l.condition ? <Badge><CheckCircle2 size={12} /> {l.condition}</Badge> : null}
+                  </div>
+                  <div className="mini dealrow-foot">{[l.seller ? t("deal_seller", { name: l.seller }) : null, itemTypeLabel(l.itemType, t)].filter(Boolean).join(" · ")}</div>
+                </div>
+                <ExternalLink size={16} className="dealrow-ext" aria-hidden="true" />
+              </a>
+            );
+          })}
         </div>
       ) : null}
 

@@ -64,11 +64,13 @@ async function run(opts: RunOptions = {}) {
     let fresh = 0;
     for (const l of listings) {
       const res = await query(
-        `INSERT INTO listings (mug_id, source, title, price, currency, url, image_url, condition, notified)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8, TRUE)
+        `INSERT INTO listings (mug_id, source, title, price, currency, url, image_url, condition,
+                               end_date, bid_count, current_bid, buy_now, start_price, seller, item_type, notified)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15, TRUE)
          ON CONFLICT (mug_id, url) DO NOTHING
          RETURNING id`,
-        [mug.id, l.source, l.title, l.price, l.currency, l.url, l.imageUrl, l.condition],
+        [mug.id, l.source, l.title, l.price, l.currency, l.url, l.imageUrl, l.condition,
+         l.endDate ?? null, l.bidCount ?? null, l.currentBid ?? null, l.buyItNow ?? null, l.startPrice ?? null, l.seller ?? null, l.itemType ?? null],
       );
       if (res.rowCount && res.rowCount > 0) fresh++;
     }

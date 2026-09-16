@@ -54,6 +54,15 @@ CREATE TABLE IF NOT EXISTS listings (
 
 CREATE INDEX IF NOT EXISTS listings_mug_idx ON listings (mug_id);
 
+-- Marketplace listing details (Tradera auctions etc.), added later.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS end_date TIMESTAMPTZ;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS bid_count INTEGER;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS current_bid NUMERIC;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS buy_now NUMERIC;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS start_price NUMERIC;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS seller TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS item_type TEXT;
+
 CREATE TABLE IF NOT EXISTS catalog_mugs (
   id         TEXT PRIMARY KEY,
   title      TEXT NOT NULL,
@@ -199,6 +208,13 @@ export function rowToMug(r: Record<string, unknown>): Mug {
           imageUrl: (l.image_url as string) ?? null,
           condition: (l.condition as string) ?? null,
           foundAt: l.found_at ? String(l.found_at) : undefined,
+          endDate: l.end_date ? String(l.end_date) : null,
+          bidCount: l.bid_count == null ? null : Number(l.bid_count),
+          currentBid: l.current_bid == null ? null : Number(l.current_bid),
+          buyItNow: l.buy_now == null ? null : Number(l.buy_now),
+          startPrice: l.start_price == null ? null : Number(l.start_price),
+          seller: (l.seller as string) ?? null,
+          itemType: (l.item_type as string) ?? null,
         }))
       : undefined,
   };

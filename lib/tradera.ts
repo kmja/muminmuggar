@@ -45,11 +45,34 @@ function toNum(v: unknown): number | null {
   const n = Number(String(v).replace(",", "."));
   return Number.isFinite(n) && n > 0 ? n : null;
 }
-function asArray<T>(v: T | T[] | undefined | null): T[] {
-  return Array.isArray(v) ? v : v == null ? [] : [v];
+function asArray<T>(v: unknown): T[] {
+  return Array.isArray(v) ? (v as T[]) : v == null ? [] : [v as T];
 }
 function text(v: unknown): string {
   return v == null ? "" : typeof v === "object" ? "" : String(v);
+}
+function toInt(v: unknown): number | null {
+  if (v == null || typeof v === "object") return null;
+  const n = Number(String(v));
+  return Number.isFinite(n) ? n : null;
+}
+/** Best available image (prefer the "normal" size over the tiny thumbnail). */
+function pickImage(e: Record<string, unknown>): string | null {
+  const links = asArray<Record<string, unknown>>((e.ImageLinks as { ImageLink?: unknown } | undefined)?.ImageLink);
+  const byFormat = (f: string) => links.find((x) => String(x.Format).toLowerCase() === f);
+  return text(byFormat("normal")?.Url) || text(byFormat("medium")?.Url) || text(e.ThumbnailLink) || null;
+}
+/** Tradera's "Skick" (condition) attribute, e.g. "Oanvänt". */
+function pickCondition(e: Record<string, unknown>): string | null {
+  const attrs = (e.AttributeValues as { TermAttributeValues?: { TermAttributeValue?: unknown } } | undefined)
+    ?.TermAttributeValues?.TermAttributeValue;
+  for (const tv of asArray<Record<string, unknown>>(attrs)) {
+    if (String(tv.Name).toLowerCase() === "condition") {
+      const vals = asArray<unknown>((tv.Values as { string?: unknown } | undefined)?.string).map(text).filter(Boolean);
+      if (vals.length) return vals.join(", ");
+    }
+  }
+  return null;
 }
 
 /**
@@ -75,23 +98,36 @@ export function parseTraderaResponse(xml: string): Listing[] {
   const listings = asArray<Record<string, unknown>>(result.Items)
     .filter((e) => String(e.IsEnded).toLowerCase() !== "true")
     .map((e) => {
-      const id = e.Id != null ? String(e.Id) : "";
-      // A Buy-It-Now price is the true asking price; otherwise use the current
-      // highest bid, then the next minimum bid.
-      const price = toNum(e.BuyItNowPrice) ?? toNum(e.MaxBid) ?? toNum(e.NextBid);
+      const id = text(e.Id);
+      const hasBids = String(e.HasBids).toLowerCase() === "true";
+      const bidCount = toInt(e.BidCount);
+      const buyItNow = toNum(e.BuyItNowPrice);
+      const maxBid = toNum(e.MaxBid);
+      const nextBid = toNum(e.NextBid);
+      // With bids, MaxBid is the current highest bid; without, MaxBid/NextBid are
+      // the start price. `price` is the most relevant headline number.
+      const currentBid = hasBids ? maxBid : null;
+      const startPrice = hasBids ? null : nextBid ?? maxBid;
+      const price = currentBid ?? buyItNow ?? startPrice ?? maxBid ?? nextBid;
       const url = (
         text(e.ItemUrl) ||
         (id ? `https://www.tradera.com/item/${id}` : "https://www.tradera.com")
       ).replace(/^http:\/\//i, "https://"); // Tradera returns http:// item links
-      const thumb = text(e.ThumbnailLink) || null;
       return {
         source: "Tradera",
         title: text(e.ShortDescription) || "Tradera listing",
         price,
         currency: price != null ? "SEK" : null,
         url,
-        imageUrl: thumb,
-        condition: null,
+        imageUrl: pickImage(e),
+        condition: pickCondition(e),
+        endDate: text(e.EndDate) || null,
+        bidCount,
+        currentBid,
+        buyItNow,
+        startPrice,
+        seller: text(e.SellerAlias) || null,
+        itemType: text(e.ItemType) || null,
       } as Listing;
     })
     .filter((l) => Boolean(l.title));

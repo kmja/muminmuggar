@@ -12,10 +12,16 @@ export const dynamic = "force-dynamic";
 async function persistListings(mugId: string, listings: Listing[]) {
   for (const l of listings) {
     await query(
-      `INSERT INTO listings (mug_id, source, title, price, currency, url, image_url, condition)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-       ON CONFLICT (mug_id, url) DO NOTHING`,
-      [mugId, l.source, l.title, l.price, l.currency, l.url, l.imageUrl, l.condition],
+      `INSERT INTO listings (mug_id, source, title, price, currency, url, image_url, condition,
+                             end_date, bid_count, current_bid, buy_now, start_price, seller, item_type)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+       ON CONFLICT (mug_id, url) DO UPDATE SET
+         price = EXCLUDED.price, image_url = EXCLUDED.image_url, condition = EXCLUDED.condition,
+         end_date = EXCLUDED.end_date, bid_count = EXCLUDED.bid_count, current_bid = EXCLUDED.current_bid,
+         buy_now = EXCLUDED.buy_now, start_price = EXCLUDED.start_price, seller = EXCLUDED.seller,
+         item_type = EXCLUDED.item_type`,
+      [mugId, l.source, l.title, l.price, l.currency, l.url, l.imageUrl, l.condition,
+       l.endDate ?? null, l.bidCount ?? null, l.currentBid ?? null, l.buyItNow ?? null, l.startPrice ?? null, l.seller ?? null, l.itemType ?? null],
     );
   }
 }
