@@ -50,14 +50,49 @@ export function localizedName(name: string | null | undefined, lang: "sv" | "en"
 // Words too generic to identify a mug on their own.
 const NAME_STOP = new Set(["mug", "mugg", "moomin", "mumin", "arabia", "the", "and", "with", "of", "in", "on", "a", "x"]);
 
-/** Does a listing title plausibly refer to this mug? (Precision filter for broad search hits.) */
-export function listingMatches(title: string, name: string | null | undefined): boolean {
-  const f = foldC(name);
-  if (!f || !title) return false;
-  const padded = ` ${foldC(title)} `;
-  if (padded.includes(` ${f} `)) return true; // whole-name phrase
+// "moominmugg" -> "moomin mugg" so the name phrase "mugg rosa" matches inside it.
+const foldT = (s: unknown): string => foldC(s).replace(/([a-z])mugg?\b/g, "$1 mugg");
+
+/** Match a folded name against a folded title: 100 for the name phrase, 55 for all
+ *  name tokens present, minus a small penalty for extra descriptive words. */
+function matchFolded(tf: string, f: string): number {
+  if (!f || !tf) return 0;
   const toks = f.split(" ").filter((x) => x && !NAME_STOP.has(x));
-  return toks.length > 0 && toks.every((x) => padded.includes(` ${x} `));
+  if (!toks.length) return 0;
+  const padded = ` ${tf} `;
+  const phrase = padded.includes(` ${f} `);
+  const allToks = toks.every((x) => padded.includes(` ${x} `));
+  if (!phrase && !allToks) return 0;
+  const extra = tf.split(" ").filter((x) => x && !NAME_STOP.has(x) && !toks.includes(x)).length;
+  return (phrase ? 100 : 55) - extra * 2;
+}
+
+// Folded catalogue names, to find which mug a listing title is *really* about.
+const CATALOG_FOLDED = (MASTER_CATALOG as MasterEntry[]).map((e) => ({
+  en: foldT(e.nameEn),
+  sv: e.nameSv ? foldT(e.nameSv) : "",
+}));
+
+function bestCatalogMatch(tf: string): number {
+  let best = 0;
+  for (const n of CATALOG_FOLDED) {
+    const s = Math.max(matchFolded(tf, n.en), n.sv ? matchFolded(tf, n.sv) : 0);
+    if (s > best) best = s;
+  }
+  return best;
+}
+
+/**
+ * Relevance of a listing title to a mug (0 = not this mug, or a *different*
+ * catalogue mug matches the title better). This is how we drop broad Tradera
+ * hits like "Muminmugg Snusmumriken (rosa)" when searching for "Mug Rose".
+ */
+export function titleScore(title: string, mug: Pick<Mug, "name">): number {
+  const tf = foldT(title);
+  if (!tf) return 0;
+  const target = Math.max(matchFolded(tf, foldT(mug.name)), matchFolded(tf, foldT(localizedName(mug.name, "sv"))));
+  if (target <= 0) return 0;
+  return target >= bestCatalogMatch(tf) ? target : 0;
 }
 
 /** Build a focused marketplace search query for a mug, in the given language. */
@@ -91,12 +126,14 @@ export async function searchMarketplaces(mug: Pick<Mug, "name" | "series" | "yea
     }
   }
 
-  // Tradera's keyword search is broad (a generic name can return dozens of
-  // unrelated mugs), so keep only titles that actually name this mug.
-  const svName = localizedName(mug.name, "sv");
+  // Tradera's keyword search is broad, so score each hit by title relevance, drop
+  // the ones that don't name this mug (or name a different one) and best-match first.
   const seen = new Set<string>();
   return results
-    .filter((l) => listingMatches(l.title, mug.name) || listingMatches(l.title, svName))
+    .map((l) => ({ l, s: titleScore(l.title, mug) }))
+    .filter((x) => x.s > 0)
+    .sort((a, b) => b.s - a.s)
+    .map((x) => x.l)
     .filter((l) => (seen.has(l.url) ? false : (seen.add(l.url), true)));
 }
 

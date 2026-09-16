@@ -15,7 +15,7 @@ import { createSearch } from "../lib/search";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
-  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X, Clock, ExternalLink,
+  BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
   ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User,
 } from "lucide-react";
 
@@ -88,15 +88,6 @@ function timeLeft(iso, t) {
   const hours = Math.round(mins / 60);
   if (hours < 24) return t("deal_ends_hour", { n: hours });
   return t("deal_ends_day", { n: Math.round(hours / 24) });
-}
-function itemTypeLabel(it, t) {
-  switch (it) {
-    case "Auction": return t("deal_type_auction");
-    case "AuctionWithBuyItNow": return t("deal_type_auction_bin");
-    case "PureBuyItNow": return t("deal_type_bin");
-    case "ShopItem": return t("deal_type_shop");
-    default: return it || "";
-  }
 }
 function fileToDataUrl(file) {
   return new Promise((res, rej) => {
@@ -954,6 +945,8 @@ function DealsModal({ open, onClose, mug }) {
               : l.buyItNow != null ? { kind: "buy", amount: l.buyItNow }
               : l.startPrice != null ? { kind: "start", amount: l.startPrice }
               : l.price != null ? { kind: "price", amount: l.price } : null;
+            const secondary = l.currentBid != null && l.buyItNow != null ? { kind: "buy", amount: l.buyItNow } : null;
+            const meta = [l.endDate ? timeLeft(l.endDate, t) : null, l.bidCount ? t("deal_bids_count", { n: l.bidCount }) : null].filter(Boolean).join(" · ");
             return (
               <a className="dealrow" key={i} href={l.url} target="_blank" rel="noopener noreferrer">
                 <div className="dealrow-thumb">
@@ -961,16 +954,14 @@ function DealsModal({ open, onClose, mug }) {
                 </div>
                 <div className="dealrow-main">
                   <div className="dealrow-title" title={l.title}>{l.title}</div>
-                  <div className="badges">
-                    {primary ? <Badge kind={primary.kind === "bid" ? "deal" : ""}><Coins size={12} /> {t("deal_" + primary.kind)} {formatMoney(primary.amount, cur)}</Badge> : null}
-                    {l.currentBid != null && l.buyItNow != null ? <Badge><Tag size={12} /> {t("deal_buy")} {formatMoney(l.buyItNow, cur)}</Badge> : null}
-                    {l.bidCount ? <Badge>{t("deal_bids_count", { n: l.bidCount })}</Badge> : null}
-                    {l.endDate ? <Badge><Clock size={12} /> {timeLeft(l.endDate, t)}</Badge> : null}
-                    {l.condition ? <Badge><CheckCircle2 size={12} /> {l.condition}</Badge> : null}
-                  </div>
-                  <div className="mini dealrow-foot">{[l.seller ? t("deal_seller", { name: l.seller }) : null, itemTypeLabel(l.itemType, t)].filter(Boolean).join(" · ")}</div>
+                  {primary ? (
+                    <div className="dealrow-price">
+                      <span className="dealrow-price-main">{t("deal_" + primary.kind)} {formatMoney(primary.amount, cur)}</span>
+                      {secondary ? <span className="dealrow-price-alt">{t("deal_" + secondary.kind)} {formatMoney(secondary.amount, cur)}</span> : null}
+                    </div>
+                  ) : null}
+                  {meta ? <div className="mini dealrow-foot">{meta}</div> : null}
                 </div>
-                <ExternalLink size={16} className="dealrow-ext" aria-hidden="true" />
               </a>
             );
           })}
