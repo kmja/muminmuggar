@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MASTER_CATALOG from "../../lib/master-catalog.json";
 import { matchMug, warmUp, isReady, getProgress } from "../../lib/image-match";
 import { getDeviceId } from "../../lib/device";
+import { fuzzyScore } from "../../lib/search";
 
 /* On-site labeling + fine-tuning. Upload real mug photos, click through the
  * model's top-4, and record the correct catalogue mug. Everything is stored in
@@ -128,8 +129,12 @@ export default function LabelPage() {
   });
 
   const allList = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return MASTER_CATALOG.filter((e) => !q || `${e.nameEn} ${e.nameSv || ""} ${e.year}`.toLowerCase().includes(q)).slice(0, 80);
+    if (!search.trim()) return MASTER_CATALOG.slice(0, 80);
+    return MASTER_CATALOG.map((e) => ({ e, s: fuzzyScore(search, e.nameEn, e.nameSv, e.year) }))
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .map((x) => x.e)
+      .slice(0, 80);
   }, [search]);
 
   const done = images && idx >= images.length;

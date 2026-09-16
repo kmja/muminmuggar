@@ -6,6 +6,7 @@ import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
 import { getDeviceId } from "../lib/device";
+import { fuzzyMatch, fuzzyScore } from "../lib/search";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -285,9 +286,11 @@ function MugPicker({ value, onPick, invalid }) {
     return () => document.removeEventListener("mousedown", h);
   }, []);
   const results = useMemo(() => {
-    const f = foldC(q);
-    const list = f ? MASTER_CATALOG.filter((e) => foldC(e.nameEn + " " + (e.nameSv || "") + " " + e.years).includes(f)) : MASTER_CATALOG;
-    return list.slice(0, 80);
+    if (!q.trim()) return MASTER_CATALOG;
+    return MASTER_CATALOG.map((e) => ({ e, s: fuzzyScore(q, e.nameEn, e.nameSv, e.years) }))
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .map((x) => x.e);
   }, [q]);
   return (
     <div className="mugpicker" ref={boxRef}>
@@ -566,8 +569,9 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
   const newest = useMemo(() => [...CATALOG_UNIQUE].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0)), []);
   const results = useMemo(() => {
-    const f = foldC(q);
-    const base = f ? CATALOG_UNIQUE.filter((e) => foldC(e.nameEn + " " + (e.nameSv || "") + " " + e.years).includes(f)) : newest.slice(0, 12);
+    const base = q.trim()
+      ? CATALOG_UNIQUE.map((e) => ({ e, s: fuzzyScore(q, e.nameEn, e.nameSv, e.years) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).map((x) => x.e)
+      : newest.slice(0, 12);
     return base.filter((e) => {
       const k = ownKey(e.nameEn);
       if (k && ownedKeys.has(k)) return false;             // already in the collection
@@ -773,7 +777,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
 
   const missing = (rows || []).filter((r) => !r.owned);
   const catMissing = (cat || []).filter((e) => !e.owned);
-  const catShown = (cat || []).filter((e) => (!onlyMissing || !e.owned) && (!catQuery || foldC(e.nameEn + " " + catName(e.nameEn, "sv")).includes(foldC(catQuery))));
+  const catShown = (cat || []).filter((e) => (!onlyMissing || !e.owned) && (!catQuery.trim() || fuzzyMatch(catQuery, e.nameEn, catName(e.nameEn, "sv"))));
 
   const footer = cat ? (
     <>
@@ -1162,7 +1166,7 @@ export default function App() {
       if (favoriteOnly && !m.favorite) return false;
       if (!q) return true;
       const hay = [m.name, catName(m.name, "sv"), m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
-      return normalizeText(hay).includes(q);
+      return fuzzyMatch(query, hay);
     });
     out.sort((a, b) => {
       const au = a.updatedAt ? Date.parse(a.updatedAt) : 0, bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
