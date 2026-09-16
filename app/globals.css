@@ -330,7 +330,7 @@ body{overflow:hidden}
 .wrap{display:flex; flex-direction:column; height:100dvh; max-width:1120px; margin:0 auto; padding:0 18px}
 .top,.tabs{flex:none}
 .pager{flex:1; min-height:0; position:relative; overflow:hidden}
-.track{display:flex; height:100%}
+.track{display:flex; height:100%; gap:16px}   /* breathing room between swiped tabs */
 .panel{flex:0 0 100%; min-width:0; height:100%; display:flex; flex-direction:column}
 .panel-scroll{flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:96px}
 @media (min-width: 720px){ .panel-scroll{padding-bottom:24px} }
