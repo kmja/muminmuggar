@@ -31,6 +31,7 @@ const condLabel = (t, c) => { if (!c) return c; const k = "cond_" + c; const v =
 /* ----------------------------- constants ----------------------------- */
 const STATUS_VALUES = ["owned", "wishlist", "sold"];
 const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
+const CURRENCIES = ["SEK", "EUR", "USD", "GBP", "NOK", "DKK"];
 
 /* ----------------------------- helpers -------------------------------- */
 const normalizeText = (s) => (s || "").toString().trim().toLowerCase();
@@ -69,7 +70,6 @@ const CATALOG_UNIQUE = (() => { const seen = new Set(), out = []; for (const e o
 const searchMasterCatalog = createSearch(MASTER_CATALOG, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.years });
 const searchCatalogUnique = createSearch(CATALOG_UNIQUE, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.years });
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
-const tokenizeTags = (s) => (s || "").split(/[,#\n]+/).map((t) => t.trim()).filter(Boolean);
 function formatMoney(amount, currency = "SEK") {
   if (amount === "" || amount == null) return "";
   const n = Number(amount);
@@ -398,12 +398,11 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
   const t = useT();
   const lang = useLang();
   const [d, setD] = useState(initial);
-  const [tagInput, setTagInput] = useState((initial?.tags || []).join(", "));
   const [errors, setErrors] = useState({});
   const [added, setAdded] = useState(0);   // mugs saved via "add another" without closing
   const [acquired, setAcquired] = useState(false); // wishlist -> collection in this session
   const uploadRef = useRef(null);
-  useEffect(() => { setD(initial); setTagInput((initial?.tags || []).join(", ")); setErrors({}); setAdded(0); setAcquired(false); }, [initial, open]);
+  useEffect(() => { setD(initial); setErrors({}); setAdded(0); setAcquired(false); }, [initial, open]);
   const dups = useMemo(() => (mode === "create" && d ? findDuplicates(d, mugs || []) : []), [d?.name, d?.year, d?.series, mode, mugs]);
   if (!d) return null;
   const up = (patch) => setD((x) => ({ ...x, ...patch }));
@@ -423,7 +422,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 
   // Build a clean record and validate; returns the record or null if invalid.
   const build = () => {
-    const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: tokenizeTags(tagInput) };
+    const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: Array.isArray(d.tags) ? d.tags : [] };
     const e = validateMug(next, t);
     // Every added mug must map to a catalogue entry (no free-typed mugs).
     if (mode === "create" && (!next.name || !CATALOG_NAMES.has(foldC(next.name)))) e.name = t("err_pick_catalog");
@@ -437,7 +436,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
     if (ok && addAnother) {
       // Reset for the next mug but keep the chosen status (usually "owned").
       setD({ ...blankMug(), status: d.status });
-      setTagInput(""); setErrors({}); setAdded((n) => n + 1);
+      setErrors({}); setAdded((n) => n + 1);
     }
   };
 
@@ -454,13 +453,10 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
         <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
         <div className="field"><label>{t("form_acquired")}</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
       </div>
-      <div className="field"><label>{t("form_condition_notes")}</label><input value={d.conditionNotes || ""} onChange={(e) => up({ conditionNotes: e.target.value })} placeholder={t("form_condition_notes_ph")} /></div>
-      <div className="field"><label>{t("form_location")}</label><input value={d.location || ""} onChange={(e) => up({ location: e.target.value })} placeholder={t("form_location_ph")} /></div>
       <div className="row">
         <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} />{errors.price ? <div className="err">{errors.price}</div> : null}</div>
-        <div className="field"><label>{t("form_currency")}</label><input value={d.currency || ""} onChange={(e) => up({ currency: e.target.value })} placeholder="SEK" /></div>
+        <div className="field"><label>{t("form_currency")}</label><select value={d.currency || "SEK"} onChange={(e) => up({ currency: e.target.value })}>{[...new Set([...CURRENCIES, d.currency].filter(Boolean))].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
       </div>
-      <div className="field"><label>{t("form_tags")}</label><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder={t("form_tags_ph")} /></div>
       <div className="switch"><span className="mini">{t("form_favorite")}</span><input type="checkbox" checked={!!d.favorite} onChange={(e) => up({ favorite: e.target.checked })} style={{ width: "auto" }} /></div>
       <div className="field">
         <label>{t("form_photo")}</label>
@@ -478,7 +474,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
     <div className="formactions">
       <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
       {mode === "create" ? <button className="big" disabled={saving} onClick={() => submit(true)}><Plus size={17} /> {t("save_add_another")}</button> : null}
-      <button className="primary big" disabled={saving} onClick={() => submit(false)}>{saving ? <span className="spin" /> : t("save_mug")}</button>
+      <button className="primary big" disabled={saving} onClick={() => submit(false)}>{saving ? <span className="spin" /> : t("save")}</button>
     </div>
   );
 
@@ -491,10 +487,10 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
           <>
             {/* An existing mug's identity is fixed — show it, don't edit it. */}
             <div className="editident">
-              <div className="editident-photo">{d.photoUrl ? <img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /> : <MugMark size={40} />}</div>
+              <div className="editident-photo">{d.photoUrl ? <img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /> : <MugMark size={56} />}</div>
               <div style={{ minWidth: 0 }}>
-                <div className="t-h3">{catName(d.name, lang) || t("card_untitled")}</div>
-                <div className="mini">{[d.series, d.year, d.edition].filter(Boolean).join(" · ")}</div>
+                <div className="t-h2 editident-name">{catName(d.name, lang) || t("card_untitled")}</div>
+                <div className="sub" style={{ marginTop: 4 }}>{[d.series, d.year, d.edition].filter(Boolean).join(" · ")}</div>
               </div>
             </div>
             {d.status === "wishlist" ? (
