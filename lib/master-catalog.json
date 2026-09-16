@@ -1,7 +1,7 @@
 [
   {
     "num": 1,
-    "nameEn": "Mug Green",
+    "nameEn": "Mug Green 1990",
     "year": 1990,
     "years": "1990-1993",
     "capacity": "0.3L",
@@ -9,12 +9,12 @@
     "estHigh": 900,
     "estCur": "EUR",
     "image": "/mugs/mug-green.webp",
-    "norm": "mug green",
-    "nameSv": "Mugg Grön"
+    "norm": "mug green 1990",
+    "nameSv": "Mugg Grön 1990"
   },
   {
     "num": 2,
-    "nameEn": "Mug Blue",
+    "nameEn": "Mug Blue 1990",
     "year": 1990,
     "years": "1990-1996",
     "capacity": "0.3L",
@@ -22,12 +22,12 @@
     "estHigh": 200,
     "estCur": "EUR",
     "image": "/mugs/blue.webp",
-    "norm": "mug blue",
-    "nameSv": "Mugg Blå"
+    "norm": "mug blue 1990",
+    "nameSv": "Mugg Blå 1990"
   },
   {
     "num": 3,
-    "nameEn": "Mug Rose",
+    "nameEn": "Mug Rose 1990",
     "year": 1990,
     "years": "1990-1993",
     "capacity": "0.3L",
@@ -35,12 +35,12 @@
     "estHigh": 850,
     "estCur": "EUR",
     "image": "/mugs/rosa.webp",
-    "norm": "mug rose",
-    "nameSv": "Mugg Rosa"
+    "norm": "mug rose 1990",
+    "nameSv": "Mugg Rosa 1990"
   },
   {
     "num": 4,
-    "nameEn": "Mug Yellow",
+    "nameEn": "Mug Yellow 1990",
     "year": 1990,
     "years": "1990-1996",
     "capacity": "0.3L",
@@ -48,8 +48,8 @@
     "estHigh": 300,
     "estCur": "EUR",
     "image": "/mugs/yellow.webp",
-    "norm": "mug yellow",
-    "nameSv": "Mugg Gul"
+    "norm": "mug yellow 1990",
+    "nameSv": "Mugg Gul 1990"
   },
   {
     "num": 5,
@@ -118,7 +118,7 @@
   },
   {
     "num": 10,
-    "nameEn": "Peace",
+    "nameEn": "Peace 1996",
     "year": 1996,
     "years": "1996-2002",
     "capacity": "0.3L",
@@ -126,8 +126,8 @@
     "estHigh": 380,
     "estCur": "EUR",
     "image": "/mugs/peace.webp",
-    "norm": "peace",
-    "nameSv": "Fred"
+    "norm": "peace 1996",
+    "nameSv": "Fred 1996"
   },
   {
     "num": 11,
@@ -144,7 +144,7 @@
   },
   {
     "num": 12,
-    "nameEn": "Love",
+    "nameEn": "Love 1996",
     "year": 1996,
     "years": "1996-",
     "capacity": "0.3L",
@@ -152,8 +152,8 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/love-pink.webp",
-    "norm": "love",
-    "nameSv": "Kärlek"
+    "norm": "love 1996",
+    "nameSv": "Kärlek 1996"
   },
   {
     "num": 13,
@@ -196,7 +196,7 @@
   },
   {
     "num": 16,
-    "nameEn": "Moomintroll On Ice",
+    "nameEn": "Moomintroll On Ice 1999",
     "year": 1999,
     "years": "1999-2012",
     "capacity": "0.3L",
@@ -204,12 +204,12 @@
     "estHigh": 40,
     "estCur": "EUR",
     "image": "/mugs/moomintroll-on-ice.webp",
-    "norm": "moomintroll on ice",
-    "nameSv": "Mumintrollet på isen"
+    "norm": "moomintroll on ice 1999",
+    "nameSv": "Mumintrollet på isen 1999"
   },
   {
     "num": 17,
-    "nameEn": "Little My Sliding",
+    "nameEn": "Little My Sliding 1999",
     "year": 1999,
     "years": "1999-2007, 2011",
     "capacity": "0.3L",
@@ -217,8 +217,8 @@
     "estHigh": 70,
     "estCur": "EUR",
     "image": "/mugs/little-my-sliding.webp",
-    "norm": "little my sliding",
-    "nameSv": "Lilla My glider"
+    "norm": "little my sliding 1999",
+    "nameSv": "Lilla My glider 1999"
   },
   {
     "num": 18,
@@ -235,7 +235,7 @@
   },
   {
     "num": 19,
-    "nameEn": "Snorkmaiden",
+    "nameEn": "Snorkmaiden 2001",
     "year": 2001,
     "years": "2001-2012",
     "capacity": "0.3L",
@@ -243,8 +243,8 @@
     "estHigh": 40,
     "estCur": "EUR",
     "image": "/mugs/snorkmaiden.webp",
-    "norm": "snorkmaiden",
-    "nameSv": "Snorkfröken"
+    "norm": "snorkmaiden 2001",
+    "nameSv": "Snorkfröken 2001"
   },
   {
     "num": 20,
@@ -287,7 +287,7 @@
   },
   {
     "num": 23,
-    "nameEn": "Family",
+    "nameEn": "Family 2002",
     "year": 2002,
     "years": "2002-2009, 2011",
     "capacity": "0.3L",
@@ -295,12 +295,12 @@
     "estHigh": 45,
     "estCur": "EUR",
     "image": "/mugs/family.webp",
-    "norm": "family",
-    "nameSv": "Familjen"
+    "norm": "family 2002",
+    "nameSv": "Familjen 2002"
   },
   {
     "num": 24,
-    "nameEn": "Fillyjonk",
+    "nameEn": "Fillyjonk 2004",
     "year": 2004,
     "years": "2004-2013",
     "capacity": "0.3L",
@@ -308,8 +308,8 @@
     "estHigh": 45,
     "estCur": "EUR",
     "image": "/mugs/fillyjonk.webp",
-    "norm": "fillyjonk",
-    "nameSv": "Filifjonkan"
+    "norm": "fillyjonk 2004",
+    "nameSv": "Filifjonkan 2004"
   },
   {
     "num": 25,
@@ -378,7 +378,7 @@
   },
   {
     "num": 30,
-    "nameEn": "Thingumy and Bob",
+    "nameEn": "Thingumy and Bob 2005",
     "year": 2005,
     "years": "2005-2017",
     "capacity": "0.3L",
@@ -386,12 +386,12 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/thingumy-and-bob.webp",
-    "norm": "thingumy and bob",
-    "nameSv": "Tofslan och Vifslan"
+    "norm": "thingumy and bob 2005",
+    "nameSv": "Tofslan och Vifslan 2005"
   },
   {
     "num": 31,
-    "nameEn": "Too-Ticky",
+    "nameEn": "Too-Ticky 2006",
     "year": 2006,
     "years": "2006-2015",
     "capacity": "0.3L",
@@ -399,8 +399,8 @@
     "estHigh": 25,
     "estCur": "EUR",
     "image": "/mugs/tooticky.webp",
-    "norm": "too ticky",
-    "nameSv": "Tooticki"
+    "norm": "too ticky 2006",
+    "nameSv": "Tooticki 2006"
   },
   {
     "num": 32,
@@ -482,7 +482,7 @@
   },
   {
     "num": 37,
-    "nameEn": "Little My",
+    "nameEn": "Little My 2008",
     "year": 2008,
     "years": "2008-2014",
     "capacity": "0.3L",
@@ -490,8 +490,8 @@
     "estHigh": 35,
     "estCur": "EUR",
     "image": "/mugs/little-my.webp",
-    "norm": "little my",
-    "nameSv": "Lilla My"
+    "norm": "little my 2008",
+    "nameSv": "Lilla My 2008"
   },
   {
     "num": 38,
@@ -755,7 +755,7 @@
   },
   {
     "num": 58,
-    "nameEn": "Snorkmaiden",
+    "nameEn": "Snorkmaiden 2013",
     "year": 2013,
     "years": "2013-2019",
     "capacity": "0.3L",
@@ -763,8 +763,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/snorkmaiden-pink.webp",
-    "norm": "snorkmaiden",
-    "nameSv": "Snorkfröken"
+    "norm": "snorkmaiden 2013",
+    "nameSv": "Snorkfröken 2013"
   },
   {
     "num": 59,
@@ -937,7 +937,7 @@
   },
   {
     "num": 71,
-    "nameEn": "Little My",
+    "nameEn": "Little My 2015",
     "year": 2015,
     "years": "2015-2021",
     "capacity": "0.3L",
@@ -945,8 +945,8 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/little-my-red.webp",
-    "norm": "little my",
-    "nameSv": "Lilla My"
+    "norm": "little my 2015",
+    "nameSv": "Lilla My 2015"
   },
   {
     "num": 72,
@@ -989,7 +989,7 @@
   },
   {
     "num": 75,
-    "nameEn": "Too-ticky",
+    "nameEn": "Too-Ticky 2016",
     "year": 2016,
     "years": "2016-",
     "capacity": "0.3L",
@@ -997,8 +997,8 @@
     "estHigh": 10,
     "estCur": "EUR",
     "image": "/mugs/tooticky-violet.webp",
-    "norm": "too ticky",
-    "nameSv": "Tooticki"
+    "norm": "too ticky 2016",
+    "nameSv": "Tooticki 2016"
   },
   {
     "num": 76,
@@ -1093,7 +1093,7 @@
   },
   {
     "num": 83,
-    "nameEn": "Thingumy and Bob",
+    "nameEn": "Thingumy and Bob 2018",
     "year": 2018,
     "years": "2018-",
     "capacity": "0.3L",
@@ -1101,8 +1101,8 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/thingumy-and-bob-green.webp",
-    "norm": "thingumy and bob",
-    "nameSv": "Tofslan och Vifslan"
+    "norm": "thingumy and bob 2018",
+    "nameSv": "Tofslan och Vifslan 2018"
   },
   {
     "num": 84,
@@ -1301,7 +1301,7 @@
   },
   {
     "num": 99,
-    "nameEn": "Snorkmaiden",
+    "nameEn": "Snorkmaiden 2019",
     "year": 2019,
     "years": "2019-",
     "capacity": "0.3L",
@@ -1309,8 +1309,8 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/snorkmaiden-lila.webp",
-    "norm": "snorkmaiden",
-    "nameSv": "Snorkfröken"
+    "norm": "snorkmaiden 2019",
+    "nameSv": "Snorkfröken 2019"
   },
   {
     "num": 100,
@@ -1392,7 +1392,7 @@
   },
   {
     "num": 106,
-    "nameEn": "Fillyjonk",
+    "nameEn": "Fillyjonk 2021",
     "year": 2021,
     "years": "2021-",
     "capacity": "0.3L",
@@ -1400,8 +1400,8 @@
     "estHigh": 10,
     "estCur": "EUR",
     "image": "/mugs/fillyjonk-arabia-6411801009279.webp",
-    "norm": "fillyjonk",
-    "nameSv": "Filifjonkan"
+    "norm": "fillyjonk 2021",
+    "nameSv": "Filifjonkan 2021"
   },
   {
     "num": 107,
@@ -1444,7 +1444,7 @@
   },
   {
     "num": 110,
-    "nameEn": "Mug Yellow",
+    "nameEn": "Mug Yellow 2021",
     "year": 2021,
     "years": "2021-",
     "capacity": "0.4L",
@@ -1452,12 +1452,12 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/04-yellow.webp",
-    "norm": "mug yellow",
-    "nameSv": "Mugg Gul"
+    "norm": "mug yellow 2021",
+    "nameSv": "Mugg Gul 2021"
   },
   {
     "num": 111,
-    "nameEn": "Mug Blue",
+    "nameEn": "Mug Blue 2021",
     "year": 2021,
     "years": "2021-",
     "capacity": "0.4L",
@@ -1465,8 +1465,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/04-blue.webp",
-    "norm": "mug blue",
-    "nameSv": "Mugg Blå"
+    "norm": "mug blue 2021",
+    "nameSv": "Mugg Blå 2021"
   },
   {
     "num": 112,
@@ -1522,7 +1522,7 @@
   },
   {
     "num": 116,
-    "nameEn": "Mug Green",
+    "nameEn": "Mug Green 2021",
     "year": 2021,
     "years": "2021-",
     "capacity": "0.4L",
@@ -1530,12 +1530,12 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/green-04.webp",
-    "norm": "mug green",
-    "nameSv": "Mugg Grön"
+    "norm": "mug green 2021",
+    "nameSv": "Mugg Grön 2021"
   },
   {
     "num": 117,
-    "nameEn": "Mug Rose",
+    "nameEn": "Mug Rose 2021",
     "year": 2021,
     "years": "2021-",
     "capacity": "0.4L",
@@ -1543,8 +1543,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/rose-04.webp",
-    "norm": "mug rose",
-    "nameSv": "Mugg Rosa"
+    "norm": "mug rose 2021",
+    "nameSv": "Mugg Rosa 2021"
   },
   {
     "num": 118,
@@ -1743,7 +1743,7 @@
   },
   {
     "num": 133,
-    "nameEn": "Love",
+    "nameEn": "Love 2023",
     "year": 2023,
     "years": "2023",
     "capacity": "0.4L",
@@ -1751,12 +1751,12 @@
     "estHigh": 25,
     "estCur": "EUR",
     "image": "/mugs/love-04.webp",
-    "norm": "love",
-    "nameSv": "Kärlek"
+    "norm": "love 2023",
+    "nameSv": "Kärlek 2023"
   },
   {
     "num": 134,
-    "nameEn": "Peace",
+    "nameEn": "Peace 2023",
     "year": 2023,
     "years": "2023",
     "capacity": "0.4L",
@@ -1764,8 +1764,8 @@
     "estHigh": 25,
     "estCur": "EUR",
     "image": "/mugs/peace-04.webp",
-    "norm": "peace",
-    "nameSv": "Fred"
+    "norm": "peace 2023",
+    "nameSv": "Fred 2023"
   },
   {
     "num": 135,
@@ -1808,7 +1808,7 @@
   },
   {
     "num": 138,
-    "nameEn": "ABC A",
+    "nameEn": "ABC A 2023",
     "year": 2023,
     "years": "2023",
     "capacity": "0.4L",
@@ -1816,8 +1816,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/abc-a-04.webp",
-    "norm": "abc a",
-    "nameSv": "ABC A"
+    "norm": "abc a 2023",
+    "nameSv": "ABC A 2023"
   },
   {
     "num": 139,
@@ -1964,7 +1964,7 @@
   },
   {
     "num": 150,
-    "nameEn": "Moomintroll On Ice",
+    "nameEn": "Moomintroll On Ice 2024",
     "year": 2024,
     "years": "2024",
     "capacity": "0.4L",
@@ -1972,12 +1972,12 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/moomintroll-on-ice-0-4-04.webp",
-    "norm": "moomintroll on ice",
-    "nameSv": "Mumintrollet på isen"
+    "norm": "moomintroll on ice 2024",
+    "nameSv": "Mumintrollet på isen 2024"
   },
   {
     "num": 151,
-    "nameEn": "Little My Sliding",
+    "nameEn": "Little My Sliding 2024",
     "year": 2024,
     "years": "2024",
     "capacity": "0.4L",
@@ -1985,12 +1985,12 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/little-my-sliding-0-4-04.webp",
-    "norm": "little my sliding",
-    "nameSv": "Lilla My glider"
+    "norm": "little my sliding 2024",
+    "nameSv": "Lilla My glider 2024"
   },
   {
     "num": 152,
-    "nameEn": "Snorkmaiden",
+    "nameEn": "Snorkmaiden 2024",
     "year": 2024,
     "years": "2024",
     "capacity": "0.4L",
@@ -1998,12 +1998,12 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/snorkmaiden-0-4-04.webp",
-    "norm": "snorkmaiden",
-    "nameSv": "Snorkfröken"
+    "norm": "snorkmaiden 2024",
+    "nameSv": "Snorkfröken 2024"
   },
   {
     "num": 153,
-    "nameEn": "Family",
+    "nameEn": "Family 2024",
     "year": 2024,
     "years": "2024",
     "capacity": "0.4L",
@@ -2011,8 +2011,8 @@
     "estHigh": 15,
     "estCur": "EUR",
     "image": "/mugs/family-mug-0-4-04.webp",
-    "norm": "family",
-    "nameSv": "Familjen"
+    "norm": "family 2024",
+    "nameSv": "Familjen 2024"
   },
   {
     "num": 154,
@@ -2120,7 +2120,7 @@
   },
   {
     "num": 162,
-    "nameEn": "Home at Last",
+    "nameEn": "Home at Last 0.3L",
     "year": 2025,
     "years": "2025",
     "capacity": "0.3L",
@@ -2128,8 +2128,8 @@
     "estHigh": 40,
     "estCur": "EUR",
     "image": "/mugs/home-at-last.webp",
-    "norm": "home at last",
-    "nameSv": "Äntligen hemma"
+    "norm": "home at last 0 3l",
+    "nameSv": "Äntligen hemma 0.3L"
   },
   {
     "num": 163,
@@ -2263,7 +2263,7 @@
   },
   {
     "num": 173,
-    "nameEn": "Home at Last",
+    "nameEn": "Home at Last 0.4L",
     "year": 2025,
     "years": "2025",
     "capacity": "0.4L",
@@ -2271,8 +2271,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/home-at-last.webp",
-    "norm": "home at last",
-    "nameSv": "Äntligen hemma"
+    "norm": "home at last 0 4l",
+    "nameSv": "Äntligen hemma 0.4L"
   },
   {
     "num": 174,
@@ -2432,7 +2432,7 @@
   },
   {
     "num": 186,
-    "nameEn": "ABC Ä",
+    "nameEn": "ABC Ä 2026",
     "year": 2026,
     "years": "2026",
     "capacity": "0.4L",
@@ -2440,8 +2440,8 @@
     "estHigh": 20,
     "estCur": "EUR",
     "image": "/mugs/abc-ae.webp",
-    "norm": "abc a",
-    "nameSv": "ABC Ä"
+    "norm": "abc a 2026",
+    "nameSv": "ABC Ä 2026"
   },
   {
     "num": 187,
