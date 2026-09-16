@@ -861,12 +861,15 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
 /* ------------------------------ DealsModal ---------------------------- */
 function DealsModal({ open, onClose, mug }) {
   const t = useT();
+  const lang = useLang();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [listings, setListings] = useState([]);
   const [web, setWeb] = useState(null);
+  const [webError, setWebError] = useState("");
+  const [sources, setSources] = useState(null);
   useEffect(() => {
-    if (open && mug) { setError(""); setWeb(null); setListings(mug.listings || []); run(); }
+    if (open && mug) { setError(""); setWeb(null); setWebError(""); setSources(null); setListings(mug.listings || []); run(); }
   }, [open, mug?.id]);
 
   const run = async () => {
@@ -875,12 +878,19 @@ function DealsModal({ open, onClose, mug }) {
       const j = await api("/api/deals", { method: "POST", body: JSON.stringify({ mugId: mug.id }) });
       setListings(j.listings?.length ? j.listings : (mug.listings || []));
       setWeb(j.web || null);
+      setWebError(j.webError || "");
+      setSources(j.sources || null);
     } catch (err) { setError(err.message || String(err)); }
     finally { setBusy(false); }
   };
 
+  const sourceNames = sources
+    ? [sources.tradera ? "Tradera" : null, sources.ebay ? "eBay" : null, sources.web ? t("deals_source_web") : null].filter(Boolean)
+    : [];
+
   return (
-    <Modal open={open} onClose={onClose} wide title={mug ? t("deals_find_title", { name: mug.name }) : t("deals_find_default")} subtitle={t("deals_subtitle")} footer={<button className="primary" onClick={run} disabled={busy}>{busy ? <span className="spin" /> : t("deals_search_again")}</button>}>
+    <Modal open={open} onClose={onClose} wide title={mug ? t("deals_find_title", { name: catName(mug.name, lang) }) : t("deals_find_default")} subtitle={t("deals_subtitle")} footer={<button className="primary" onClick={run} disabled={busy}>{busy ? <span className="spin" /> : t("deals_search_again")}</button>}>
+      {sourceNames.length ? <div className="help" style={{ marginBottom: 10 }}>{t("deals_sources", { list: sourceNames.join(" · ") })}</div> : null}
       {busy && !listings.length ? <div className="drop"><span className="spin" /><div style={{ marginTop: 8 }}>{t("deals_searching")}</div></div> : null}
       {error ? <div className="err">{error}</div> : null}
 
@@ -898,6 +908,8 @@ function DealsModal({ open, onClose, mug }) {
           ))}
         </div>
       ) : null}
+
+      {webError ? <div className="note" style={{ marginTop: 12 }}>{t("deals_web_unavailable", { msg: webError })}</div> : null}
 
       {web ? (
         <div className="grid" style={{ gap: 10, marginTop: 12 }}>
