@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { currentOwner, unauthorized } from "@/lib/session";
-import { base, decodeEmbedding, encodeF32, evaluate, solveWithLabels, type LabelSample } from "@/lib/probe";
+import { base, decodeF32, decodeSample, encodeF32, evaluate, solveWithLabels, type LabelSample } from "@/lib/probe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,18 +9,22 @@ export const maxDuration = 60;
 
 const CLS = new Map(base.entries.map((e, i) => [e.num, i]));
 
-async function loadSamples(owner: string): Promise<LabelSample[]> {
+async function loadSamples(owner: string): Promise<{ samples: LabelSample[]; skipped: number; lengths: number[] }> {
   const { rows } = await query(
     "SELECT chosen_num, embedding FROM labels WHERE owner = $1 AND chosen_num IS NOT NULL AND embedding IS NOT NULL",
     [owner],
   );
-  const out: LabelSample[] = [];
+  const samples: LabelSample[] = [];
+  const lengths = new Set<number>();
+  let skipped = 0;
   for (const r of rows) {
     const c = CLS.get(Number(r.chosen_num));
-    if (c == null) continue;
-    try { out.push({ c, x: decodeEmbedding(String(r.embedding)) }); } catch { /* skip */ }
+    if (c == null) { skipped++; continue; }
+    const x = decodeSample(String(r.embedding), base.dim);
+    if (!x) { try { lengths.add(decodeF32(String(r.embedding)).length); } catch { /* ignore */ } skipped++; continue; }
+    samples.push({ c, x });
   }
-  return out;
+  return { samples, skipped, lengths: [...lengths] };
 }
 
 /**
@@ -31,8 +35,10 @@ export async function POST(req: Request) {
   const owner = await currentOwner();
   if (!owner) return unauthorized();
   try {
-    const samples = await loadSamples(owner);
-    if (samples.length < 4) return NextResponse.json({ error: "Need at least 4 labeled photos." }, { status: 400 });
+    const { samples, skipped, lengths } = await loadSamples(owner);
+    if (samples.length < 4) {
+      return NextResponse.json({ error: `Need at least 4 usable labeled photos (found ${samples.length}${skipped ? `, skipped ${skipped}` : ""}).`, skipped, lengths }, { status: 400 });
+    }
 
     // Cross-validate the fine-tune on the real labels, tuning how strongly they
     // override the synthetic prior (a handful of real photos shouldn't be
@@ -69,7 +75,7 @@ export async function POST(req: Request) {
          weights = EXCLUDED.weights, auto_margin = EXCLUDED.auto_margin, temperature = EXCLUDED.temperature, updated_at = now()`,
       [owner, encodeF32(W), autoMargin, base.temperature],
     );
-    return NextResponse.json({ ok: true, n: samples.length, weight: best.weight, cv: { top1: best.top1, top5: best.top5 }, autoMargin });
+    return NextResponse.json({ ok: true, n: samples.length, skipped, lengths, weight: best.weight, cv: { top1: best.top1, top5: best.top5 }, autoMargin });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

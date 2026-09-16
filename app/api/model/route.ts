@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { currentOwner, unauthorized } from "@/lib/session";
-import { base, decodeF32, decodeEmbedding, evaluate, type LabelSample } from "@/lib/probe";
+import { base, decodeF32, decodeSample, evaluate, type LabelSample } from "@/lib/probe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +17,8 @@ async function loadSamples(owner: string): Promise<LabelSample[]> {
   for (const r of rows) {
     const c = CLS.get(Number(r.chosen_num));
     if (c == null) continue;
-    try { out.push({ c, x: decodeEmbedding(String(r.embedding)) }); } catch { /* skip */ }
+    const x = decodeSample(String(r.embedding), base.dim);
+    if (x) out.push({ c, x });
   }
   return out;
 }

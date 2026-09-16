@@ -21,6 +21,16 @@ export function decodeEmbedding(b64: string): number[] {
   return Array.from(f, (x) => x / n);
 }
 
+/** Decode an embedding only if it matches the probe's feature dimension. */
+export function decodeSample(b64: string, dim: number): number[] | null {
+  try {
+    const x = decodeEmbedding(b64);
+    return x.length === dim ? x : null;
+  } catch {
+    return null;
+  }
+}
+
 function logits(W: Float32Array | Float64Array, x: number[]): Float64Array {
   const D = base.dim, C = base.count;
   const s = new Float64Array(C);
@@ -47,7 +57,9 @@ export function solveWithLabels(samples: LabelSample[], weight: number, lambda: 
   const XtX = Float64Array.from(decodeF32(base.xtx));
   const XtY = Float64Array.from(decodeF32(base.xty));
   for (const s of samples) {
-    const xa = new Float64Array(Dp); xa.set(s.x); xa[D] = 1;
+    const xa = new Float64Array(Dp);
+    for (let i = 0; i < Math.min(s.x.length, D); i++) xa[i] = s.x[i];
+    xa[D] = 1;
     for (let a = 0; a < Dp; a++) { const va = weight * xa[a]; for (let b = a; b < Dp; b++) XtX[a * Dp + b] += va * xa[b]; XtY[a * C + s.c] += va; }
   }
   const A = Float64Array.from(XtX);
