@@ -19,8 +19,8 @@ export async function createMatcher() {
   async function embed(input) {
     const jpeg = await sharp(input).rotate().resize({ width: 1024, withoutEnlargement: true }).jpeg({ quality: 90 }).toBuffer();
     const out = await ex(await RawImage.fromBlob(new Blob([jpeg])), { pooling: "mean", normalize: true });
-    const v = out.dims && out.dims.length === 3 ? Array.from(out.data.slice(0, out.dims[2])) : Array.from(out.data);
-    return unit(v);
+    const raw = out.data.length > D ? out.data.slice(0, D) : out.data;
+    return unit(Array.from(raw));
   }
 
   function rank(x, k = 4) {

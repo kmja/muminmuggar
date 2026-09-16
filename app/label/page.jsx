@@ -118,8 +118,8 @@ export default function LabelPage() {
     setFtMsg("Fine-tuning…");
     try {
       const r = await jfetch("/api/finetune", { method: "POST", body: JSON.stringify({}) }).then((x) => x.json());
-      if (r.error) setFtMsg(r.error);
-      else { setFtMsg(`Fine-tuned on ${r.n} photos — cross-validated top-1 ${r.cv.top1}/${r.n}, top-5 ${r.cv.top5}/${r.n}. Applied.`); await loadAll(); }
+      if (r.error) setFtMsg(r.error + (Array.isArray(r.lengths) && r.lengths.length ? ` [embedding lengths: ${r.lengths.join(", ")}]` : ""));
+      else { setFtMsg(`Fine-tuned on ${r.n} photos${r.skipped ? ` (${r.skipped} skipped)` : ""} — cross-validated top-1 ${r.cv.top1}/${r.n}, top-5 ${r.cv.top5}/${r.n}. Applied.`); await loadAll(); }
     } catch (e) { setFtMsg(String(e)); }
   };
   const resetModel = async () => {
