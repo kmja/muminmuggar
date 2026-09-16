@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MASTER_CATALOG from "../../lib/master-catalog.json";
 import { matchMug, warmUp, isReady, getProgress } from "../../lib/image-match";
 import { getDeviceId } from "../../lib/device";
-import { fuzzyScore } from "../../lib/search";
+import { createSearch } from "../../lib/search";
+
+const searchCatalog = createSearch(MASTER_CATALOG, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.year });
 
 /* On-site labeling + fine-tuning. Upload real mug photos, click through the
  * model's top-4, and record the correct catalogue mug. Everything is stored in
@@ -141,14 +143,7 @@ export default function LabelPage() {
     return () => window.removeEventListener("keydown", h);
   });
 
-  const allList = useMemo(() => {
-    if (!search.trim()) return MASTER_CATALOG.slice(0, 80);
-    return MASTER_CATALOG.map((e) => ({ e, s: fuzzyScore(search, e.nameEn, e.nameSv, e.year) }))
-      .filter((x) => x.s > 0)
-      .sort((a, b) => b.s - a.s)
-      .map((x) => x.e)
-      .slice(0, 80);
-  }, [search]);
+  const allList = useMemo(() => (search.trim() ? searchCatalog(search) : MASTER_CATALOG).slice(0, 80), [search]);
 
   const done = images && idx >= images.length;
   const labeled = Object.keys(labels).length;

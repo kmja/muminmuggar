@@ -6,7 +6,7 @@ import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
 import { getDeviceId } from "../lib/device";
-import { fuzzyMatch, fuzzyScore } from "../lib/search";
+import { createSearch } from "../lib/search";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -60,6 +60,9 @@ const displayImg = (m) => CATALOG_IMAGE_BY_NAME.get(foldC(m?.name)) || mugImg(m?
 const OWN_STOP = new Set(["and", "the", "with", "of", "in", "on", "a", "x", "mug"]);
 const ownKey = (s) => foldC(s).split(" ").filter((x) => x && !OWN_STOP.has(x)).join("");
 const CATALOG_UNIQUE = (() => { const seen = new Set(), out = []; for (const e of MASTER_CATALOG) { const k = ownKey(e.nameEn); if (k && seen.has(k)) continue; seen.add(k); out.push(e); } return out; })();
+// Fuse-backed typo-tolerant search over the catalogue (built once).
+const searchMasterCatalog = createSearch(MASTER_CATALOG, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.years });
+const searchCatalogUnique = createSearch(CATALOG_UNIQUE, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.years });
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
 const tokenizeTags = (s) => (s || "").split(/[,#\n]+/).map((t) => t.trim()).filter(Boolean);
 function formatMoney(amount, currency = "SEK") {
@@ -294,13 +297,7 @@ function MugPicker({ value, onPick, invalid }) {
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
-  const results = useMemo(() => {
-    if (!q.trim()) return MASTER_CATALOG;
-    return MASTER_CATALOG.map((e) => ({ e, s: fuzzyScore(q, e.nameEn, e.nameSv, e.years) }))
-      .filter((x) => x.s > 0)
-      .sort((a, b) => b.s - a.s)
-      .map((x) => x.e);
-  }, [q]);
+  const results = useMemo(() => (q.trim() ? searchMasterCatalog(q) : MASTER_CATALOG).slice(0, 80), [q]);
   return (
     <div className="mugpicker" ref={boxRef}>
       <input
@@ -544,9 +541,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
   const results = useMemo(() => {
     // Mugs added this session stay visible (marked) and pinned to the top.
     const pinned = CATALOG_UNIQUE.filter((e) => added.has(e.nameEn));
-    const base = q.trim()
-      ? CATALOG_UNIQUE.map((e) => ({ e, s: fuzzyScore(q, e.nameEn, e.nameSv, e.years) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).map((x) => x.e)
-      : newest.slice(0, 12);
+    const base = q.trim() ? searchCatalogUnique(q) : newest.slice(0, 12);
     const rest = base.filter((e) => {
       if (added.has(e.nameEn)) return false;               // already pinned
       const k = ownKey(e.nameEn);
@@ -746,7 +741,9 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
 
   const missing = (rows || []).filter((r) => !r.owned);
   const catMissing = (cat || []).filter((e) => !e.owned);
-  const catShown = (cat || []).filter((e) => (!onlyMissing || !e.owned) && (!catQuery.trim() || fuzzyMatch(catQuery, e.nameEn, catName(e.nameEn, "sv"))));
+  const catFiltered = (cat || []).filter((e) => !onlyMissing || !e.owned);
+  const searchCat = useMemo(() => createSearch(catFiltered, { nameEn: (e) => e.nameEn, sv: (e) => catName(e.nameEn, "sv") }), [cat, onlyMissing]);
+  const catShown = catQuery.trim() ? searchCat(catQuery) : catFiltered;
 
   const footer = cat ? (
     <>
@@ -1118,9 +1115,21 @@ export default function App() {
     } catch (e) { setNotifState("error"); setNotifMsg(e.message || String(e)); }
   };
 
+  const mugSearch = useMemo(() => createSearch(mugs, {
+    name: (m) => m.name,
+    sv: (m) => catName(m.name, "sv"),
+    series: (m) => m.series,
+    edition: (m) => m.edition,
+    condition: (m) => m.condition,
+    conditionNotes: (m) => m.conditionNotes,
+    location: (m) => m.location,
+    notes: (m) => m.notes,
+    tags: (m) => (m.tags || []).join(" "),
+    year: (m) => m.year,
+  }), [mugs]);
+
   const panels = useMemo(() => {
     const build = (k) => {
-      const q = normalizeText(query);
       let out = mugs.filter((m) => {
         if (k === "wishlist") { if (m.status !== "wishlist") return false; }
         else {
@@ -1129,22 +1138,25 @@ export default function App() {
           if (statusFilter !== "all" && m.status !== statusFilter) return false;
         }
         if (favoriteOnly && !m.favorite) return false;
-        if (!q) return true;
-        const hay = [m.name, catName(m.name, "sv"), m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
-        return fuzzyMatch(query, hay);
+        return true;
       });
-      out.sort((a, b) => {
-        const au = a.updatedAt ? Date.parse(a.updatedAt) : 0, bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
-        if (sortBy === "updated_desc") return bu - au;
-        if (sortBy === "year_desc") return (Number(b.year) || 0) - (Number(a.year) || 0);
-        if (sortBy === "year_asc") return (Number(a.year) || 0) - (Number(b.year) || 0);
-        if (sortBy === "value_desc") return (Number(b.estValueHigh ?? b.estValueLow) || 0) - (Number(a.estValueHigh ?? a.estValueLow) || 0);
-        return normalizeText(a.name).localeCompare(normalizeText(b.name));
-      });
+      if (query.trim()) {
+        const rank = new Map(mugSearch(query).map((m, i) => [m.id, i]));
+        out = out.filter((m) => rank.has(m.id)).sort((a, b) => rank.get(a.id) - rank.get(b.id));
+      } else {
+        out.sort((a, b) => {
+          const au = a.updatedAt ? Date.parse(a.updatedAt) : 0, bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+          if (sortBy === "updated_desc") return bu - au;
+          if (sortBy === "year_desc") return (Number(b.year) || 0) - (Number(a.year) || 0);
+          if (sortBy === "year_asc") return (Number(a.year) || 0) - (Number(b.year) || 0);
+          if (sortBy === "value_desc") return (Number(b.estValueHigh ?? b.estValueLow) || 0) - (Number(a.estValueHigh ?? a.estValueLow) || 0);
+          return normalizeText(a.name).localeCompare(normalizeText(b.name));
+        });
+      }
       return out;
     };
     return { collection: build("collection"), wishlist: build("wishlist") };
-  }, [mugs, query, statusFilter, favoriteOnly, sortBy]);
+  }, [mugs, query, statusFilter, favoriteOnly, sortBy, mugSearch]);
 
   // Owned/sold mugs (the collection); wishlist has its own tab.
   const collectionCount = useMemo(() => mugs.filter((m) => m.status !== "wishlist").length, [mugs]);
