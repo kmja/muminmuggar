@@ -79,9 +79,10 @@ export function parseTraderaResponse(xml: string): Listing[] {
       // A Buy-It-Now price is the true asking price; otherwise use the current
       // highest bid, then the next minimum bid.
       const price = toNum(e.BuyItNowPrice) ?? toNum(e.MaxBid) ?? toNum(e.NextBid);
-      const url =
+      const url = (
         text(e.ItemUrl) ||
-        (id ? `https://www.tradera.com/item/${id}` : "https://www.tradera.com");
+        (id ? `https://www.tradera.com/item/${id}` : "https://www.tradera.com")
+      ).replace(/^http:\/\//i, "https://"); // Tradera returns http:// item links
       const thumb = text(e.ThumbnailLink) || null;
       return {
         source: "Tradera",
