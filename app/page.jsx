@@ -210,7 +210,7 @@ function LangPicker({ lang, setLang }) {
   return (
     <div className="langpick" ref={ref}>
       <button type="button" className="ghost icon" aria-label={t("language")} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <span style={{ fontSize: 19, lineHeight: 1 }}>{cur.flag}</span>
+        <span className="t-h3" style={{ lineHeight: 1 }}>{cur.flag}</span>
       </button>
       {open ? (
         <div className="langmenu" role="listbox">
@@ -218,7 +218,7 @@ function LangPicker({ lang, setLang }) {
             <button key={l.code} type="button" role="option" aria-selected={l.code === lang}
               className={"langitem" + (l.code === lang ? " active" : "")}
               onClick={() => { setLang(l.code); setOpen(false); }}>
-              <span style={{ fontSize: 18 }}>{l.flag}</span><span>{l.label}</span>
+              <span className="t-h3">{l.flag}</span><span>{l.label}</span>
             </button>
           ))}
         </div>
@@ -268,7 +268,7 @@ function AccountMenu({ user, signedIn, theme, setTheme, lang, setLang }) {
           <div className="menudiv" />
           {LANGS.map((l) => (
             <button key={l.code} type="button" role="menuitem" className={"langitem" + (l.code === lang ? " active" : "")} onClick={() => { setLang(l.code); }}>
-              <span style={{ fontSize: 18 }}>{l.flag}</span><span>{l.label}</span>
+              <span className="t-h3">{l.flag}</span><span>{l.label}</span>
             </button>
           ))}
           {signedIn ? (<>
@@ -609,7 +609,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
               <div className="scanrow" key={e.nameEn} style={{ alignItems: "center" }}>
                 <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
+                  <div className="mugname t-label">{catName(e.nameEn, lang)}</div>
                   <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${catSek(e.estLow)}–${catSek(e.estHigh)} kr` : null)].filter(Boolean).join(" · ")}</div>
                 </div>
                 {isAdded
@@ -776,7 +776,7 @@ function GapFinder({ open, onClose, mugs, onAddWishlist }) {
             <div className="scanrow" key={i} style={{ opacity: e.owned ? 0.55 : 1, alignItems: "center" }}>
               <div className="scanthumb">{e.image ? <img src={e.image} alt="" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="mugname" style={{ fontSize: 14 }}>{catName(e.nameEn, lang)}</div>
+                <div className="mugname t-label">{catName(e.nameEn, lang)}</div>
                 <div className="mini">{[e.years, e.capacity, (e.estLow != null ? `≈ ${e.estLow}–${e.estHigh} ${e.estCur}` : null)].filter(Boolean).join(" · ")}</div>
               </div>
               {e.owned ? <Badge kind="owned">{t("gap_in_collection")}</Badge>
@@ -883,13 +883,10 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   const dealCount = m.listings?.length || 0;
   const img = displayImg(m);
   return (
-    <div className="card mug">
+    <div className="card mug" role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
       <div className="mugphoto">
         {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
-        <div className="abschip">
-          <Badge kind={m.status}>{t("status_" + m.status)}</Badge>
-          {m.favorite ? <Badge kind="fav"><Star size={12} fill="currentColor" /></Badge> : null}
-        </div>
+        <button type="button" className={"favfab" + (m.favorite ? " on" : "")} aria-label={t("card_fav")} title={t("card_fav")} onClick={(e) => { e.stopPropagation(); onFav(m); }}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>
       </div>
       <div className="mugbody">
         <div className="mugname" title={displayName}>{displayName || t("card_untitled")}</div>
@@ -904,9 +901,8 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
         {m.tags?.length ? <div className="badges">{m.tags.slice(0, 6).map((t) => <span key={t} className="chip"><Tag size={11} />{t}</span>)}</div> : null}
         {m.conditionNotes ? <div className="mini lineclamp">{m.conditionNotes}</div> : null}
         {m.notes ? <div className="mini lineclamp">{m.notes}</div> : null}
-        <div className="mugfoot">
-          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}><PackageSearch size={15} /> {t("card_deals")}</button> : <button onClick={() => onFav(m)}><Star size={15} fill={m.favorite ? "currentColor" : "none"} /> {t("card_fav")}</button>}
-          <button onClick={() => onEdit(m)}><Pencil size={15} /> {t("card_edit")}</button>
+        <div className="mugfoot" onClick={(e) => e.stopPropagation()}>
+          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}><PackageSearch size={15} /> {t("card_deals")}</button> : null}
           <button className="danger" onClick={() => onDelete(m)}><Trash2 size={15} /> {t("card_delete")}</button>
         </div>
       </div>
@@ -926,7 +922,7 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
   const meta = [m.year, val ? "≈ " + val : null].filter(Boolean).join(" · ");
   const img = displayImg(m);
   return (
-    <div className="mugrow">
+    <div className="mugrow" role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
       <div className="mugrow-thumb">
         {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
         {m.favorite ? <span className="mugrow-fav"><Star size={11} fill="currentColor" /></span> : null}
@@ -935,11 +931,10 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
         <div className="mugrow-name" title={displayName}>{displayName || t("card_untitled")}</div>
         {meta ? <div className="mini">{meta}</div> : null}
       </div>
-      <div className="mugrow-actions">
+      <div className="mugrow-actions" onClick={(e) => e.stopPropagation()}>
         {m.status === "wishlist"
           ? <button className="ghost icon" title={t("card_deals")} aria-label={t("card_deals")} onClick={() => onDeals(m)}><PackageSearch size={17} /></button>
           : <button className="ghost icon" title={t("card_fav")} aria-label={t("card_fav")} onClick={() => onFav(m)}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>}
-        <button className="ghost icon" title={t("card_edit")} aria-label={t("card_edit")} onClick={() => onEdit(m)}><Pencil size={17} /></button>
         <button className="ghost icon danger" title={t("card_delete")} aria-label={t("card_delete")} onClick={() => onDelete(m)}><Trash2 size={17} /></button>
       </div>
     </div>
@@ -1123,48 +1118,61 @@ export default function App() {
     } catch (e) { setNotifState("error"); setNotifMsg(e.message || String(e)); }
   };
 
-  const viewMugs = useMemo(() => {
-    const q = normalizeText(query);
-    let out = mugs.filter((m) => {
-      if (tab === "wishlist") { if (m.status !== "wishlist") return false; }
-      else {
-        // The collection tab is owned/sold only — wishlist has its own tab.
-        if (m.status === "wishlist") return false;
-        if (statusFilter !== "all" && m.status !== statusFilter) return false;
-      }
-      if (favoriteOnly && !m.favorite) return false;
-      if (!q) return true;
-      const hay = [m.name, catName(m.name, "sv"), m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
-      return fuzzyMatch(query, hay);
-    });
-    out.sort((a, b) => {
-      const au = a.updatedAt ? Date.parse(a.updatedAt) : 0, bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
-      if (sortBy === "updated_desc") return bu - au;
-      if (sortBy === "year_desc") return (Number(b.year) || 0) - (Number(a.year) || 0);
-      if (sortBy === "year_asc") return (Number(a.year) || 0) - (Number(b.year) || 0);
-      if (sortBy === "value_desc") return (Number(b.estValueHigh ?? b.estValueLow) || 0) - (Number(a.estValueHigh ?? a.estValueLow) || 0);
-      return normalizeText(a.name).localeCompare(normalizeText(b.name));
-    });
-    return out;
-  }, [mugs, query, statusFilter, favoriteOnly, sortBy, tab]);
+  const panels = useMemo(() => {
+    const build = (k) => {
+      const q = normalizeText(query);
+      let out = mugs.filter((m) => {
+        if (k === "wishlist") { if (m.status !== "wishlist") return false; }
+        else {
+          // The collection tab is owned/sold only — wishlist has its own tab.
+          if (m.status === "wishlist") return false;
+          if (statusFilter !== "all" && m.status !== statusFilter) return false;
+        }
+        if (favoriteOnly && !m.favorite) return false;
+        if (!q) return true;
+        const hay = [m.name, catName(m.name, "sv"), m.series, m.edition, m.condition, m.conditionNotes, m.location, m.notes, ...(m.tags || []), m.year].filter((x) => x != null).join(" ");
+        return fuzzyMatch(query, hay);
+      });
+      out.sort((a, b) => {
+        const au = a.updatedAt ? Date.parse(a.updatedAt) : 0, bu = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+        if (sortBy === "updated_desc") return bu - au;
+        if (sortBy === "year_desc") return (Number(b.year) || 0) - (Number(a.year) || 0);
+        if (sortBy === "year_asc") return (Number(a.year) || 0) - (Number(b.year) || 0);
+        if (sortBy === "value_desc") return (Number(b.estValueHigh ?? b.estValueLow) || 0) - (Number(a.estValueHigh ?? a.estValueLow) || 0);
+        return normalizeText(a.name).localeCompare(normalizeText(b.name));
+      });
+      return out;
+    };
+    return { collection: build("collection"), wishlist: build("wishlist") };
+  }, [mugs, query, statusFilter, favoriteOnly, sortBy]);
 
   // Owned/sold mugs (the collection); wishlist has its own tab.
   const collectionCount = useMemo(() => mugs.filter((m) => m.status !== "wishlist").length, [mugs]);
-  const tabHasItems = tab === "wishlist" ? mugs.some((m) => m.status === "wishlist") : collectionCount > 0;
 
-  // Swipe left/right to move between the top-level tabs (touch devices). We track
-  // the moving finger and settle on touchend *or* touchcancel — mobile browsers
-  // often fire touchcancel once they claim the gesture, so relying on touchend
-  // alone silently misses swipes.
+  // Drag/swipe between the top-level tabs: the page follows the finger and snaps
+  // to the next/previous tab on release.
   const TAB_ORDER = ["collection", "wishlist", "stats"];
   const swipe = useRef(null);
-  const onTouchStart = (e) => { const t = e.changedTouches[0]; swipe.current = { x: t.clientX, y: t.clientY, lx: t.clientX, ly: t.clientY }; };
-  const onTouchMove = (e) => { const s = swipe.current; if (!s) return; const t = e.changedTouches[0]; s.lx = t.clientX; s.ly = t.clientY; };
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const onTouchStart = (e) => { const t = e.changedTouches[0]; swipe.current = { x: t.clientX, y: t.clientY, horizontal: null }; };
+  const onTouchMove = (e) => {
+    const s = swipe.current; if (!s) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s.x, dy = t.clientY - s.y;
+    if (s.horizontal == null) s.horizontal = Math.abs(dx) > Math.abs(dy) + 4;
+    if (!s.horizontal) return;
+    const i = TAB_ORDER.indexOf(tab);
+    const d = ((i <= 0 && dx > 0) || (i >= TAB_ORDER.length - 1 && dx < 0)) ? dx * 0.35 : dx;
+    setDragging(true); setDragX(d);
+  };
   const onTouchEnd = () => {
     const s = swipe.current; swipe.current = null;
-    if (!s) return;
-    const dx = s.lx - s.x, dy = s.ly - s.y;
-    if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy)) return;  // clear, mostly-horizontal swipe
+    if (!s || !s.horizontal) { setDragX(0); setDragging(false); return; }
+    const dx = dragX;
+    setDragX(0); setDragging(false);
+    const w = typeof window !== "undefined" ? window.innerWidth : 360;
+    if (Math.abs(dx) < w * 0.2) return;  // too small — snap back
     const i = TAB_ORDER.indexOf(tab);
     if (i < 0) return;
     const next = dx < 0 ? Math.min(i + 1, TAB_ORDER.length - 1) : Math.max(i - 1, 0);
@@ -1225,119 +1233,121 @@ export default function App() {
           desktop and in the bottom nav on mobile. */}
       <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tb.k === "stats" ? "hide-mobile " : "") + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
 
-      <div className="tabpanel" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
-      {tab !== "stats" ? (
-        <>
-          {tab === "collection" && collectionCount > 0 ? (
-            <div className="card pad" style={{ marginBottom: 12 }}>
-              <div className="row" style={{ gap: 28 }}>
-                <div><div className="kpilabel">{t("kpi_owned")}</div><div className="summary-val">{collectionCount}</div></div>
-                <div><div className="kpilabel">{t("stats_est_value")}</div><div className="summary-val">{formatMoney(stats.value, stats.valueCur)}</div></div>
-              </div>
-            </div>
-          ) : null}
-          {tabHasItems ? (
-          <div className="card pad" style={{ marginBottom: 12 }}>
-            <div className="row" style={{ alignItems: "center" }}>
-              <div className="field searchfield" style={{ flex: 1 }}>
-                <Search size={17} className="searchicon" aria-hidden="true" />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
-              </div>
-              <div className="viewtoggle" role="group" aria-label={t("view_mode")}>
-                <button type="button" className={"ghost icon" + (viewMode === "table" ? " active" : "")} onClick={() => setViewMode("table")} aria-pressed={viewMode === "table"} aria-label={t("view_table")} title={t("view_table")}><Rows3 size={18} /></button>
-                <button type="button" className={"ghost icon" + (viewMode === "grid" ? " active" : "")} onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"} aria-label={t("view_grid")} title={t("view_grid")}><LayoutGrid size={18} /></button>
-              </div>
-              <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}>
-                <SlidersHorizontal size={18} />
-              </button>
-            </div>
-            {filtersOpen ? (
-              <div className="row" style={{ marginTop: 12 }}>
-                {tab === "collection" ? (
-                  <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
-                ) : null}
-                <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
-                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                    <option value="updated_desc">{t("sort_updated")}</option>
-                    <option value="year_desc">{t("sort_year_desc")}</option>
-                    <option value="year_asc">{t("sort_year_asc")}</option>
-                    <option value="value_desc">{t("sort_value_desc")}</option>
-                    <option value="name">{t("sort_name")}</option>
-                  </select>
+      <div className="pager" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
+        <div className="track" style={{ transform: `translateX(calc(${-TAB_ORDER.indexOf(tab) * (100 / TAB_ORDER.length)}% + ${dragX}px))`, transition: dragging ? "none" : "transform .28s cubic-bezier(.2,.8,.2,1)" }}>
+          {TAB_ORDER.map((k) => (
+            <section className="panel" key={k} aria-hidden={tab !== k}>
+              {k === "stats" ? (
+                <div className="panel-scroll">
+                  <div className="kpi">
+                    <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue">{stats.owned}</div></div>
+                    <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue">{stats.wishlist}</div></div>
+                    <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue">{stats.favorites}</div></div>
+                    <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue">{stats.sold}</div></div>
+                  </div>
+                  <div className="grid" style={{ gap: 12, marginTop: 12 }}>
+                    <div className="row" style={{ gap: 12 }}>
+                      <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
+                      <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
+                    </div>
+                    <div className="card pad">
+                      <div style={{ fontWeight: 500 }}>{t("stats_by_year")}</div><div className="divider" />
+                      {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r) => (
+                        <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%` }} /></div><span className="pill">{r.count}</span></div>
+                      ))}</div> : <div className="muted">{t("stats_by_year_empty")}</div>}
+                    </div>
+                    <div className="card pad">
+                      <div style={{ fontWeight: 500 }}>{t("stats_top_chars")}</div><div className="divider" />
+                      {stats.topChars.length ? <div className="list">{stats.topChars.map((tc) => <div key={tc.name} className="listrow"><div>{tc.name}</div><span className="pill">{tc.count}</span></div>)}</div> : <div className="muted">{t("stats_top_chars_empty")}</div>}
+                    </div>
+                  </div>
                 </div>
-                <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
-              </div>
-            ) : null}
-          </div>
-          ) : null}
-
-          {loading ? (
-            <div className="card pad"><span className="spin" /> {t("loading")}</div>
-          ) : tab === "wishlist" && viewMugs.length === 0 ? (
-            <div className="card pad" style={{ textAlign: "center" }}>
-              <div className="emptyicon"><Heart size={34} /></div>
-              <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("wishlist_empty_title")}</div>
-              <div className="sub" style={{ marginTop: 6 }}>{t("wishlist_empty_sub")}</div>
-              <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
-              </div>
-            </div>
-          ) : tab === "collection" && collectionCount === 0 ? (
-            <div className="card pad" style={{ textAlign: "center" }}>
-              <div className="emptyicon"><Camera size={34} /></div>
-              <div style={{ fontWeight: 400, fontSize: 20, marginTop: 8 }}>{t("empty_title")}</div>
-              <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
-              <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                <button className="primary" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
-              </div>
-            </div>
-          ) : viewMugs.length === 0 ? (
-            <div className="card pad"><div className="muted">{t("no_match")}</div></div>
-          ) : (
-            <>
-              {viewMode === "grid"
-                ? <div className="muggrid">{viewMugs.map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
-                : <div className="muglist">{viewMugs.map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>}
-              {tab === "wishlist" ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
-            </>
-          )}
-
-          {tab === "wishlist" ? <div className="help" style={{ marginTop: 12 }}>{t("wishlist_tip")}</div> : null}
-        </>
-      ) : (
-        <>
-          <div className="kpi">
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue">{stats.owned}</div></div>
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue">{stats.wishlist}</div></div>
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue">{stats.favorites}</div></div>
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue">{stats.sold}</div></div>
-          </div>
-          <div className="grid" style={{ gap: 12, marginTop: 12 }}>
-            <div className="row" style={{ gap: 12 }}>
-              <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div style={{ fontSize: 26, fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
-              <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div style={{ fontSize: 26, fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
-            </div>
-            <div className="card pad">
-              <div style={{ fontWeight: 500 }}>{t("stats_by_year")}</div><div className="divider" />
-              {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r) => (
-                <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%` }} /></div><span className="pill">{r.count}</span></div>
-              ))}</div> : <div className="muted">{t("stats_by_year_empty")}</div>}
-            </div>
-            <div className="card pad">
-              <div style={{ fontWeight: 500 }}>{t("stats_top_chars")}</div><div className="divider" />
-              {stats.topChars.length ? <div className="list">{stats.topChars.map((tc) => <div key={tc.name} className="listrow"><div>{tc.name}</div><span className="pill">{tc.count}</span></div>)}</div> : <div className="muted">{t("stats_top_chars_empty")}</div>}
-            </div>
-          </div>
-        </>
-      )}
+              ) : (
+                <>
+                  {k === "collection" && collectionCount > 0 ? (
+                    <div className="card pad" style={{ marginBottom: 12 }}>
+                      <div className="row" style={{ gap: 28 }}>
+                        <div><div className="kpilabel">{t("kpi_owned")}</div><div className="summary-val">{collectionCount}</div></div>
+                        <div><div className="kpilabel">{t("stats_est_value")}</div><div className="summary-val">{formatMoney(stats.value, stats.valueCur)}</div></div>
+                      </div>
+                    </div>
+                  ) : null}
+                  {(k === "wishlist" ? mugs.some((m) => m.status === "wishlist") : collectionCount > 0) ? (
+                    <div className="card pad" style={{ marginBottom: 12 }}>
+                      <div className="row" style={{ alignItems: "center" }}>
+                        <div className="field searchfield" style={{ flex: 1 }}>
+                          <Search size={17} className="searchicon" aria-hidden="true" />
+                          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search_ph")} aria-label={t("search")} />
+                        </div>
+                        <div className="viewtoggle" role="group" aria-label={t("view_mode")}>
+                          <button type="button" className={"ghost icon" + (viewMode === "table" ? " active" : "")} onClick={() => setViewMode("table")} aria-pressed={viewMode === "table"} aria-label={t("view_table")} title={t("view_table")}><Rows3 size={18} /></button>
+                          <button type="button" className={"ghost icon" + (viewMode === "grid" ? " active" : "")} onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"} aria-label={t("view_grid")} title={t("view_grid")}><LayoutGrid size={18} /></button>
+                        </div>
+                        <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}><SlidersHorizontal size={18} /></button>
+                      </div>
+                      {filtersOpen ? (
+                        <div className="row" style={{ marginTop: 12 }}>
+                          {k === "collection" ? (
+                            <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+                          ) : null}
+                          <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
+                            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                              <option value="updated_desc">{t("sort_updated")}</option>
+                              <option value="year_desc">{t("sort_year_desc")}</option>
+                              <option value="year_asc">{t("sort_year_asc")}</option>
+                              <option value="value_desc">{t("sort_value_desc")}</option>
+                              <option value="name">{t("sort_name")}</option>
+                            </select>
+                          </div>
+                          <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="panel-scroll">
+                    {loading ? (
+                      <div className="card pad"><span className="spin" /> {t("loading")}</div>
+                    ) : k === "wishlist" && panels.wishlist.length === 0 ? (
+                      <div className="card pad" style={{ textAlign: "center" }}>
+                        <div className="emptyicon"><Heart size={34} /></div>
+                        <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("wishlist_empty_title")}</div>
+                        <div className="sub" style={{ marginTop: 6 }}>{t("wishlist_empty_sub")}</div>
+                        <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
+                          <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
+                        </div>
+                      </div>
+                    ) : k === "collection" && collectionCount === 0 ? (
+                      <div className="card pad" style={{ textAlign: "center" }}>
+                        <div className="emptyicon"><Camera size={34} /></div>
+                        <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("empty_title")}</div>
+                        <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
+                        <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
+                          <button className="primary" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
+                        </div>
+                      </div>
+                    ) : panels[k].length === 0 ? (
+                      <div className="card pad"><div className="muted">{t("no_match")}</div></div>
+                    ) : (
+                      viewMode === "grid"
+                        ? <div className="muggrid">{panels[k].map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+                        : <div className="muglist">{panels[k].map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+                    )}
+                    {k === "wishlist" ? <div className="help" style={{ marginTop: 12 }}>{t("wishlist_tip")}</div> : null}
+                    {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
+                  </div>
+                </>
+              )}
+            </section>
+          ))}
+        </div>
       </div>
 
       <nav className="bottomnav">
         <svg className="navwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,40 L0,40 Z" /></svg>
         <div className="navrow">
-          <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><BarChart3 size={20} /><span>{t("nav_stats")}</span></button>
-          <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="bn-addic"><Plus size={22} /></span><span>{t("nav_add")}</span></button>
-          <button className="bn" onClick={() => setAboutOpen(true)}><Bell size={20} /><span>{t("nav_alerts")}</span></button>
+          <button className={"bn " + (tab === "stats" ? "active" : "")} onClick={() => setTab("stats")}><BarChart3 size={22} /><span>{t("nav_stats")}</span></button>
+          <button className="bn bn-add" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")}><span className="bn-addic"><Plus size={26} /></span><span>{t("nav_add")}</span></button>
+          <button className="bn" onClick={() => setAboutOpen(true)}><Bell size={22} /><span>{t("nav_alerts")}</span></button>
         </div>
       </nav>
 
