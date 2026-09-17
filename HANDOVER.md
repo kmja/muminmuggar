@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.52.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.53.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -132,7 +132,8 @@ public/
   `npm run build:embeddings` after editing `lib/master-catalog.json` or
   `scripts/lib/augment.mjs`.
 - **Motion (`lib/motion.js` + the "Motion" section in `globals.css`):** every
-  control dips + ripples on press (`useRipple`, delegated `pointerdown`); list
+  control dips fast (scale .92 + inset shadow) and springs back with a bounce,
+  plus a ripple on press (`useRipple`, delegated `pointerdown`); list
   items FLIP when the set/order changes (`useFlip`, WAAPI); a deleted mug fades
   out via a fixed clone (`animateGhost`) while the rest glide up; the favourite
   star pops + emits a ring; the tab underline and the AddConfirm status thumb
@@ -236,6 +237,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.53.0** — Clearer button press: fast dip to scale(.92), springy
+  bounce-back, inset pressed shadow, stronger ripple.
 - **2026-09-17 · v1.52.1** — Add-menu items are now large Material 3 pill
   buttons (lavender, ~FAB-sized, staggered); FAB darkens + rotates to ×.
 - **2026-09-17 · v1.52.0** — Add flow starts from a Material-style FAB context

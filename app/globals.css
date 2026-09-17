@@ -216,7 +216,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .addmenu-item{display:inline-flex; align-items:center; gap:14px; min-height:56px; width:auto;
   padding:0 26px 0 22px; border:none; border-radius:999px; background:var(--fabitem); color:var(--fabitem-ink);
   font-size:var(--fs-h3); font-weight:400; letter-spacing:.01em; text-align:left;
-  box-shadow:0 6px 18px rgba(27,20,35,.16); transition:background var(--dur-fast), transform var(--dur-fast) var(--ease-out)}
+  box-shadow:0 6px 18px rgba(27,20,35,.16); transition:background var(--dur-fast), transform .4s var(--ease-spring), box-shadow var(--dur) var(--ease-out)}
 .addmenu-item:hover{background:color-mix(in srgb, var(--fabitem-ink) 10%, var(--fabitem))}
 .addmenu-item svg{color:currentColor; flex:none}
 .addmenu[data-state="open"] .addmenu-surface{animation:menuin .18s var(--ease-out)}
@@ -390,17 +390,31 @@ body{overflow:hidden}
   *,*::before,*::after{animation-duration:.001ms !important; animation-delay:0ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important}
 }
 
-/* Press feedback — every control dips, then springs back. */
+/* Press feedback — every control dips quickly, then springs back with a bounce. */
 button,.btn,.mug,.mugrow,.matchcard,.pickitem,.dealrow,.listrow,.brand,.tabbtn{position:relative}
 button,.btn,.mug,.mugrow,.matchcard,.pickitem,.dealrow,.listrow,.brand,.tabbtn{overflow:hidden}
-button,.btn{transition:border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast) var(--ease-out)}
-button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.965)}
-.mug,.mugrow,.matchcard,.pickitem,.dealrow{transition:transform var(--dur) var(--ease-out), border-color var(--dur-fast), background var(--dur-fast)}
-.mug:active,.mugrow:active,.matchcard:active,.pickitem:active,.dealrow:active{transform:scale(.99)}
+button,.btn{
+  transition:border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast),
+             box-shadow var(--dur) var(--ease-out), transform .4s var(--ease-spring)}
+button:not(:disabled):active,.btn:not(:disabled):active{
+  transform:scale(.92);
+  box-shadow:inset 0 2px 6px rgba(27,20,35,.16);
+  transition-duration:70ms;
+  transition-timing-function:ease-out}
+.tabbtn:not(:disabled):active{transform:scale(.98)}
+.mug,.mugrow,.matchcard,.pickitem,.dealrow{
+  transition:transform .4s var(--ease-spring), border-color var(--dur-fast), background var(--dur-fast)}
+.mug:active,.mugrow:active,.matchcard:active,.pickitem:active,.dealrow:active{
+  transform:scale(.975);
+  transition-duration:70ms;
+  transition-timing-function:ease-out}
+/* Filled controls depress harder; the FAB keeps a (tighter) drop shadow. */
+.primary:not(:disabled):active{box-shadow:inset 0 3px 8px rgba(0,0,0,.3)}
+.fab:not(:disabled):active{box-shadow:0 3px 10px rgba(107,78,140,.45)}
 
 /* Ripple injected by useRipple(). */
-.ripple{position:absolute; border-radius:999px; pointer-events:none; background:currentColor; opacity:.28; transform:scale(0); animation:ripple var(--dur-slow) var(--ease-out) forwards}
-@keyframes ripple{to{transform:scale(1); opacity:0}}
+.ripple{position:absolute; border-radius:999px; pointer-events:none; background:currentColor; opacity:.32; transform:scale(0); animation:ripple .5s var(--ease-out) forwards}
+@keyframes ripple{0%{transform:scale(0); opacity:.32}55%{opacity:.2}100%{transform:scale(1); opacity:0}}
 
 /* Favourite: the star pops, the button emits a golden ring. */
 .favfab svg{transition:transform var(--dur) var(--ease-spring)}
