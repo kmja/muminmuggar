@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.54.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.55.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -57,6 +57,7 @@ app/
     tradera                # diagnostics: live Tradera search
     match-feedback, label-images, labels, finetune, model
     import/mukify          # paste-import a Mukify export (bookmarklet)
+    import/mukify-shared   # import by public Mukify username (no login)
     health, claim, auth/[...nextauth]
 lib/
   db.ts               # schema (auto-migrates) + rowToMug
@@ -75,6 +76,7 @@ lib/
   master-catalog.json # 201 catalogue entries (source of truth for mugs)
   mug-details.json    # collector attributes per mug (from Mukify; see §6)
   mukify-import.ts    # map a Mukify collection export → mugs (see §6)
+  mukify-shared.ts    # import by public Mukify username (public shared API)
   probe-base.json     # synthetic normal equations for on-device fine-tuning
   version.js
 scripts/
@@ -185,6 +187,13 @@ public/
   `database-prod.mukify.com/graphiql/` with `credentials:"include"` (CORS only
   allows `https://www.mukify.com`). `type: 1` = collection, `type: 2` = favorites
   — **verify this split on the first real export**.
+- **Simpler path — by username** (`ImportDialog` → "Med användarnamn",
+  `POST /api/import/mukify-shared`, `lib/mukify-shared.ts`): Mukify's
+  `sharedCollectionItem(publicUsername, collectionType:"1"|"2")` is **public**
+  (no auth). The shared node has no name/serial, so we build a **UUID→serial
+  index** from Mukify's public catalogue (cached 1 h) and match on `item.uuid`.
+  Requires the user to share the collection/wishlist on Mukify (may be paid);
+  no price/date/notes come through this route.
 
 ---
 
@@ -210,10 +219,10 @@ public/
   `206 Moomin Norway`, `207 Moomin's Day Blue`.
 - [ ] **Surface collector details** (stamps/stickers/characters/colours/special)
   in the UI (edit dialog), **without** a Mukify link.
-- [ ] **Mukify migration:** bookmarklet + paste import is built (see §6). Verify
-  the owned/wishlist split (`collectionItem(type:1|2)`) and the
-  `serial_number`/name matching against a real export; add a "already imported"
-  dry-run preview if useful.
+- [ ] **Mukify migration:** both paths built (see §6) — **verify with a real
+  account**: (a) does the user's Mukify plan allow sharing (username path), and
+  (b) is `type:1` owned / `type:2` wishlist. Add an "already imported" dry-run
+  preview if useful.
 - [ ] **Production env:** add Tradera + VAPID keys in Vercel and redeploy; verify
   `/api/health`, enable notifications, send a test push.
 - [ ] Consider showing the "etikett" flag on list rows too; further deal-row
@@ -256,6 +265,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.55.0** — Mukify import by public **username** (uses Mukify's
+  public shared-collection API; no bookmarklet/login) — the default mode in the
+  import dialog; the bookmarklet stays as a fallback.
 - **2026-09-17 · v1.54.1** — Import dialog: "Copy code" path + mobile/PWA steps
   (no bookmarks bar to drag onto).
 - **2026-09-17 · v1.54.0** — Mukify migration: draggable bookmarklet (runs in the

@@ -361,6 +361,12 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   letter-spacing:.02em; text-decoration:none; cursor:grab; font-weight:400; transition:background var(--dur-fast)}
 .bookmarklet:hover{background:color-mix(in srgb, var(--accent) 10%, transparent)}
 .bookmarklet:active{cursor:grabbing}
+/* Simple segmented tabs inside a dialog (import mode). */
+.segtabs{display:flex; gap:8px; border-bottom:1px solid var(--border)}
+.segtabs button{flex:1; justify-content:center; border:none; border-radius:0; background:transparent; color:var(--muted);
+  padding:10px 4px; border-bottom:2px solid transparent; font-size:var(--fs-ui)}
+.segtabs button:hover{background:transparent; color:var(--ink)}
+.segtabs button.active{color:var(--accent); border-bottom-color:var(--accent); font-weight:500}
 
 /* Collection summary strip */
 .summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}

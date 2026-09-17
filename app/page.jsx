@@ -901,13 +901,15 @@ const MUKIFY_CODE = `(async()=>{const E="https://database-prod.mukify.com/graphi
 
 function ImportDialog({ open, onClose, onImported }) {
   const t = useT();
+  const [mode, setMode] = useState("user"); // user | bookmark
+  const [username, setUsername] = useState("");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [copied, setCopied] = useState(false);
   const [touch, setTouch] = useState(false); // coarse pointer → no bookmarks bar
-  useEffect(() => { if (open) { setText(""); setBusy(false); setMsg(""); setErr(""); setCopied(false); } }, [open]);
+  useEffect(() => { if (open) { setMode("user"); setUsername(""); setText(""); setBusy(false); setMsg(""); setErr(""); setCopied(false); } }, [open]);
   useEffect(() => { try { setTouch(window.matchMedia("(pointer: coarse)").matches); } catch { /* ignore */ } }, []);
 
   const copyCode = async () => {
@@ -917,49 +919,74 @@ function ImportDialog({ open, onClose, onImported }) {
   };
 
   const run = async () => {
-    setErr(""); setMsg("");
-    let payload;
-    try { payload = JSON.parse(text); } catch { setErr(t("import_bad_json")); return; }
-    const items = Array.isArray(payload) ? payload : payload?.items;
-    if (!Array.isArray(items) || !items.length) { setErr(t("import_empty")); return; }
-    setBusy(true);
+    setErr(""); setMsg(""); setBusy(true);
     try {
-      const r = await api("/api/import/mukify", { method: "POST", body: JSON.stringify({ items, currency: payload?.currency }) });
-      setMsg(t("import_done", { created: r.created, skipped: r.skipped, unmatched: r.unmatched }));
-      setText("");
+      if (mode === "user") {
+        const r = await api("/api/import/mukify-shared", { method: "POST", body: JSON.stringify({ username: username.trim(), types: ["1", "2"] }) });
+        if (!r.shared && !r.created && !r.skipped) setErr(t("import_shared_off"));
+        else setMsg(t("import_done", { created: r.created, skipped: r.skipped, unmatched: r.unmatched }));
+      } else {
+        let payload;
+        try { payload = JSON.parse(text); } catch { setErr(t("import_bad_json")); return; }
+        const items = Array.isArray(payload) ? payload : payload?.items;
+        if (!Array.isArray(items) || !items.length) { setErr(t("import_empty")); return; }
+        const r = await api("/api/import/mukify", { method: "POST", body: JSON.stringify({ items, currency: payload?.currency }) });
+        setMsg(t("import_done", { created: r.created, skipped: r.skipped, unmatched: r.unmatched }));
+        setText("");
+      }
       onImported?.();
     } catch (e) { setErr(t("import_failed", { msg: e.message || e })); }
     finally { setBusy(false); }
   };
 
+  const canRun = mode === "user" ? !!username.trim() : !!text.trim();
   const footer = (
     <div className="formactions">
       <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
-      <button className="primary big" disabled={busy || !text.trim()} onClick={run}>{busy ? <span className="spin" /> : t("import_btn")}</button>
+      <button className="primary big" disabled={busy || !canRun} onClick={run}>{busy ? <span className="spin" /> : t("import_btn")}</button>
     </div>
   );
 
   return (
     <Modal open={open} onClose={onClose} title={t("import_title")} subtitle={t("import_sub")} footer={footer}>
       <div className="grid" style={{ gap: 14 }}>
-        <div className="note">{t("import_help")}</div>
-        <div className="row" style={{ gap: 10, alignItems: "center" }}>
-          <button type="button" className="primary" onClick={copyCode}>
-            {copied ? <CheckCircle2 size={16} /> : <ClipboardCopy size={16} />} {copied ? t("import_copied") : t("import_copy")}
-          </button>
-          {!touch ? (
-            <a className="bookmarklet" href={"javascript:" + encodeURIComponent(MUKIFY_CODE)} draggable="true" onClick={(e) => e.preventDefault()} title={t("import_drag_hint")}>
-              <Download size={16} /> {t("import_bookmarklet")}
-            </a>
-          ) : null}
+        <div className="segtabs">
+          <button type="button" className={mode === "user" ? "active" : ""} onClick={() => setMode("user")}>{t("import_mode_user")}</button>
+          <button type="button" className={mode === "bookmark" ? "active" : ""} onClick={() => setMode("bookmark")}>{t("import_mode_bookmark")}</button>
         </div>
-        <div className="help" style={{ whiteSpace: "pre-line" }}>{touch ? t("import_steps_mobile") : t("import_steps_desktop")}</div>
-        <div className="field">
-          <label>{t("import_paste")}</label>
-          <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
-            placeholder='{"source":"mukify","items":[...]}'
-            style={{ minHeight: 120, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "var(--fs-caption)" }} />
-        </div>
+
+        {mode === "user" ? (
+          <>
+            <div className="field">
+              <label>{t("import_username")}</label>
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="mukify-namn"
+                autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+            </div>
+            <div className="help">{t("import_username_hint")}</div>
+          </>
+        ) : (
+          <>
+            <div className="note">{t("import_help")}</div>
+            <div className="row" style={{ gap: 10, alignItems: "center" }}>
+              <button type="button" className="primary" onClick={copyCode}>
+                {copied ? <CheckCircle2 size={16} /> : <ClipboardCopy size={16} />} {copied ? t("import_copied") : t("import_copy")}
+              </button>
+              {!touch ? (
+                <a className="bookmarklet" href={"javascript:" + encodeURIComponent(MUKIFY_CODE)} draggable="true" onClick={(e) => e.preventDefault()} title={t("import_drag_hint")}>
+                  <Download size={16} /> {t("import_bookmarklet")}
+                </a>
+              ) : null}
+            </div>
+            <div className="help" style={{ whiteSpace: "pre-line" }}>{touch ? t("import_steps_mobile") : t("import_steps_desktop")}</div>
+            <div className="field">
+              <label>{t("import_paste")}</label>
+              <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
+                placeholder='{"source":"mukify","items":[...]}'
+                style={{ minHeight: 120, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "var(--fs-caption)" }} />
+            </div>
+          </>
+        )}
+
         {msg ? <div className="note good">{msg}</div> : null}
         {err ? <div className="err">{err}</div> : null}
       </div>
