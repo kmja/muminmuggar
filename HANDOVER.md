@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.59.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.60.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -124,9 +124,11 @@ public/
   shared by the FAB menu and the empty state.
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
   gold when active (matching the grid card). The row's **name uses `h3`**.
-- **`/type` (dev tool):** a noindex playground showing each major component with
-  mock data; sliders tune the 9 scale steps and a per-component class picker.
-  "Copy spec" yields a text spec the user can send to request type changes.
+- **`/type` (dev tool):** a noindex playground. Sliders tune the 9 type steps
+  **and 5 icon sizes**; a class picker per atom; and live **composites** (list
+  view, grid view, search + filters, add dialog, edit dialog, add menu, empty
+  state, deal row, stats) that follow the atom picks. "Copy spec" yields a text
+  spec the user can send to request type/icon changes.
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
   Editable: condition, acquired date, **etikett**, price/currency, favourite,
   photo, notes. Wishlist mugs get a one-tap **"Jag har köpt den"** (acquire)
@@ -291,6 +293,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.60.0** — `/type` tool: added composed components (list, grid,
+  search+filters, add/edit dialogs, add menu, empty state, deal row, stats) that
+  follow the atom picks, plus an icon-size panel (5 tokens).
 - **2026-09-17 · v1.59.0** — Reverted the scale to the old values (keeping
   `--fs-body` = 1rem); `.mugrow-name` now uses `h3`. Added the **`/type`** scale
   playground (scale sliders + per-component class picker + copyable spec).
