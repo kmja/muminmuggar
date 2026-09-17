@@ -257,25 +257,6 @@ function Tabs({ tabs, value, onChange }) {
     </div>
   );
 }
-// Two-option segmented control with a thumb that glides behind the selection.
-function SegRadio({ value, onChange, options, ariaLabel }) {
-  const ref = useRef(null);
-  const [ind, setInd] = useState(null);
-  const sig = options.map((o) => o.value).join("|");
-  const measure = () => {
-    const el = ref.current?.querySelector("button.active");
-    if (el) setInd({ left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
-  };
-  useIsoLayoutEffect(measure, [value, sig]);
-  return (
-    <div className="segradio" ref={ref} role="radiogroup" aria-label={ariaLabel}>
-      {ind ? <span className="segthumb" aria-hidden="true" style={{ transform: `translate(${ind.left}px, ${ind.top}px)`, width: ind.width, height: ind.height }} /> : null}
-      {options.map((o) => (
-        <button key={o.value} type="button" role="radio" aria-checked={value === o.value} className={value === o.value ? "active" : ""} onClick={() => onChange(o.value)}>{o.label}</button>
-      ))}
-    </div>
-  );
-}
 function MugMark({ size = 26 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -562,18 +543,12 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
         </div>
         {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
 
-        <div className="field"><label>{t("form_status")}</label>
-          <SegRadio value={status} onChange={(v) => up({ status: v })} ariaLabel={t("form_status")}
-            options={[{ value: "owned", label: t("tab_collection") }, { value: "wishlist", label: t("nav_wishlist") }]} />
-        </div>
-
         <div className="row">
           <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} /></div>
           <div className="field"><label>{t("form_currency")}</label><select value={d.currency || "SEK"} onChange={(e) => up({ currency: e.target.value })}>{[...new Set([...CURRENCIES, d.currency].filter(Boolean))].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
         </div>
         <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
         <div className="switch"><span className="mini">{t("form_has_tag")}</span><input type="checkbox" checked={!!d.hasTag} onChange={(e) => up({ hasTag: e.target.checked })} style={{ width: "auto" }} /></div>
-        <div className="help">{t("add_confirm_optional")}</div>
       </div>
     </Modal>
   );

@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.47.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.48.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -95,11 +95,12 @@ public/
   only), `Stats`, `Notifications`, account/language menu. On phones the add
   button is a fixed **FAB bottom-right**; there is no bottom nav.
 - **Add flow:** from the add drawer (catalogue search `+`/`♥`) or photo
-  identification → an **AddConfirmModal** collects optional status (owned /
-  wishlist), purchase price + currency, condition and **"Etikett kvar"**, then
-  saves. The drawer **stays open** behind the raised confirm dialog so several
-  mugs can be added in a row (photo matches reset to the start screen). The
-  shelf-scan batch flow still closes the drawer when done.
+  identification → an **AddConfirmModal** collects purchase price + currency,
+  condition and **"Etikett kvar"**, then saves. Status (owned/wishlist) is fixed
+  by the button tapped (`+` vs `♥`), so the dialog has no status selector. The
+  drawer **stays open** behind the raised confirm dialog so several mugs can be
+  added in a row (photo matches reset to the start screen). The shelf-scan batch
+  flow still closes the drawer when done.
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
   Editable: condition, acquired date, **etikett**, price/currency, favourite,
   photo, notes. Wishlist mugs get a one-tap **"Jag har köpt den"** (acquire)
@@ -221,6 +222,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.48.0** — Add-confirm dialog: removed the owned/wishlist
+  selector and the "optional" copy; `.switch` rows now match input styling; all
+  `<select>`s use a bigger, bolder themed chevron.
 - **2026-09-17 · v1.47.0** — Add drawer now stays open behind the confirm dialog
   (add several mugs in a row); fixed the drawer close animation that slid from
   the top-left instead of straight down (transform leak from `.modal`).

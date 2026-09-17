@@ -3,6 +3,8 @@
   --ink:#1b1b1b; --border:#e7e2ee; --accent:#6b4e8c; --accent-ink:#553a73; --lilac:#efe9f6;
   --accent2:#a06a9a; --gold:#b8862f; --danger:#b3453b; --foot:#f4f0e8;
   --shadow: 0 1px 2px rgba(27,27,27,.05); --radius: 6px;
+  /* Custom select chevron (data URI so it can be themed via this variable). */
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236a6472' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   /* Type scale — all text sizes derive from these (rem). Scale the whole UI by
      changing html{font-size}. */
   --fs-h1:1.75rem; --fs-h2:1.25rem; --fs-h3:1.125rem; --fs-body:1.0625rem; --fs-ui:0.9375rem;
@@ -15,6 +17,7 @@
     --ink:#f3eef8; --border:#33293f; --accent:#b79ad6; --accent-ink:#c8b1e3; --lilac:#271e33;
     --accent2:#cd9bc6; --gold:#dcb45a; --danger:#e07a6e; --foot:#1f1826;
     --shadow: 0 1px 3px rgba(0,0,0,.4);
+    --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a89fb4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   }
 }
 /* …and an explicit dark choice wins even on a light system. */
@@ -23,6 +26,7 @@
   --ink:#f3eef8; --border:#33293f; --accent:#b79ad6; --accent-ink:#c8b1e3; --lilac:#271e33;
   --accent2:#cd9bc6; --gold:#dcb45a; --danger:#e07a6e; --foot:#1f1826;
   --shadow: 0 1px 3px rgba(0,0,0,.4);
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a89fb4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 *{box-sizing:border-box}
 /* "Not signed in" note */
@@ -100,6 +104,11 @@ button:disabled{opacity:.4; cursor:not-allowed}
 label{font-size:var(--fs-secondary); color: var(--muted); letter-spacing:.02em}
 input, textarea, select{width:100%; padding:12px 14px; border-radius: 6px; border:1px solid var(--border); background: var(--bg); color: var(--text); font-size:var(--fs-ui); outline:none; font-family:inherit}
 input:focus, textarea:focus, select:focus{border-color: var(--accent)}
+/* Replace the tiny native dropdown arrow with a larger, bolder chevron that
+   lines up with the field's left padding. */
+select{appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  background-image:var(--chev); background-repeat:no-repeat; background-position:right 14px center;
+  background-size:20px 20px; padding-right:44px}
 textarea{min-height:84px; resize:vertical}
 input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted) 90%, transparent)}
 .searchfield{position:relative}
@@ -253,7 +262,9 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 @keyframes sp{to{transform:rotate(360deg)}}
 .conf{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-caption)}
 .conf b{color:var(--text)}
-.switch{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:8px}
+/* Toggle row — styled to sit level with the inputs/selects around it. */
+.switch{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:6px;font-size:var(--fs-ui)}
+.switch>span{font-size:var(--fs-ui); color:var(--text)}
 .link{color:var(--accent);text-decoration:none;word-break:break-word}
 .emptyicon{color:var(--accent); display:flex; align-items:center; justify-content:center}
 
@@ -262,12 +273,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .mugpicker input.invalid{border-color:var(--danger)}
 /* The manual-add form leads with a large catalogue picker. */
 .bigpick .mugpicker input{font-size:var(--fs-body); padding:15px 16px; height:auto}
-/* Collection / Wishlist as a two-option segmented radio. */
-.segradio{display:flex; gap:8px}
-.segradio button{flex:1; justify-content:center; padding:13px 14px; border-radius:10px; border:1.5px solid var(--border);
-  background:transparent; color:var(--muted); font-size:var(--fs-ui)}
-.segradio button:hover{background:transparent; border-color:var(--muted)}
-.segradio button.active{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500}
 /* Catalogue product shot: show the whole mug, modestly sized. */
 .formphoto{display:flex; justify-content:center; align-items:center; background:transparent; border-radius:10px; padding:12px}
 .formphoto img{max-height:160px; max-width:100%; object-fit:contain; display:block}
@@ -396,14 +401,6 @@ button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.965)}
 .tabind{position:absolute; left:0; bottom:0; height:2px; border-radius:2px; background:var(--accent); pointer-events:none;
   transition:transform .3s var(--ease-out), width .3s var(--ease-out)}
 .tabbtn.active,.tabbtn.active:hover{border-bottom-color:transparent}
-
-/* Segmented radio: a thumb glides behind the selected option. */
-.segradio{position:relative}
-.segthumb{position:absolute; left:0; top:0; border-radius:10px; background:var(--accent); pointer-events:none; z-index:0;
-  transition:transform .28s var(--ease-out), width .28s var(--ease-out), height .28s var(--ease-out)}
-.segradio button{position:relative; z-index:1}
-.segradio button.active{background:transparent; border-color:transparent; color:#fff; font-weight:500}
-.segradio button.active:hover{background:transparent; border-color:transparent}
 
 /* Dialogs fade/scale in and out (Radix Presence waits for these). */
 .overlay[data-state="open"]{animation:fadein var(--dur) var(--ease-out)}
