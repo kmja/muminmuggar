@@ -9,8 +9,8 @@
   --fabitem:#e7d8f8; --fabitem-ink:#4a2f6b;
   /* Type scale — all text sizes derive from these (rem). Scale the whole UI by
      changing html{font-size}. */
-  --fs-h1:1.75rem; --fs-h2:1.25rem; --fs-h3:1.125rem; --fs-body:1.0625rem; --fs-ui:0.9375rem;
-  --fs-label:0.875rem; --fs-secondary:0.8125rem; --fs-caption:0.75rem; --fs-tiny:0.6875rem;
+  --fs-h1:2.5rem; --fs-h2:1.75rem; --fs-h3:1.25rem; --fs-body:1rem; --fs-ui:0.975rem;
+  --fs-label:0.95rem; --fs-secondary:0.925rem; --fs-caption:0.9rem; --fs-tiny:0.875rem;
 }
 /* Dark palette: follows the system when no explicit choice is made… */
 @media (prefers-color-scheme: dark){
@@ -81,6 +81,7 @@ a{color:var(--accent-ink)}
 .brand{display:flex;align-items:center;gap:13px;min-width:0; flex:1; cursor:pointer; border-radius:10px}
 .brand:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 .title{display:flex;flex-direction:column;gap:0;min-width:0}
+.title h1{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 h1{font-size:var(--fs-h1); margin:0; letter-spacing:.005em; font-weight:300; line-height:1.02}
 .ver{display:block; font-size:var(--fs-tiny); color:var(--muted); font-weight:400; letter-spacing:.06em; margin-top:1px}
 .sub{color:var(--muted); font-size:var(--fs-secondary)}

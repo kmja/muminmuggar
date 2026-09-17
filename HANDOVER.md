@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.57.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.58.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -265,6 +265,9 @@ public/
   history entry; closing programmatically calls `history.back()` with a
   `suppressPops` counter so our own traversal doesn't close the dialog below it.
   Dialogs are stacked so only the top-most responds.
+- Type scale: 9 rem-based steps in `app/globals.css` (`--fs-tiny` .875 →
+  `--fs-h1` 2.5, `--fs-body` = 1rem) with matching `.t-*` utilities. Scale the
+  whole UI by changing `html{font-size}`; never hard-code font sizes.
 - i18n: add keys to **both** `sv` and `en` in `lib/i18n.js`.
 - Secrets never in git; `.env.local` is ignored.
 
@@ -283,6 +286,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.58.0** — Rescaled the type scale: `--fs-tiny` .875 →
+  `--fs-h1` 2.5rem, `--fs-body` = 1rem (16px base unchanged).
 - **2026-09-17 · v1.57.0** — Reworked the empty collection state: mug-shelf
   illustration + three purple actions (Take photo / Choose photo / Search).
 - **2026-09-17 · v1.56.0** — Added the **Chrome/Edge extension** (`extension/`):
