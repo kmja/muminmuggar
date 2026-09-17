@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.58.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.59.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -46,6 +46,7 @@ app/
   globals.css         # all styling (fixed shell, header wave, dialogs, deal rows…)
   providers.tsx       # next-auth SessionProvider + theme
   label/page.jsx      # on-site labelling tool
+  type/page.jsx       # type-scale playground (dev tool, noindex)
   api/
     mugs/…            # CRUD (+ [id] PATCH/DELETE)
     identify, shelf-scan   # Gemini vision
@@ -122,7 +123,10 @@ public/
   camera/file inputs live in `App` (`camRef`/`fileRef`, `pickPhoto`) and are
   shared by the FAB menu and the empty state.
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
-  gold when active (matching the grid card).
+  gold when active (matching the grid card). The row's **name uses `h3`**.
+- **`/type` (dev tool):** a noindex playground showing each major component with
+  mock data; sliders tune the 9 scale steps and a per-component class picker.
+  "Copy spec" yields a text spec the user can send to request type changes.
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
   Editable: condition, acquired date, **etikett**, price/currency, favourite,
   photo, notes. Wishlist mugs get a one-tap **"Jag har köpt den"** (acquire)
@@ -265,9 +269,10 @@ public/
   history entry; closing programmatically calls `history.back()` with a
   `suppressPops` counter so our own traversal doesn't close the dialog below it.
   Dialogs are stacked so only the top-most responds.
-- Type scale: 9 rem-based steps in `app/globals.css` (`--fs-tiny` .875 →
-  `--fs-h1` 2.5, `--fs-body` = 1rem) with matching `.t-*` utilities. Scale the
-  whole UI by changing `html{font-size}`; never hard-code font sizes.
+- Type scale: 9 rem-based steps in `app/globals.css` (`--fs-tiny` .6875 →
+  `--fs-h1` 1.75, `--fs-body` = **1rem**) with matching `.t-*` utilities. Scale
+  the whole UI by changing `html{font-size}`; never hard-code font sizes. Use
+  `/type` to experiment (see §4).
 - i18n: add keys to **both** `sv` and `en` in `lib/i18n.js`.
 - Secrets never in git; `.env.local` is ignored.
 
@@ -286,6 +291,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.59.0** — Reverted the scale to the old values (keeping
+  `--fs-body` = 1rem); `.mugrow-name` now uses `h3`. Added the **`/type`** scale
+  playground (scale sliders + per-component class picker + copyable spec).
 - **2026-09-17 · v1.58.0** — Rescaled the type scale: `--fs-tiny` .875 →
   `--fs-h1` 2.5rem, `--fs-body` = 1rem (16px base unchanged).
 - **2026-09-17 · v1.57.0** — Reworked the empty collection state: mug-shelf

@@ -9,8 +9,8 @@
   --fabitem:#e7d8f8; --fabitem-ink:#4a2f6b;
   /* Type scale — all text sizes derive from these (rem). Scale the whole UI by
      changing html{font-size}. */
-  --fs-h1:2.5rem; --fs-h2:1.75rem; --fs-h3:1.25rem; --fs-body:1rem; --fs-ui:0.975rem;
-  --fs-label:0.95rem; --fs-secondary:0.925rem; --fs-caption:0.9rem; --fs-tiny:0.875rem;
+  --fs-h1:1.75rem; --fs-h2:1.25rem; --fs-h3:1.125rem; --fs-body:1rem; --fs-ui:0.9375rem;
+  --fs-label:0.875rem; --fs-secondary:0.8125rem; --fs-caption:0.75rem; --fs-tiny:0.6875rem;
 }
 /* Dark palette: follows the system when no explicit choice is made… */
 @media (prefers-color-scheme: dark){
@@ -142,7 +142,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .mugrow-thumb{position:relative; width:78px; height:78px; flex:none; border-radius:10px; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 .mugrow-thumb img{width:100%; height:100%; object-fit:contain; padding:5px; display:block}
 .mugrow-main{flex:1; min-width:0}
-.mugrow-name{font-weight:400; font-size:var(--fs-body); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.mugrow-name{font-weight:400; font-size:var(--fs-h3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .mugrow-actions{display:flex; gap:6px; flex:none}
 .mugrow-actions .icon{width:38px; height:38px; padding:8px}
 /* Marketplace deal row — mirrors the compact mug row, as a whole-row link. */

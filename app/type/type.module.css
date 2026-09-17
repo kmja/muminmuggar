@@ -1,0 +1,27 @@
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 18px 90px; }
+.head { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; }
+.title { font-size: var(--fs-h1); font-weight: 300; margin: 0; }
+.sub { color: var(--muted); font-size: var(--fs-secondary); margin: 6px 0 0; max-width: 62ch; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.scalePanel { border: 1px solid var(--border); border-radius: 10px; background: var(--card); padding: 14px 16px; margin-bottom: 16px; }
+.scaleTitle { font-size: var(--fs-label); font-weight: 500; margin-bottom: 10px; }
+.scaleGrid { display: grid; gap: 8px 22px; grid-template-columns: 1fr; }
+@media (min-width: 620px) { .scaleGrid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .scaleGrid { grid-template-columns: 1fr 1fr 1fr; } }
+.scaleRow { display: flex; align-items: center; gap: 10px; }
+.scaleName { width: 72px; font-size: var(--fs-secondary); color: var(--muted); }
+.scaleRow input[type="range"] { flex: 1; }
+.scaleVal { width: 56px; text-align: right; font-size: var(--fs-tiny); }
+.grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+.spec { border: 1px solid var(--border); border-radius: 10px; background: var(--card); overflow: hidden; }
+.specHead { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.specLabel { font-size: var(--fs-label); font-weight: 500; }
+.specCss { font-size: var(--fs-tiny); color: var(--muted); }
+.specControls { display: flex; gap: 8px; align-items: center; }
+.select { width: auto; padding: 6px 8px; font-size: var(--fs-secondary); }
+.val { font-size: var(--fs-tiny); color: var(--muted); min-width: 64px; text-align: right; }
+.custom { display: flex; gap: 8px; align-items: center; }
+.custom input[type="range"] { width: 110px; }
+.custom b { font-size: var(--fs-tiny); min-width: 56px; text-align: right; }
+.preview { padding: 16px 14px; display: flex; align-items: center; gap: 10px; min-height: 66px; flex-wrap: wrap; }
