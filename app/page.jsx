@@ -17,7 +17,7 @@ import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
-  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User, Download,
+  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User, Download, ClipboardCopy,
 } from "lucide-react";
 
 /* ------------------------------- i18n --------------------------------- */
@@ -905,7 +905,16 @@ function ImportDialog({ open, onClose, onImported }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
-  useEffect(() => { if (open) { setText(""); setBusy(false); setMsg(""); setErr(""); } }, [open]);
+  const [copied, setCopied] = useState(false);
+  const [touch, setTouch] = useState(false); // coarse pointer → no bookmarks bar
+  useEffect(() => { if (open) { setText(""); setBusy(false); setMsg(""); setErr(""); setCopied(false); } }, [open]);
+  useEffect(() => { try { setTouch(window.matchMedia("(pointer: coarse)").matches); } catch { /* ignore */ } }, []);
+
+  const copyCode = async () => {
+    const code = "javascript:" + MUKIFY_CODE;
+    try { await navigator.clipboard.writeText(code); setCopied(true); window.setTimeout(() => setCopied(false), 2500); }
+    catch { window.prompt(t("import_copy"), code); }
+  };
 
   const run = async () => {
     setErr(""); setMsg("");
@@ -934,12 +943,17 @@ function ImportDialog({ open, onClose, onImported }) {
     <Modal open={open} onClose={onClose} title={t("import_title")} subtitle={t("import_sub")} footer={footer}>
       <div className="grid" style={{ gap: 14 }}>
         <div className="note">{t("import_help")}</div>
-        <div className="row" style={{ gap: 12, alignItems: "center" }}>
-          <a className="bookmarklet" href={"javascript:" + encodeURIComponent(MUKIFY_CODE)} draggable="true" onClick={(e) => e.preventDefault()} title={t("import_drag_hint")}>
-            <Download size={16} /> {t("import_bookmarklet")}
-          </a>
-          <span className="help">{t("import_drag_hint")}</span>
+        <div className="row" style={{ gap: 10, alignItems: "center" }}>
+          <button type="button" className="primary" onClick={copyCode}>
+            {copied ? <CheckCircle2 size={16} /> : <ClipboardCopy size={16} />} {copied ? t("import_copied") : t("import_copy")}
+          </button>
+          {!touch ? (
+            <a className="bookmarklet" href={"javascript:" + encodeURIComponent(MUKIFY_CODE)} draggable="true" onClick={(e) => e.preventDefault()} title={t("import_drag_hint")}>
+              <Download size={16} /> {t("import_bookmarklet")}
+            </a>
+          ) : null}
         </div>
+        <div className="help" style={{ whiteSpace: "pre-line" }}>{touch ? t("import_steps_mobile") : t("import_steps_desktop")}</div>
         <div className="field">
           <label>{t("import_paste")}</label>
           <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}

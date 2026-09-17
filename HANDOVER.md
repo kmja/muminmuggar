@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.54.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.54.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -172,10 +172,11 @@ public/
 
 ### Collection migration from Mukify
 
-- Account menu → **"Importera från Mukify"** opens `ImportDialog`: a draggable
-  **bookmarklet** + a paste box. The user runs the bookmarklet **on mukify.com**
-  (their session never leaves their browser), it copies a JSON export to the
-  clipboard, and they paste it in.
+- Account menu → **"Importera från Mukify"** opens `ImportDialog`: a **bookmarklet**
+  (draggable on desktop; on touch/PWA a **"Copy code"** button plus steps to paste
+  it into a bookmark, since there's no bookmarks bar) + a paste box. The user runs
+  the bookmarklet **on mukify.com** (their session never leaves their browser), it
+  copies a JSON export to the clipboard, and they paste it in.
 - `POST /api/import/mukify` (`lib/mukify-import.ts`) matches each item to our
   catalogue by **serial number** (fallback: name), creates owned/wishlist mugs,
   skips ones already present (folded name), and maps `boughtPrice`/`boughtDate`/
@@ -255,6 +256,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.54.1** — Import dialog: "Copy code" path + mobile/PWA steps
+  (no bookmarks bar to drag onto).
 - **2026-09-17 · v1.54.0** — Mukify migration: draggable bookmarklet (runs in the
   user's Mukify session) + paste-import dialog + `POST /api/import/mukify`
   (`lib/mukify-import.ts`). No Mukify credentials touch our servers.
