@@ -179,7 +179,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .divider{height:1px;background:var(--border);margin:9px 0}
 .lineclamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .overlay{position:fixed;inset:0;background:rgba(27,20,35,.5);z-index:50; backdrop-filter: blur(2px)}
-/* "Raised" dialogs sit above the add-mug drawer (z-index 60). */
+/* "Raised" dialogs sit above the add-mug dialog. */
 .overlay.raised{z-index:70}
 .modal.raised{z-index:71}
 .modal{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:51; outline:none;
@@ -331,17 +331,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   padding:17px 18px 36px; color:var(--muted); font-size:var(--fs-label); letter-spacing:.02em}
 .footmark{color:var(--accent); display:inline-flex}
 
-/* Bottom-sheet drawer (vaul) for the add-mug dialog. */
-.drawer-overlay{position:fixed; inset:0; background:rgba(27,20,35,.5); backdrop-filter:blur(2px); z-index:50}
-/* The drawer is bottom-anchored, so it must not inherit the centred modal's
-   translate(-50%,-50%) — otherwise vaul's slide-down starts from that offset.
-   Pin its own transform for every state; vaul's keyframes animate on top. */
-.modal.drawer{left:0; right:0; top:auto; bottom:0; width:100%; max-width:760px; margin:0 auto; border-radius:20px 20px 0 0; max-height:92vh; border-bottom:none; z-index:60; transform:translate3d(0,0,0)}
-/* Search screen: a tall sheet so the input sits at the top, above the keyboard.
-   dvh adapts to the mobile URL bar; with interactive-widget:overlays-content the
-   keyboard draws over the sheet instead of resizing it. */
-.modal.drawer.drawer-tall{height:90dvh; max-height:90dvh}
-.drawer-handle{width:44px; height:5px; border-radius:999px; background:var(--border); margin:10px auto 2px}
 /* Collection summary strip */
 .summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}
 
@@ -402,7 +391,7 @@ button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.965)}
 .addbtn.popping{animation:heartpop .42s var(--ease-spring)}
 @keyframes heartpop{0%{transform:scale(1)}30%{transform:scale(1.4)}60%{transform:scale(.88)}100%{transform:scale(1)}}
 
-/* Add-drawer stages (choose / browse / match / review) cross-fade in. */
+/* Add-dialog stages (choose / browse / match / review) cross-fade in. */
 .drawerstage{animation:stagein .3s var(--ease-out)}
 @keyframes stagein{from{opacity:0; transform:translateY(10px)}}
 
@@ -415,8 +404,8 @@ button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.965)}
 /* Dialogs fade/scale in and out (Radix Presence waits for these). */
 .overlay[data-state="open"]{animation:fadein var(--dur) var(--ease-out)}
 .overlay[data-state="closed"]{animation:fadeout var(--dur) var(--ease-out) forwards}
-.modal:not(.drawer)[data-state="open"]{animation:modalin var(--dur-slow) var(--ease-out)}
-.modal:not(.drawer)[data-state="closed"]{animation:modalout var(--dur) var(--ease-out) forwards}
+.modal[data-state="open"]{animation:modalin var(--dur-slow) var(--ease-out)}
+.modal[data-state="closed"]{animation:modalout var(--dur) var(--ease-out) forwards}
 @keyframes fadein{from{opacity:0}}
 @keyframes fadeout{to{opacity:0}}
 @keyframes modalin{from{opacity:0; transform:translate(-50%,-50%) scale(.96)}}

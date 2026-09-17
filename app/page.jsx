@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import useEmblaCarousel from "embla-carousel-react";
-import { Drawer } from "vaul";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Toaster, toast } from "sonner";
@@ -12,7 +11,7 @@ import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
 import { getDeviceId } from "../lib/device";
 import { createSearch } from "../lib/search";
-import { useRipple, useFlip, animateGhost, useCountUp, useIsoLayoutEffect } from "../lib/motion";
+import { useRipple, useFlip, animateGhost, useCountUp, useIsoLayoutEffect, useBackToClose } from "../lib/motion";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -160,6 +159,8 @@ function catalogDraft(e) {
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
 function Modal({ open, title, subtitle, children, onClose, footer, wide, raised }) {
   const t = useT();
+  // Swiping back from the screen edge closes the dialog (see useBackToClose).
+  useBackToClose(open, () => onClose?.());
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
       <Dialog.Portal>
@@ -186,6 +187,7 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide, raised 
 // Confirm-delete dialog (Radix AlertDialog).
 function DeleteDialog({ mug, onCancel, onConfirm }) {
   const t = useT();
+  useBackToClose(!!mug, onCancel);
   return (
     <AlertDialog.Root open={!!mug} onOpenChange={(o) => { if (!o) onCancel(); }}>
       <AlertDialog.Portal>
@@ -200,28 +202,6 @@ function DeleteDialog({ mug, onCancel, onConfirm }) {
         </AlertDialog.Content>
       </AlertDialog.Portal>
     </AlertDialog.Root>
-  );
-}
-// Bottom-sheet drawer (vaul) used by the add-mug dialog.
-function DrawerModal({ open, title, subtitle, children, onClose, footer, tall }) {
-  const t = useT();
-  return (
-    <Drawer.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }} repositionInputs={false}>
-      <Drawer.Portal>
-        <Drawer.Overlay className="drawer-overlay" />
-        <Drawer.Content className={"modal drawer" + (tall ? " drawer-tall" : "")} aria-describedby={undefined}>
-          <Drawer.Handle className="drawer-handle" />
-          <div className="head">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-              <div><h2>{title}</h2>{subtitle ? <div className="help" style={{ marginTop: 6 }}>{subtitle}</div> : null}</div>
-              <Drawer.Close asChild><button className="ghost icon" aria-label={t("close")}><X size={18} /></button></Drawer.Close>
-            </div>
-          </div>
-          <div className="body">{children}</div>
-          {footer ? <div className="foot">{footer}</div> : null}
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
   );
 }
 function Confidence({ v }) {
@@ -516,13 +496,14 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
   const t = useT();
   const lang = useLang();
   const [d, setD] = useState(draft);
+  const [action, setAction] = useState(""); // which action is saving (save | more)
   // Default the acquisition date to today so the common case is one tap away.
   // Layout effect so the date is filled before the first paint (no flash).
   useIsoLayoutEffect(() => { setD(draft ? { ...draft, acquiredDate: draft.acquiredDate || todayISO() } : draft); }, [draft]);
   if (!d) return null;
   const up = (patch) => setD((x) => ({ ...x, ...patch }));
   const status = d.status === "wishlist" ? "wishlist" : "owned";
-  const confirm = () => onConfirm({
+  const patch = () => ({
     status,
     acquiredDate: toISODate(d.acquiredDate),
     condition: d.condition || "Good",
@@ -531,10 +512,12 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
     hasTag: !!d.hasTag,
     notes: d.notes || "",
   });
+  const submit = (more) => { setAction(more ? "more" : "save"); onConfirm(patch(), more); };
   const footer = (
     <div className="formactions">
       <button className="linkbtn" onClick={onCancel}>{t("cancel")}</button>
-      <button className="primary big" disabled={saving} onClick={confirm}>{saving ? <span className="spin" /> : t("add_confirm_btn")}</button>
+      <button className="big" disabled={saving} onClick={() => submit(true)}>{saving && action === "more" ? <span className="spin" /> : t("add_save_more")}</button>
+      <button className="primary big" disabled={saving} onClick={() => submit(false)}>{saving && action === "save" ? <span className="spin" /> : t("save")}</button>
     </div>
   );
   return (
@@ -734,25 +717,18 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
       }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
     </>
   );
-  const browseFooter = (
+  // Every stage except the shelf-scan review has a single secondary action: close.
+  const closeFooter = (
     <div className="formactions">
-      <button className="linkbtn" onClick={() => setScreen("choose")}>{t("back")}</button>
-      {added.size ? <span className="help">{t("form_added_count", { n: added.size })}</span> : null}
-      <button className="primary big" onClick={onClose}>{t("add_done")}</button>
+      <button className="big" onClick={onClose}>{t("close")}</button>
     </div>
   );
-  const matchFooter = (
-    <div className="formactions">
-      <button className="linkbtn" onClick={() => setScreen("browse")}>{t("match_search_all")}</button>
-      <button onClick={onClose}>{t("cancel")}</button>
-    </div>
-  );
-  const footer = items.length ? reviewFooter : screen === "browse" ? browseFooter : screen === "match" ? matchFooter : null;
-  // Each stage of the drawer fades/slides in when it replaces the previous one.
+  const footer = items.length ? reviewFooter : closeFooter;
+  // Each stage of the dialog fades/slides in when it replaces the previous one.
   const stage = items.length ? "review" : busy ? "busy" : screen;
 
   return (
-    <DrawerModal open={open} onClose={onClose} title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer} tall={screen === "browse"}>
+    <Modal open={open} onClose={onClose} title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
       <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
       <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
 
@@ -869,7 +845,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
         </div>
       ) : null}
       </div>
-    </DrawerModal>
+    </Modal>
   );
 }
 
@@ -1288,11 +1264,15 @@ export default function App() {
   const [pendingAdd, setPendingAdd] = useState(null);
   const requestAdd = (draft) => new Promise((resolve) => { addResolveRef.current = resolve; setPendingAdd({ ...draft }); });
   const finishAdd = (created) => { const r = addResolveRef.current; addResolveRef.current = null; setPendingAdd(null); r?.(created || null); };
-  const confirmAdd = async (patch) => {
+  const confirmAdd = async (patch, more) => {
     const d = pendingAdd; if (!d) return;
     setSaving(true);
-    try { const mug = await quickAdd({ ...d, ...patch }); finishAdd(mug); }
-    finally { setSaving(false); }
+    try {
+      const mug = await quickAdd({ ...d, ...patch });
+      finishAdd(mug);
+      // "Save" finishes the add flow; "save and add more" leaves it open.
+      if (!more) setScanOpen(false);
+    } finally { setSaving(false); }
   };
   const del = (m) => setConfirmMug(m);
   const doDelete = async () => {

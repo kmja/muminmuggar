@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.50.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.51.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -43,7 +43,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 app/
   page.jsx            # the ENTIRE client UI (~1.5k lines). App + components.
   layout.tsx          # metadata + viewport (interactiveWidget: overlays-content)
-  globals.css         # all styling (fixed shell, header wave, drawer, deal rows…)
+  globals.css         # all styling (fixed shell, header wave, dialogs, deal rows…)
   providers.tsx       # next-auth SessionProvider + theme
   label/page.jsx      # on-site labelling tool
   api/
@@ -94,15 +94,19 @@ public/
 - **Header:** cream wavy bar. Right side: `Add` (desktop only), `Gaps` (desktop
   only), `Stats`, `Notifications`, account/language menu. On phones the add
   button is a fixed **FAB bottom-right**; there is no bottom nav.
-- **Add flow:** from the add drawer (catalogue search `+`/`♥`) or photo
-  identification. **`♥` (wishlist) skips the dialog** — the heart pops and a
-  toast confirms. **`+` (owned)** opens the **AddConfirmModal** — grouped into
-  **Förvärv** (acquisition date, defaulted to today; paid + currency) and
-  **Egenskaper** (condition, **"Etikett kvar"**, notes) — before saving. The
-  drawer **stays open** behind
-  the raised confirm so several mugs can be added in a row (photo matches reset
-  to the start screen); each stage (choose/browse/match/review) cross-fades in.
-  The shelf-scan batch flow still closes the drawer when done.
+- **Add flow:** a centred **dialog** (was a vaul bottom sheet; `vaul` removed) —
+  photo capture/upload or catalogue search (`+`/`♥`). **`♥` (wishlist) skips the
+  confirm** — the heart pops and a toast confirms. **`+` (owned)** opens the
+  raised **AddConfirmModal** — grouped into **Förvärv** (acquisition date,
+  defaulted to today; paid + currency) and **Egenskaper** (condition,
+  **"Etikett kvar"**, notes) — with **Save** (primary, closes the add dialog),
+  **Save and add more** (secondary, keeps it open) and **Cancel** (tertiary).
+  The add dialog's own action is a single secondary **Close**; each stage
+  (choose/browse/match/review) cross-fades in. The shelf-scan batch review keeps
+  its Rescan / Add actions.
+- **Back gesture:** swiping in from the screen edge (or the Android back button)
+  closes the top-most open dialog; with none open it falls through to the browser
+  default. Implemented by `useBackToClose` (sentinel history entries).
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
   gold when active (matching the grid card).
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
@@ -202,12 +206,12 @@ public/
 - Tradera SOAP v3 `SearchService.Search` returns a **repeated `Items`** element
   (not `Items.SearchResultEntry`). Auth = `AuthenticationHeader` (AppId/AppKey).
   `orderBy=Relevance` is weak; we rank ourselves. Sandbox is retired.
-- `interactiveWidget: "overlays-content"` in `app/layout.tsx` + vaul
-  `repositionInputs={false}` + `90dvh` drawer = keyboard overlays instead of
-  resizing/pushing the add sheet.
-- The vaul drawer must carry its **own** `transform` (`.modal.drawer`); the base
-  `.modal` `translate(-50%,-50%)` otherwise leaks into the closed state and
-  vaul's slide-down starts from that offset (the old top-left glitch).
+- `interactiveWidget: "overlays-content"` in `app/layout.tsx` keeps the on-screen
+  keyboard overlaying content rather than resizing the page.
+- Back-gesture handling (`useBackToClose`): each open dialog pushes one sentinel
+  history entry; closing programmatically calls `history.back()` with a
+  `suppressPops` counter so our own traversal doesn't close the dialog below it.
+  Dialogs are stacked so only the top-most responds.
 - i18n: add keys to **both** `sv` and `en` in `lib/i18n.js`.
 - Secrets never in git; `.env.local` is ignored.
 
@@ -226,6 +230,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.51.0** — Add flow is now a centred dialog (vaul removed) with
+  a single secondary Close action; add-confirm has Save / Save and add more /
+  Cancel; back gesture closes the top dialog.
 - **2026-09-17 · v1.50.0** — Add-confirm dialog split into "Förvärv"
   (acquisition date defaulted to today + payment) and "Egenskaper" (condition,
   etikett, notes) sections; notes + acquisition date now captured on add.
