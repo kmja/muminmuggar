@@ -901,21 +901,36 @@ const MUKIFY_CODE = `(async()=>{const E="https://database-prod.mukify.com/graphi
 
 function ImportDialog({ open, onClose, onImported }) {
   const t = useT();
-  const [mode, setMode] = useState("user"); // user | bookmark
+  const [mode, setMode] = useState("user"); // user | bookmark | extension
   const [username, setUsername] = useState("");
   const [text, setText] = useState("");
+  const [extToken, setExtToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [copied, setCopied] = useState(false);
   const [touch, setTouch] = useState(false); // coarse pointer → no bookmarks bar
-  useEffect(() => { if (open) { setMode("user"); setUsername(""); setText(""); setBusy(false); setMsg(""); setErr(""); setCopied(false); } }, [open]);
+  // Default to the extension on desktop, the bookmarklet on touch (no toolbar).
+  useEffect(() => { if (open) { setMode(touch ? "bookmark" : "extension"); setUsername(""); setText(""); setExtToken(""); setBusy(false); setMsg(""); setErr(""); setCopied(false); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { try { setTouch(window.matchMedia("(pointer: coarse)").matches); } catch { /* ignore */ } }, []);
+  // Mint a connection token for the browser extension on demand.
+  useEffect(() => {
+    if (!open || mode !== "extension" || extToken) return;
+    let alive = true;
+    api("/api/import/token", { method: "POST" })
+      .then((r) => { if (alive) setExtToken(r.token); })
+      .catch((e) => { if (alive) setErr(t("import_failed", { msg: e.message || e })); });
+    return () => { alive = false; };
+  }, [open, mode, extToken]);
 
   const copyCode = async () => {
     const code = "javascript:" + MUKIFY_CODE;
     try { await navigator.clipboard.writeText(code); setCopied(true); window.setTimeout(() => setCopied(false), 2500); }
     catch { window.prompt(t("import_copy"), code); }
+  };
+  const copyToken = async () => {
+    try { await navigator.clipboard.writeText(extToken); setCopied(true); window.setTimeout(() => setCopied(false), 2500); }
+    catch { window.prompt(t("import_ext_token"), extToken); }
   };
 
   const run = async () => {
@@ -944,11 +959,11 @@ function ImportDialog({ open, onClose, onImported }) {
     finally { setBusy(false); }
   };
 
-  const canRun = mode === "user" ? !!username.trim() : !!text.trim();
+  const canRun = mode === "user" ? !!username.trim() : mode === "bookmark" ? !!text.trim() : false;
   const footer = (
     <div className="formactions">
       <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
-      <button className="primary big" disabled={busy || !canRun} onClick={run}>{busy ? <span className="spin" /> : t("import_btn")}</button>
+      {mode !== "extension" ? <button className="primary big" disabled={busy || !canRun} onClick={run}>{busy ? <span className="spin" /> : t("import_btn")}</button> : null}
     </div>
   );
 
@@ -956,11 +971,31 @@ function ImportDialog({ open, onClose, onImported }) {
     <Modal open={open} onClose={onClose} title={t("import_title")} subtitle={t("import_sub")} footer={footer}>
       <div className="grid" style={{ gap: 14 }}>
         <div className="segtabs">
+          <button type="button" className={mode === "extension" ? "active" : ""} onClick={() => setMode("extension")}>{t("import_mode_extension")}</button>
           <button type="button" className={mode === "user" ? "active" : ""} onClick={() => setMode("user")}>{t("import_mode_user")}</button>
           <button type="button" className={mode === "bookmark" ? "active" : ""} onClick={() => setMode("bookmark")}>{t("import_mode_bookmark")}</button>
         </div>
 
-        {mode === "user" ? (
+        {mode === "extension" ? (
+          <>
+            <div className="note">{t("import_ext_help")}</div>
+            {extToken ? (
+              <>
+                <div className="field">
+                  <label>{t("import_ext_token")}</label>
+                  <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
+                    <input readOnly value={extToken} onFocus={(e) => e.target.select()}
+                      style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "var(--fs-caption)" }} />
+                    <button type="button" className="primary" onClick={copyToken} style={{ flex: "none" }}>
+                      {copied ? <CheckCircle2 size={16} /> : <ClipboardCopy size={16} />} {copied ? t("import_copied") : t("import_copy")}
+                    </button>
+                  </div>
+                </div>
+                <div className="help" style={{ whiteSpace: "pre-line" }}>{t("import_ext_steps")}</div>
+              </>
+            ) : <div className="help">{t("loading")}</div>}
+          </>
+        ) : mode === "user" ? (
           <>
             <div className="field">
               <label>{t("import_username")}</label>

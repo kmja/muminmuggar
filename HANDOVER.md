@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.55.2** (keep in sync with `lib/version.js`)
+- **Current version:** **1.56.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -56,8 +56,9 @@ app/
     cron/check-wishlist    # scheduled notifier
     tradera                # diagnostics: live Tradera search
     match-feedback, label-images, labels, finetune, model
-    import/mukify          # paste-import a Mukify export (bookmarklet)
+    import/mukify          # paste-import a Mukify export (bookmarklet) + extension
     import/mukify-shared   # import by public Mukify username (no login)
+    import/token           # mint a connection token for the browser extension
     health, claim, auth/[...nextauth]
 lib/
   db.ts               # schema (auto-migrates) + rowToMug
@@ -77,6 +78,8 @@ lib/
   mug-details.json    # collector attributes per mug (from Mukify; see §6)
   mukify-import.ts    # map a Mukify collection export → mugs (see §6)
   mukify-shared.ts    # import by public Mukify username (public shared API)
+  import-token.ts     # HMAC import tokens for the browser extension
+extension/            # Chrome/Edge MV3 add-on (one-click Mukify import)
   probe-base.json     # synthetic normal equations for on-device fine-tuning
   version.js
 scripts/
@@ -194,6 +197,14 @@ public/
   index** from Mukify's public catalogue (cached 1 h) and match on `item.uuid`.
   Requires the user to share the collection/wishlist on Mukify (may be paid);
   no price/date/notes come through this route.
+- **Browser extension** (`extension/`, Chrome/Edge MV3): a floating button on
+  mukify.com. The service worker fetches `collectionItem(type 1|2)` with the
+  browser's session (host permission) and POSTs to `/api/import/mukify` with a
+  token from `POST /api/import/token` (see `lib/import-token.ts`, HMAC of
+  `IMPORT_TOKEN_SECRET`/`AUTH_SECRET`, 24 h). `ownerFromImportToken` accepts it.
+  Install: `chrome://extensions` → Developer mode → Load unpacked → `extension/`.
+  `API_BASE` in `background.js` is hardcoded to the Vercel URL — update if the
+  domain changes. Desktop only (mobile browsers have no extension support).
 
 ---
 
@@ -219,10 +230,12 @@ public/
   `206 Moomin Norway`, `207 Moomin's Day Blue`.
 - [ ] **Surface collector details** (stamps/stickers/characters/colours/special)
   in the UI (edit dialog), **without** a Mukify link.
-- [ ] **Mukify migration:** both paths built (see §6) — **verify with a real
-  account**: (a) does the user's Mukify plan allow sharing (username path), and
-  (b) is `type:1` owned / `type:2` wishlist. Add an "already imported" dry-run
-  preview if useful.
+- [ ] **Mukify migration:** username + bookmarklet + Chrome extension built (see
+  §6). **Verify with a real account**: (a) does the Mukify plan allow sharing
+  (username path — free accounts can't), (b) is `type:1` owned / `type:2`
+  wishlist, (c) the extension's cookie access from the service worker. Add an
+  "already imported" dry-run preview if useful. Not yet published to the Chrome
+  Web Store.
 - [ ] **Production env:** add Tradera + VAPID keys in Vercel and redeploy; verify
   `/api/health`, enable notifications, send a test push.
 - [ ] Consider showing the "etikett" flag on list rows too; further deal-row
@@ -265,6 +278,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.56.0** — Added the **Chrome/Edge extension** (`extension/`):
+  one-click Mukify import via a floating button; `POST /api/import/token` +
+  HMAC import tokens; import dialog gained a "Browser extension" tab.
 - **2026-09-17 · v1.55.2** — Import: friendly messages for Mukify's "no public
   username"/"no such user" errors (the username path needs a public username +
   sharing; a free account without sharing must use the bookmarklet tab).

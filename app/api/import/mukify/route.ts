@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listMugs } from "@/lib/mugs";
 import { importMukify, type MukifyItem } from "@/lib/mukify-import";
-import { currentOwner, unauthorized } from "@/lib/session";
+import { currentOwner, ownerFromImportToken, unauthorized } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * and pastes the resulting JSON here — we never handle Mukify credentials.
  */
 export async function POST(req: Request) {
-  const owner = await currentOwner();
+  const owner = (await currentOwner()) || (await ownerFromImportToken(req));
   if (!owner) return unauthorized();
   try {
     const body = await req.json();

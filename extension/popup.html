@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon48.png" alt="" width="28" height="28">
+    <h1>Muminmuggar</h1>
+  </header>
+
+  <main>
+    <section id="disconnected">
+      <p>Anslut tillägget till ditt konto:</p>
+      <ol>
+        <li>Öppna Muminmuggar → <em>Importera från Mukify</em>.</li>
+        <li>Välj fliken <strong>Webbläsartillägg</strong> och kopiera koden.</li>
+        <li>Klistra in den här och spara.</li>
+      </ol>
+      <input id="token" type="text" placeholder="Anslutningskod" autocomplete="off" spellcheck="false">
+      <button id="save" class="primary">Spara</button>
+      <a id="openApp" href="https://muminmuggar.vercel.app/" target="_blank" rel="noopener">Öppna Muminmuggar</a>
+      <p id="msg" class="err"></p>
+    </section>
+
+    <section id="connected" hidden>
+      <p class="ok">Ansluten</p>
+      <p>Öppna din samling på mukify.com och klicka på knappen <strong>Importera till Muminmuggar</strong> — eller importera härifrån:</p>
+      <button id="import" class="primary">Importera nu</button>
+      <button id="disconnect">Koppla från</button>
+      <p id="result" class="muted"></p>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

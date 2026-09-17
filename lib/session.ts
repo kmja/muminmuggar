@@ -1,5 +1,6 @@
 import { auth } from "./auth";
 import { headers } from "next/headers";
+import { verifyImportToken } from "./import-token";
 
 /**
  * The caller's owner key. Signed-in users own by their (lowercased) Google email;
@@ -32,6 +33,17 @@ export function unauthorized(): Response {
     status: 401,
     headers: { "content-type": "application/json" },
   });
+}
+
+/**
+ * Owner from a browser-extension import token (`Authorization: Bearer …` or
+ * `x-import-token`), or null when absent/invalid. Used by the import routes so
+ * the extension doesn't need the app's session cookie.
+ */
+export async function ownerFromImportToken(req: Request): Promise<string | null> {
+  const authz = req.headers.get("authorization") || "";
+  const token = authz.replace(/^Bearer\s+/i, "").trim() || req.headers.get("x-import-token");
+  return verifyImportToken(token);
 }
 
 /**
