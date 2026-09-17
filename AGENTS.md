@@ -1,5 +1,10 @@
 # Agent notes
 
+> **Start every session by reading [`HANDOVER.md`](./HANDOVER.md).** It holds the
+> current version, architecture, behaviour, conventions and open threads — and it
+> must be kept up to date. After finishing work, update `HANDOVER.md` (version,
+> changed sections, open threads, recent-work log) and commit it with the change.
+
 ## Workflow
 - After completing a change, **always commit and push to `main`** — no need to ask first.
 - Commit style: a concise summary line ending with the version, e.g. `Rework the add-mug dialog (v1.14.0)`.
