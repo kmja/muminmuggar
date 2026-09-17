@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.55.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.55.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -265,6 +265,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.55.1** — Fix Mukify pagination: `first` is capped at **100**
+  (both the username import and the bookmarklet used 200).
 - **2026-09-17 · v1.55.0** — Mukify import by public **username** (uses Mukify's
   public shared-collection API; no bookmarklet/login) — the default mode in the
   import dialog; the bookmarklet stays as a fallback.

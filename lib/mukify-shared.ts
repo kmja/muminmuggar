@@ -83,7 +83,7 @@ export async function importFromMukifyUser(
   for (const type of types) {
     let offset = 0, total = Infinity;
     while (offset < total) {
-      const data = await gql(SHARED_QUERY, { u: username, t: type, first: 200, offset });
+      const data = await gql(SHARED_QUERY, { u: username, t: type, first: 100, offset });
       const conn = data.sharedCollectionItem;
       if (!conn) break;
       if (conn.shared) result.shared = true;
