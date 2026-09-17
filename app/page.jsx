@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import useEmblaCarousel from "embla-carousel-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import * as Popover from "@radix-ui/react-popover";
 import { Toaster, toast } from "sonner";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
@@ -561,12 +562,12 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
 }
 
 /* ------------------------------ AddMugModal --------------------------- */
-// One dialog for adding a mug: search the catalogue (newest shortlisted) and
-// quick-add with +, or open the camera to scan a whole shelf.
-function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
+// The add dialog: browse the catalogue (newest shortlisted) and quick-add with
+// +/♥, match a photo handed over by the add menu, or review a shelf scan.
+function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
   const t = useT();
   const lang = useLang();
-  const [screen, setScreen] = useState("choose"); // choose | browse | match
+  const [screen, setScreen] = useState("browse"); // browse | match
   const [q, setQ] = useState("");
   const [added, setAdded] = useState(() => new Map()); // nameEn -> "owned" | "wishlist"
   const [pulsing, setPulsing] = useState(""); // nameEn whose ♥ is popping (wishlist quick-add)
@@ -577,12 +578,12 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
   const [matchData, setMatchData] = useState(null); // { embedding, model, candidates } for feedback
   const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
-  const camRef = useRef(null), fileRef = useRef(null);
   const addingRef = useRef(false); // guards against double-tapping the quick-add heart
+  const photoRef = useRef("");     // last initialPhoto we've started processing
 
   // Reset on open.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose"); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse"); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]);
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
@@ -603,8 +604,8 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
       const initial = e
         ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
         : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
-      // Keep the drawer open (the confirmation sits above it) so more can be added.
-      onAddOne(initial); setScreen("choose"); return;
+      // Keep the dialog open (the confirmation sits above it) so more can be added.
+      onAddOne(initial); setScreen("browse"); return;
     }
     setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
   };
@@ -636,7 +637,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
           const [best, second] = candidates;
           if (autoMargin != null && best.logit - second.logit >= autoMargin) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
-            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose"); return; }
+            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse"); return; }
           }
           setScreen("match");
           return;
@@ -650,17 +651,20 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
     const e = MASTER_CATALOG.find((x) => x.num === m.num);
     if (!e) return;
     logMatch(m, false, matchData);
-    // Add via the raised confirmation, then return to the start screen so the
-    // drawer stays open for the next mug.
+    // Add via the raised confirmation, then return to the catalogue so the
+    // dialog stays open for the next mug.
     onAddOne(catalogDraft(e));
-    setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose");
+    setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse");
   };
-  const run = async (file) => {
-    setError("");
-    if (!file) return;
-    const raw = await fileToDataUrl(file);
-    await processImage(await downscaleImage(raw, 1400, 0.85));
-  };
+  // A photo handed over by the add menu: process it once per new photo.
+  useEffect(() => {
+    if (open && initialPhoto && photoRef.current !== initialPhoto) {
+      photoRef.current = initialPhoto;
+      processImage(initialPhoto);
+    }
+    if (!open) photoRef.current = "";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialPhoto]);
 
   // Browse list: newest catalogue mugs first, filtered to ones not already owned.
   const ownedKeys = useMemo(() => new Set(mugs.filter((m) => m.status !== "wishlist").map((m) => ownKey(m.name)).filter(Boolean)), [mugs]);
@@ -734,20 +738,8 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
   const stage = items.length ? "review" : busy ? "busy" : screen;
 
   return (
-    <Modal open={open} onClose={onClose} title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer}>
-      <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
-      <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
-
-      <div className="drawerstage" key={stage}>
-      {!items.length && !busy && screen === "choose" ? (
-        <div className="grid" style={{ gap: 10 }}>
-          <button className="primary big" style={{ justifyContent: "center", padding: "16px" }} onClick={() => camRef.current?.click()}><Camera size={20} /> {t("scan_take_photo")}</button>
-          <button className="big" style={{ justifyContent: "center", padding: "16px" }} onClick={() => fileRef.current?.click()}><ImagePlus size={20} /> {t("scan_choose_image")}</button>
-          <button className="big" style={{ justifyContent: "center", padding: "16px" }} onClick={() => setScreen("browse")}><Search size={20} /> {t("add_search_catalog")}</button>
-          <div className="help">{t("scan_tip")}</div>
-        </div>
-      ) : null}
-
+    <Modal open={open} onClose={onClose} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : undefined} footer={footer}>
+      <div className="addstage" key={stage}>
       {!items.length && !busy && screen === "browse" ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
@@ -852,6 +844,50 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuick
       ) : null}
       </div>
     </Modal>
+  );
+}
+
+/* ------------------------------- AddMenu ------------------------------ */
+// Material-style context menu that springs from the add FAB (or the header Add
+// button): photograph a mug, pick an image, or browse the catalogue.
+function AddMenu({ open, onOpenChange, anchorRef, onBrowse, onPhoto }) {
+  const t = useT();
+  const camRef = useRef(null), fileRef = useRef(null);
+  const pick = async (file) => {
+    if (!file) return;
+    const raw = await fileToDataUrl(file);
+    onPhoto(await downscaleImage(raw, 1400, 0.85));
+  };
+  // Click the input synchronously to keep the user gesture (iOS needs it), then
+  // dismiss the menu while the OS picker takes over.
+  const choose = (which) => {
+    (which === "cam" ? camRef : fileRef).current?.click();
+    onOpenChange(false);
+  };
+  const items = [
+    { key: "catalog", icon: <Search size={18} />, label: t("add_search_catalog"), onClick: () => { onOpenChange(false); onBrowse(); } },
+    { key: "image", icon: <ImagePlus size={18} />, label: t("scan_choose_image"), onClick: () => choose("file") },
+    { key: "photo", icon: <Camera size={18} />, label: t("scan_take_photo"), onClick: () => choose("cam") },
+  ];
+  return (
+    <>
+      <Popover.Root open={open} onOpenChange={onOpenChange}>
+        <Popover.Anchor virtualRef={anchorRef} />
+        <Popover.Portal>
+          <Popover.Content className="addmenu" side="top" align="end" sideOffset={12} collisionPadding={16} aria-label={t("nav_add")}>
+            <div className="addmenu-surface" role="menu">
+              {items.map((it, i) => (
+                <button key={it.key} type="button" role="menuitem" className="addmenu-item" style={{ animationDelay: `${i * 35}ms` }} onClick={it.onClick}>
+                  {it.icon}<span>{it.label}</span>
+                </button>
+              ))}
+            </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+      <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+      <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+    </>
   );
 }
 
@@ -1149,6 +1185,9 @@ export default function App() {
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const addAnchorRef = useRef(null);      // element the add menu points at
+  const [addPhoto, setAddPhoto] = useState(""); // photo handed to the add dialog
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -1315,6 +1354,11 @@ export default function App() {
 
   const openEdit = (m) => { setFormInitial({ ...m }); setFormOpen(true); };
 
+  // The add menu springs from whichever trigger was tapped (FAB or header Add).
+  const openAddMenu = (el) => { addAnchorRef.current = el; warmUp(); setAddMenuOpen(true); };
+  const startAddBrowse = () => { setAddPhoto(""); setScanOpen(true); };
+  const startAddPhoto = (dataUrl) => { setAddPhoto(dataUrl); setScanOpen(true); };
+
   const enableNotifications = async () => {
     setNotifMsg("");
     try {
@@ -1432,7 +1476,7 @@ export default function App() {
             <div className="title"><h1>{t("app_title")}</h1><span className="ver">v{APP_VERSION}</span></div>
           </div>
           <div className="actions">
-            <button className="primary hide-mobile" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
+            <button className="primary hide-mobile" onClick={(e) => openAddMenu(e.currentTarget)}><Plus size={16} /> {t("nav_add")}</button>
             <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
             <button className="ghost icon" title={t("tab_stats")} aria-label={t("tab_stats")} onClick={() => setStatsOpen(true)}><BarChart3 size={18} /></button>
             <button className="ghost icon" title={t("notif_about_aria")} aria-label={t("about_title")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
@@ -1526,7 +1570,7 @@ export default function App() {
                     <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("empty_title")}</div>
                     <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
                     <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                      <button className="primary" onClick={() => setScanOpen(true)}><Plus size={16} /> {t("nav_add")}</button>
+                      <button className="primary" onClick={(e) => openAddMenu(e.currentTarget)}><Plus size={16} /> {t("nav_add")}</button>
                     </div>
                   </div>
                 ) : panels[k].length === 0 ? (
@@ -1541,7 +1585,9 @@ export default function App() {
         </div>
       </div>
 
-      <button className="fab" onClick={() => setScanOpen(true)} aria-label={t("nav_add_aria")} title={t("nav_add")}><Plus size={28} /></button>
+      <button className={"fab" + (addMenuOpen ? " open" : "")} aria-expanded={addMenuOpen}
+        onClick={(e) => { if (addMenuOpen) setAddMenuOpen(false); else openAddMenu(e.currentTarget); }}
+        aria-label={t("nav_add_aria")} title={t("nav_add")}><Plus size={28} /></button>
 
       <footer className="sitefoot hide-mobile">
         <svg className="wave" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0,26 C180,48 360,6 720,20 C1080,34 1260,48 1440,18 L1440,48 L0,48 Z" /></svg>
@@ -1549,7 +1595,8 @@ export default function App() {
       </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving} />
-      <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
+      <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse} onPhoto={startAddPhoto} />
+      <AddMugModal open={scanOpen} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />

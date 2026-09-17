@@ -200,7 +200,24 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   z-index:40; background: var(--accent); color:#fff; border:1.5px solid var(--accent)}
 .fab:hover{background: var(--accent-ink); border-color: var(--accent-ink)}
 .fab:active{transform:translateY(1px)}
+.fab svg{transition:transform var(--dur) var(--ease-spring)}
+.fab.open svg{transform:rotate(45deg)}
 @media(min-width: 720px){ .fab{display:none} }
+
+/* Material-style add menu, sprung from the FAB (or the header Add button). */
+.addmenu{outline:none; z-index:70}
+.addmenu-surface{min-width:224px; background:var(--card); border:1px solid var(--border); border-radius:12px;
+  box-shadow:0 16px 40px rgba(27,20,35,.22); padding:6px; transform-origin:var(--radix-popover-content-transform-origin)}
+.addmenu-item{display:flex; align-items:center; gap:12px; width:100%; justify-content:flex-start; border:none;
+  background:transparent; color:var(--text); padding:12px; border-radius:8px; font-size:var(--fs-ui); text-align:left}
+.addmenu-item:hover{background:var(--lilac)}
+.addmenu-item svg{color:var(--accent); flex:none}
+.addmenu[data-state="open"] .addmenu-surface{animation:menuin .2s var(--ease-out)}
+.addmenu[data-state="closed"] .addmenu-surface{animation:menuout .13s var(--ease-out) forwards}
+.addmenu[data-state="open"] .addmenu-item{animation:menuitem .24s var(--ease-out) backwards}
+@keyframes menuin{from{opacity:0; transform:scale(.94) translateY(6px)}}
+@keyframes menuout{to{opacity:0; transform:scale(.96)}}
+@keyframes menuitem{from{opacity:0; transform:translateY(8px)}}
 
 /* responsive utilities */
 @media (max-width: 719px){
@@ -391,8 +408,8 @@ button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.965)}
 .addbtn.popping{animation:heartpop .42s var(--ease-spring)}
 @keyframes heartpop{0%{transform:scale(1)}30%{transform:scale(1.4)}60%{transform:scale(.88)}100%{transform:scale(1)}}
 
-/* Add-dialog stages (choose / browse / match / review) cross-fade in. */
-.drawerstage{animation:stagein .3s var(--ease-out)}
+/* Add-dialog stages (browse / busy / match / review) cross-fade in. */
+.addstage{animation:stagein .3s var(--ease-out)}
 @keyframes stagein{from{opacity:0; transform:translateY(10px)}}
 
 /* Tab strip: the active underline slides between tabs. */

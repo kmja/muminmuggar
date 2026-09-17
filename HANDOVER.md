@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.51.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.52.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -94,16 +94,18 @@ public/
 - **Header:** cream wavy bar. Right side: `Add` (desktop only), `Gaps` (desktop
   only), `Stats`, `Notifications`, account/language menu. On phones the add
   button is a fixed **FAB bottom-right**; there is no bottom nav.
-- **Add flow:** a centred **dialog** (was a vaul bottom sheet; `vaul` removed) —
-  photo capture/upload or catalogue search (`+`/`♥`). **`♥` (wishlist) skips the
-  confirm** — the heart pops and a toast confirms. **`+` (owned)** opens the
-  raised **AddConfirmModal** — grouped into **Förvärv** (acquisition date,
-  defaulted to today; paid + currency) and **Egenskaper** (condition,
-  **"Etikett kvar"**, notes) — with **Save** (primary, closes the add dialog),
-  **Save and add more** (secondary, keeps it open) and **Cancel** (tertiary).
-  The add dialog's own action is a single secondary **Close**; each stage
-  (choose/browse/match/review) cross-fades in. The shelf-scan batch review keeps
-  its Rescan / Add actions.
+- **Add flow:** tapping the add **FAB** (or the desktop header `Add`) opens a
+  Material-style **context menu** (`AddMenu`, Radix Popover anchored to the
+  trigger): Take photo · Choose image · Search the catalogue. A photo is
+  processed by the centred **add dialog** (`AddMugModal`); the catalogue opens
+  it on the browse stage. **`♥` (wishlist) skips the confirm** — the heart pops
+  and a toast confirms. **`+` (owned)** opens the raised **AddConfirmModal** —
+  grouped into **Förvärv** (acquisition date, defaulted to today; paid +
+  currency) and **Egenskaper** (condition, **"Etikett kvar"**, notes) — with
+  **Save** (primary, closes the add dialog), **Save and add more** (secondary,
+  keeps it open) and **Cancel** (tertiary). The add dialog's own action is a
+  single secondary **Close**; stages (browse/busy/match/review) cross-fade in.
+  The shelf-scan batch review keeps its Rescan / Add actions. (`vaul` removed.)
 - **Back gesture:** swiping in from the screen edge (or the Android back button)
   closes the top-most open dialog; with none open it falls through to the browser
   default. Implemented by `useBackToClose` (sentinel history entries).
@@ -208,6 +210,10 @@ public/
   `orderBy=Relevance` is weak; we rank ourselves. Sandbox is retired.
 - `interactiveWidget: "overlays-content"` in `app/layout.tsx` keeps the on-screen
   keyboard overlaying content rather than resizing the page.
+- The add menu (`AddMenu`) is a Radix **Popover** anchored via `virtualRef` to
+  whichever trigger was tapped (FAB or header `Add`); the file/camera inputs are
+  always mounted and clicked **synchronously** in the handler so iOS keeps the
+  user gesture.
 - Back-gesture handling (`useBackToClose`): each open dialog pushes one sentinel
   history entry; closing programmatically calls `history.back()` with a
   `suppressPops` counter so our own traversal doesn't close the dialog below it.
@@ -230,6 +236,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.52.0** — Add flow starts from a Material-style FAB context
+  menu (Radix Popover): photo / choose image / search catalogue; the in-dialog
+  "choose" stage is gone.
 - **2026-09-17 · v1.51.1** — Edit dialog's Save button stays disabled until an
   editable field actually changes.
 - **2026-09-17 · v1.51.0** — Add flow is now a centred dialog (vaul removed) with
