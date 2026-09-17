@@ -12,6 +12,7 @@ import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
 import { getDeviceId } from "../lib/device";
 import { createSearch } from "../lib/search";
+import { useRipple, useFlip, animateGhost, useCountUp, useIsoLayoutEffect } from "../lib/motion";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
@@ -227,6 +228,53 @@ function Confidence({ v }) {
   const pct = Math.round(Number(v) * 100);
   const col = pct >= 75 ? "var(--accent2)" : pct >= 45 ? "var(--gold)" : "var(--danger)";
   return <span className="conf" title={t("conf_title")}><span style={{ width: 8, height: 8, borderRadius: 99, background: col, display: "inline-block" }} /><b>{pct}%</b> {t("conf_sure")}</span>;
+}
+// Number that counts up from zero on mount (used by the stats dialog).
+function CountUp({ value, format }) {
+  const n = useCountUp(value);
+  return <>{format ? format(n) : n}</>;
+}
+// Tab strip with an active underline that slides between tabs.
+function Tabs({ tabs, value, onChange }) {
+  const ref = useRef(null);
+  const [ind, setInd] = useState({ left: 0, width: 0 });
+  const sig = tabs.map((tb) => tb.label).join("|");
+  const measure = () => {
+    const el = ref.current?.querySelector(".tabbtn.active");
+    if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
+  };
+  useIsoLayoutEffect(measure, [value, sig]);
+  useEffect(() => {
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+  return (
+    <div className="tabs" ref={ref}>
+      {tabs.map((tb) => (
+        <button key={tb.k} className={"tabbtn " + (value === tb.k ? "active" : "")} onClick={() => onChange(tb.k)}>{tb.label}</button>
+      ))}
+      <span className="tabind" aria-hidden="true" style={{ transform: `translateX(${ind.left}px)`, width: ind.width }} />
+    </div>
+  );
+}
+// Two-option segmented control with a thumb that glides behind the selection.
+function SegRadio({ value, onChange, options, ariaLabel }) {
+  const ref = useRef(null);
+  const [ind, setInd] = useState(null);
+  const sig = options.map((o) => o.value).join("|");
+  const measure = () => {
+    const el = ref.current?.querySelector("button.active");
+    if (el) setInd({ left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+  };
+  useIsoLayoutEffect(measure, [value, sig]);
+  return (
+    <div className="segradio" ref={ref} role="radiogroup" aria-label={ariaLabel}>
+      {ind ? <span className="segthumb" aria-hidden="true" style={{ transform: `translate(${ind.left}px, ${ind.top}px)`, width: ind.width, height: ind.height }} /> : null}
+      {options.map((o) => (
+        <button key={o.value} type="button" role="radio" aria-checked={value === o.value} className={value === o.value ? "active" : ""} onClick={() => onChange(o.value)}>{o.label}</button>
+      ))}
+    </div>
+  );
 }
 function MugMark({ size = 26 }) {
   return (
@@ -515,10 +563,8 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
         {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
 
         <div className="field"><label>{t("form_status")}</label>
-          <div className="segradio" role="radiogroup" aria-label={t("form_status")}>
-            <button type="button" role="radio" aria-checked={status !== "wishlist"} className={status !== "wishlist" ? "active" : ""} onClick={() => up({ status: "owned" })}>{t("tab_collection")}</button>
-            <button type="button" role="radio" aria-checked={status === "wishlist"} className={status === "wishlist" ? "active" : ""} onClick={() => up({ status: "wishlist" })}>{t("nav_wishlist")}</button>
-          </div>
+          <SegRadio value={status} onChange={(v) => up({ status: v })} ariaLabel={t("form_status")}
+            options={[{ value: "owned", label: t("tab_collection") }, { value: "wishlist", label: t("nav_wishlist") }]} />
         </div>
 
         <div className="row">
@@ -999,7 +1045,7 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
   const dealCount = m.listings?.length || 0;
   const img = displayImg(m);
   return (
-    <div className="card mug" role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
+    <div className="card mug" data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
       <div className="mugphoto">
         {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span className="ph"><MugMark size={46} /></span>}
         <button type="button" className={"favfab" + (m.favorite ? " on" : "")} aria-label={t("card_fav")} title={t("card_fav")} onClick={(e) => { e.stopPropagation(); onFav(m); }}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>
@@ -1039,7 +1085,7 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
   const meta = [m.year, val ? "≈ " + val : null].filter(Boolean).join(" · ");
   const img = displayImg(m);
   return (
-    <div className="mugrow" role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
+    <div className="mugrow" data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
       <div className="mugrow-thumb">
         {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
         {m.favorite ? <span className="mugrow-fav"><Star size={11} fill="currentColor" /></span> : null}
@@ -1051,11 +1097,24 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
       <div className="mugrow-actions" onClick={(e) => e.stopPropagation()}>
         {m.status === "wishlist"
           ? <button className="ghost icon" title={t("card_deals")} aria-label={t("card_deals")} onClick={() => onDeals(m)}><PackageSearch size={17} /></button>
-          : <button className="ghost icon" title={t("card_fav")} aria-label={t("card_fav")} onClick={() => onFav(m)}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>}
+          : <button className={"ghost icon" + (m.favorite ? " fav-on" : "")} title={t("card_fav")} aria-label={t("card_fav")} onClick={() => onFav(m)}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>}
         <button className="ghost icon danger" title={t("card_delete")} aria-label={t("card_delete")} onClick={() => onDelete(m)}><Trash2 size={17} /></button>
       </div>
     </div>
   );
+}
+
+/* ------------------------------ MugList ------------------------------- */
+// Renders the mug cards/rows and animates them (FLIP) whenever the set or order
+// changes — so filtering, sorting, adding and favouriting glide into place.
+function MugList({ items, viewMode, onEdit, onDelete, onFav, onDeals }) {
+  const ref = useRef(null);
+  const sig = items.map((m) => m.id).join("|");
+  useFlip(ref, sig);
+  const props = { onEdit, onDelete, onFav, onDeals };
+  return viewMode === "grid"
+    ? <div className="muggrid" ref={ref}>{items.map((m) => <MugCard key={m.id} m={m} {...props} />)}</div>
+    : <div className="muglist" ref={ref}>{items.map((m) => <MugRow key={m.id} m={m} {...props} />)}</div>;
 }
 
 /* -------------------------------- App --------------------------------- */
@@ -1063,6 +1122,7 @@ export default function App() {
   const [lang, setLang] = useState("sv");
   const [theme, setTheme] = useState("system"); // system | light | dark
   const t = useMemo(() => makeT(lang), [lang]);
+  useRipple(); // delegated press ripple for every control
 
   // Auth is optional: signed-in users own by Google account, everyone else by a
   // per-device id. NEXT_PUBLIC_DEV_OWNER is a local-only bypass for testing.
@@ -1218,8 +1278,14 @@ export default function App() {
   const doDelete = async () => {
     const m = confirmMug; setConfirmMug(null);
     if (!m) return;
-    try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); setMugs((prev) => prev.filter((x) => x.id !== m.id)); }
-    catch (e) { toast.error(t("delete_failed", { msg: e.message || e })); }
+    // Let the card fade away while the rest of the list glides up to fill the gap.
+    const node = typeof document !== "undefined" ? document.querySelector(`[data-mug-id="${String(m.id).replace(/["\\]/g, "\\$&")}"]`) : null;
+    const rect = node?.getBoundingClientRect();
+    if (node && rect) animateGhost(node, rect);
+    const snapshot = mugs;
+    setMugs((prev) => prev.filter((x) => x.id !== m.id));
+    try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); }
+    catch (e) { setMugs(snapshot); toast.error(t("delete_failed", { msg: e.message || e })); }
   };
   const fav = async (m) => {
     const optimistic = !m.favorite;
@@ -1396,28 +1462,30 @@ export default function App() {
             </div>
             <button type="button" className={"ghost icon" + (filtersOpen ? " active" : "")} onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-label={t("filters")} title={t("filters")}><SlidersHorizontal size={18} /></button>
           </div>
-          {filtersOpen ? (
-            <div className="row" style={{ marginTop: 12 }}>
-              {tab === "collection" ? (
-                <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
-              ) : null}
-              <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="updated_desc">{t("sort_updated")}</option>
-                  <option value="year_desc">{t("sort_year_desc")}</option>
-                  <option value="year_asc">{t("sort_year_asc")}</option>
-                  <option value="value_desc">{t("sort_value_desc")}</option>
-                  <option value="name">{t("sort_name")}</option>
-                </select>
+          <div className={"collapse" + (filtersOpen ? " open" : "")}>
+            <div className="collapse-inner">
+              <div className="row" style={{ marginTop: 12 }}>
+                {tab === "collection" ? (
+                  <div className="field" style={{ minWidth: 150 }}><label>{t("filter_status")}</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">{t("filter_all")}</option>{STATUS_VALUES.filter((s) => s !== "wishlist").map((s) => <option key={s} value={s}>{t("status_" + s)}</option>)}</select></div>
+                ) : null}
+                <div className="field" style={{ minWidth: 170 }}><label>{t("filter_sort")}</label>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                    <option value="updated_desc">{t("sort_updated")}</option>
+                    <option value="year_desc">{t("sort_year_desc")}</option>
+                    <option value="year_asc">{t("sort_year_asc")}</option>
+                    <option value="value_desc">{t("sort_value_desc")}</option>
+                    <option value="name">{t("sort_name")}</option>
+                  </select>
+                </div>
+                <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
               </div>
-              <div className="field" style={{ maxWidth: 150 }}><label>{t("filter_favorites")}</label><div className="switch"><span className="mini">{t("filter_star_only")}</span><input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} style={{ width: "auto" }} /></div></div>
             </div>
-          ) : null}
+          </div>
         </div>
       ) : null}
 
       {/* Collection and Wishlist are the top-level tabs; Stats opens from the header. */}
-      <div className="tabs">{TABS.map((tb) => <button key={tb.k} className={"tabbtn " + (tab === tb.k ? "active" : "")} onClick={() => setTab(tb.k)}>{tb.label}</button>)}</div>
+      <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
       <div className="pager" ref={emblaRef}>
         <div className="track">
@@ -1458,9 +1526,7 @@ export default function App() {
                 ) : panels[k].length === 0 ? (
                   <div className="card pad"><div className="muted">{t("no_match")}</div></div>
                 ) : (
-                  viewMode === "grid"
-                    ? <div className="muggrid">{panels[k].map((m) => <MugCard key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
-                    : <div className="muglist">{panels[k].map((m) => <MugRow key={m.id} m={m} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />)}</div>
+                  <MugList key={viewMode} items={panels[k]} viewMode={viewMode} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />
                 )}
                 {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
               </div>
@@ -1487,19 +1553,19 @@ export default function App() {
       <Modal open={statsOpen} onClose={() => setStatsOpen(false)} title={t("tab_stats")} subtitle={t("stats_subtitle")} wide>
         <div className="grid" style={{ gap: 12 }}>
           <div className="kpi">
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue">{stats.owned}</div></div>
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue">{stats.wishlist}</div></div>
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue">{stats.favorites}</div></div>
-            <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue">{stats.sold}</div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_owned")}</div><div className="kpivalue"><CountUp value={stats.owned} /></div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_wishlist")}</div><div className="kpivalue"><CountUp value={stats.wishlist} /></div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_favorites")}</div><div className="kpivalue"><CountUp value={stats.favorites} /></div></div>
+            <div className="card kpicard"><div className="kpilabel">{t("kpi_sold")}</div><div className="kpivalue"><CountUp value={stats.sold} /></div></div>
           </div>
           <div className="row" style={{ gap: 12 }}>
-            <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.spent, "SEK")}</div></div>
-            <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}>{formatMoney(stats.value, stats.valueCur)}</div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
+            <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_total_paid")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}><CountUp value={stats.spent} format={(n) => formatMoney(n, "SEK")} /></div></div>
+            <div className="card pad" style={{ flex: 1, minWidth: 200 }}><div className="kpilabel">{t("stats_est_value")}</div><div className="t-h1" style={{ fontWeight: 300, marginTop: 6 }}><CountUp value={stats.value} format={(n) => formatMoney(n, stats.valueCur)} /></div><div className="help" style={{ marginTop: 4 }}>{t("stats_est_value_sub")}</div></div>
           </div>
           <div className="card pad">
             <div style={{ fontWeight: 500 }}>{t("stats_by_year")}</div><div className="divider" />
-            {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r) => (
-              <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%` }} /></div><span className="pill">{r.count}</span></div>
+            {stats.byYearData.length ? <div className="list">{stats.byYearData.map((r, i) => (
+              <div key={r.year} className="listrow"><div style={{ fontWeight: 700, width: 52 }}>{r.year}</div><div className="bar"><span style={{ width: `${(r.count / stats.maxYear) * 100}%`, animationDelay: `${i * 45}ms` }} /></div><span className="pill">{r.count}</span></div>
             ))}</div> : <div className="muted">{t("stats_by_year_empty")}</div>}
           </div>
           <div className="card pad">

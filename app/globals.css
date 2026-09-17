@@ -355,3 +355,75 @@ body{overflow:hidden}
   border:1px solid var(--border); background:color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter:blur(6px); color:var(--muted)}
 .favfab.on{color:var(--gold); border-color:color-mix(in srgb, var(--gold) 55%, var(--border))}
 .mug,.mugrow{cursor:pointer}
+
+/* ============================== Motion ================================
+   Micro-interactions that explain what just changed: controls dip when
+   pressed, cards glide when the list reorders, deleted cards fade away,
+   favourites pop. Everything is disabled under reduced-motion. */
+:root{
+  --ease-out:cubic-bezier(.22,.61,.36,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --dur-fast:.12s; --dur:.22s; --dur-slow:.34s;
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important; animation-delay:0ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important}
+}
+
+/* Press feedback — every control dips, then springs back. */
+button,.btn,.mug,.mugrow,.matchcard,.pickitem,.dealrow,.listrow,.brand,.tabbtn{position:relative}
+button,.btn,.mug,.mugrow,.matchcard,.pickitem,.dealrow,.listrow,.brand,.tabbtn{overflow:hidden}
+button,.btn{transition:border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast) var(--ease-out)}
+button:not(:disabled):active,.btn:not(:disabled):active{transform:scale(.965)}
+.mug,.mugrow,.matchcard,.pickitem,.dealrow{transition:transform var(--dur) var(--ease-out), border-color var(--dur-fast), background var(--dur-fast)}
+.mug:active,.mugrow:active,.matchcard:active,.pickitem:active,.dealrow:active{transform:scale(.99)}
+
+/* Ripple injected by useRipple(). */
+.ripple{position:absolute; border-radius:999px; pointer-events:none; background:currentColor; opacity:.28; transform:scale(0); animation:ripple var(--dur-slow) var(--ease-out) forwards}
+@keyframes ripple{to{transform:scale(1); opacity:0}}
+
+/* Favourite: the star pops, the button emits a golden ring. */
+.favfab svg{transition:transform var(--dur) var(--ease-spring)}
+.favfab.on{animation:favring .55s var(--ease-out)}
+.favfab.on svg{animation:starpop .5s var(--ease-spring)}
+.icon.fav-on svg{animation:starpop .5s var(--ease-spring)}
+.mugrow-fav{animation:starpop .45s var(--ease-spring)}
+@keyframes starpop{0%{transform:scale(.5) rotate(-25deg)}45%{transform:scale(1.35) rotate(10deg)}70%{transform:scale(.92) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes favring{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--gold) 55%, transparent)}100%{box-shadow:0 0 0 14px transparent}}
+
+/* Tab strip: the active underline slides between tabs. */
+.tabs{position:relative}
+.tabind{position:absolute; left:0; bottom:0; height:2px; border-radius:2px; background:var(--accent); pointer-events:none;
+  transition:transform .3s var(--ease-out), width .3s var(--ease-out)}
+.tabbtn.active,.tabbtn.active:hover{border-bottom-color:transparent}
+
+/* Segmented radio: a thumb glides behind the selected option. */
+.segradio{position:relative}
+.segthumb{position:absolute; left:0; top:0; border-radius:10px; background:var(--accent); pointer-events:none; z-index:0;
+  transition:transform .28s var(--ease-out), width .28s var(--ease-out), height .28s var(--ease-out)}
+.segradio button{position:relative; z-index:1}
+.segradio button.active{background:transparent; border-color:transparent; color:#fff; font-weight:500}
+.segradio button.active:hover{background:transparent; border-color:transparent}
+
+/* Dialogs fade/scale in and out (Radix Presence waits for these). */
+.overlay[data-state="open"]{animation:fadein var(--dur) var(--ease-out)}
+.overlay[data-state="closed"]{animation:fadeout var(--dur) var(--ease-out) forwards}
+.modal:not(.drawer)[data-state="open"]{animation:modalin var(--dur-slow) var(--ease-out)}
+.modal:not(.drawer)[data-state="closed"]{animation:modalout var(--dur) var(--ease-out) forwards}
+@keyframes fadein{from{opacity:0}}
+@keyframes fadeout{to{opacity:0}}
+@keyframes modalin{from{opacity:0; transform:translate(-50%,-50%) scale(.96)}}
+@keyframes modalout{to{opacity:0; transform:translate(-50%,-50%) scale(.97)}}
+
+/* Collapsible filter panel: the card grows/shrinks instead of jumping. */
+.collapse{display:grid; grid-template-rows:0fr; transition:grid-template-rows .3s var(--ease-out)}
+.collapse.open{grid-template-rows:1fr}
+.collapse>.collapse-inner{overflow:hidden; min-height:0; opacity:0; transform:translateY(-4px);
+  transition:opacity .25s var(--ease-out), transform .25s var(--ease-out)}
+.collapse.open>.collapse-inner{opacity:1; transform:none}
+
+/* Stats bars grow from zero; list cards/panels settle in on mount. */
+.bar > span{transform-origin:left; animation:growbar .7s var(--ease-out) both}
+@keyframes growbar{from{width:0}}
+.muggrid,.muglist{animation:fadein var(--dur) var(--ease-out)}
+.anonnote,.notifblurb{animation:fadeup .3s var(--ease-out)}
+@keyframes fadeup{from{opacity:0; transform:translateY(-6px)}}

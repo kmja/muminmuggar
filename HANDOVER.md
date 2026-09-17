@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.45.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.46.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -70,6 +70,7 @@ lib/
   ebay.ts             # eBay Browse API (currently UNUSED)
   i18n.js             # sv (default) + en strings
   search.js           # Fuse.js wrapper (createSearch)
+  motion.js           # motion toolkit: useRipple, useFlip, animateGhost, useCountUp
   master-catalog.json # 201 catalogue entries (source of truth for mugs)
   mug-details.json    # collector attributes per mug (from Mukify; see §6)
   probe-base.json     # synthetic normal equations for on-device fine-tuning
@@ -117,6 +118,14 @@ public/
   (`lib/image-match.js`), top-4 picker, Gemini fallback. Rebuild with
   `npm run build:embeddings` after editing `lib/master-catalog.json` or
   `scripts/lib/augment.mjs`.
+- **Motion (`lib/motion.js` + the "Motion" section in `globals.css`):** every
+  control dips + ripples on press (`useRipple`, delegated `pointerdown`); list
+  items FLIP when the set/order changes (`useFlip`, WAAPI); a deleted mug fades
+  out via a fixed clone (`animateGhost`) while the rest glide up; the favourite
+  star pops + emits a ring; the tab underline and the AddConfirm status thumb
+  slide; stats count up and bars grow; dialogs scale/fade; filters expand.
+  Everything is off under `prefers-reduced-motion`. FLIP is opt-in per element
+  via `data-flip-key`; the delete ghost queries `[data-mug-id]`.
 
 ---
 
@@ -207,6 +216,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.46.0** — Added motion design: press ripples, FLIP list
+  animations, animated delete (fade + reflow), favourite star pop/ring, sliding
+  tab + segmented indicators, animated stats, collapsible filters, dialog
+  transitions. New `lib/motion.js`; reduced-motion respected.
 - **2026-09-17 · v1.45.1** — Added this handover doc; `AGENTS.md` now points here.
 - **2026-09-17 · v1.45.0** — Added the add-confirmation dialog (status, price,
   condition, etikett); per-mug `hasTag` field; edit dialog made metadata-only.
