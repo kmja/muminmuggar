@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.51.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.51.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -230,6 +230,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.51.1** — Edit dialog's Save button stays disabled until an
+  editable field actually changes.
 - **2026-09-17 · v1.51.0** — Add flow is now a centred dialog (vaul removed) with
   a single secondary Close action; add-confirm has Save / Save and add more /
   Cancel; back gesture closes the top dialog.

@@ -404,7 +404,13 @@ function MugForm({ open, onClose, initial, onSave, saving }) {
   const [errors, setErrors] = useState({});
   const [acquired, setAcquired] = useState(false); // wishlist -> collection in this session
   const uploadRef = useRef(null);
-  useEffect(() => { setD(initial); setErrors({}); setAcquired(false); }, [initial, open]);
+  useIsoLayoutEffect(() => { setD(initial); setErrors({}); setAcquired(false); }, [initial, open]);
+  // Enable Save only once an editable field actually differs from the mug we opened.
+  const dirty = useMemo(() => {
+    const keys = ["status", "condition", "acquiredDate", "hasTag", "price", "currency", "favorite", "photoUrl", "notes"];
+    const sig = (o) => keys.map((k) => { const v = o?.[k]; return v == null ? "" : String(v); }).join("\u0001");
+    return sig(d) !== sig(initial);
+  }, [d, initial]);
   if (!d) return null;
   const up = (patch) => setD((x) => ({ ...x, ...patch }));
 
@@ -455,7 +461,7 @@ function MugForm({ open, onClose, initial, onSave, saving }) {
   const footer = (
     <div className="formactions">
       <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
-      <button className="primary big" disabled={saving} onClick={submit}>{saving ? <span className="spin" /> : t("save")}</button>
+      <button className="primary big" disabled={saving || !dirty} onClick={submit}>{saving ? <span className="spin" /> : t("save")}</button>
     </div>
   );
 
