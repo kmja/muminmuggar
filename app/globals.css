@@ -326,9 +326,10 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 
 /* Bottom-sheet drawer (vaul) for the add-mug dialog. */
 .drawer-overlay{position:fixed; inset:0; background:rgba(27,20,35,.5); backdrop-filter:blur(2px); z-index:50}
-.modal.drawer{left:0; right:0; top:auto; bottom:0; width:100%; max-width:760px; margin:0 auto; border-radius:20px 20px 0 0; max-height:92vh; border-bottom:none; z-index:60}
-/* vaul sets the closed transform via CSS and animates in; pin the open state. */
-.modal.drawer[data-state="open"]{transform:translate3d(0,0,0)}
+/* The drawer is bottom-anchored, so it must not inherit the centred modal's
+   translate(-50%,-50%) — otherwise vaul's slide-down starts from that offset.
+   Pin its own transform for every state; vaul's keyframes animate on top. */
+.modal.drawer{left:0; right:0; top:auto; bottom:0; width:100%; max-width:760px; margin:0 auto; border-radius:20px 20px 0 0; max-height:92vh; border-bottom:none; z-index:60; transform:translate3d(0,0,0)}
 /* Search screen: a tall sheet so the input sits at the top, above the keyboard.
    dvh adapts to the mobile URL bar; with interactive-widget:overlays-content the
    keyboard draws over the sheet instead of resizing it. */

@@ -620,7 +620,8 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
       const initial = e
         ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
         : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
-      onAddOne(initial); onClose(); return;
+      // Keep the drawer open (the confirmation sits above it) so more can be added.
+      onAddOne(initial); setScreen("choose"); return;
     }
     setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
   };
@@ -652,7 +653,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
           const [best, second] = candidates;
           if (autoMargin != null && best.logit - second.logit >= autoMargin) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
-            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); onClose(); return; }
+            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose"); return; }
           }
           setScreen("match");
           return;
@@ -666,7 +667,10 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
     const e = MASTER_CATALOG.find((x) => x.num === m.num);
     if (!e) return;
     logMatch(m, false, matchData);
-    onAddOne(catalogDraft(e)); onClose();
+    // Add via the raised confirmation, then return to the start screen so the
+    // drawer stays open for the next mug.
+    onAddOne(catalogDraft(e));
+    setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose");
   };
   const run = async (file) => {
     setError("");
@@ -697,8 +701,8 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
   }, [q, ownedKeys, added, newest]);
 
   const add = async (e, status) => {
-    // Close the drawer, then let the confirmation dialog collect optional details.
-    onClose();
+    // Keep the drawer open — the confirmation dialog is raised above it, and the
+    // user may want to keep adding more mugs from the list.
     const created = await onAddRequest({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status,
       capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
     if (created) setAdded((m) => { const n = new Map(m); n.set(e.nameEn, status); return n; });

@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.46.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.47.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -97,7 +97,9 @@ public/
 - **Add flow:** from the add drawer (catalogue search `+`/`♥`) or photo
   identification → an **AddConfirmModal** collects optional status (owned /
   wishlist), purchase price + currency, condition and **"Etikett kvar"**, then
-  saves. The shelf-scan batch flow is unchanged.
+  saves. The drawer **stays open** behind the raised confirm dialog so several
+  mugs can be added in a row (photo matches reset to the start screen). The
+  shelf-scan batch flow still closes the drawer when done.
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
   Editable: condition, acquired date, **etikett**, price/currency, favourite,
   photo, notes. Wishlist mugs get a one-tap **"Jag har köpt den"** (acquire)
@@ -198,6 +200,9 @@ public/
 - `interactiveWidget: "overlays-content"` in `app/layout.tsx` + vaul
   `repositionInputs={false}` + `90dvh` drawer = keyboard overlays instead of
   resizing/pushing the add sheet.
+- The vaul drawer must carry its **own** `transform` (`.modal.drawer`); the base
+  `.modal` `translate(-50%,-50%)` otherwise leaks into the closed state and
+  vaul's slide-down starts from that offset (the old top-left glitch).
 - i18n: add keys to **both** `sv` and `en` in `lib/i18n.js`.
 - Secrets never in git; `.env.local` is ignored.
 
@@ -216,6 +221,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.47.0** — Add drawer now stays open behind the confirm dialog
+  (add several mugs in a row); fixed the drawer close animation that slid from
+  the top-left instead of straight down (transform leak from `.modal`).
 - **2026-09-17 · v1.46.0** — Added motion design: press ripples, FLIP list
   animations, animated delete (fade + reflow), favourite star pop/ring, sliding
   tab + segmented indicators, animated stats, collapsible filters, dialog
