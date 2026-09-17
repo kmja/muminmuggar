@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.48.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.49.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -95,12 +95,14 @@ public/
   only), `Stats`, `Notifications`, account/language menu. On phones the add
   button is a fixed **FAB bottom-right**; there is no bottom nav.
 - **Add flow:** from the add drawer (catalogue search `+`/`♥`) or photo
-  identification → an **AddConfirmModal** collects purchase price + currency,
-  condition and **"Etikett kvar"**, then saves. Status (owned/wishlist) is fixed
-  by the button tapped (`+` vs `♥`), so the dialog has no status selector. The
-  drawer **stays open** behind the raised confirm dialog so several mugs can be
-  added in a row (photo matches reset to the start screen). The shelf-scan batch
-  flow still closes the drawer when done.
+  identification. **`♥` (wishlist) skips the dialog** — the heart pops and a
+  toast confirms. **`+` (owned)** opens the **AddConfirmModal** (price + currency,
+  condition, **"Etikett kvar"**) before saving. The drawer **stays open** behind
+  the raised confirm so several mugs can be added in a row (photo matches reset
+  to the start screen); each stage (choose/browse/match/review) cross-fades in.
+  The shelf-scan batch flow still closes the drawer when done.
+- **List view:** no favourite badge on the thumbnail; the row's star button turns
+  gold when active (matching the grid card).
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
   Editable: condition, acquired date, **etikett**, price/currency, favourite,
   photo, notes. Wishlist mugs get a one-tap **"Jag har köpt den"** (acquire)
@@ -222,6 +224,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.49.0** — Wishlist quick-add skips the confirm (heart pop +
+  toast); add-drawer stages cross-fade; list-view star button is gold when
+  active and the thumbnail badge is gone.
 - **2026-09-17 · v1.48.0** — Add-confirm dialog: removed the owned/wishlist
   selector and the "optional" copy; `.switch` rows now match input styling; all
   `<select>`s use a bigger, bolder themed chevron.

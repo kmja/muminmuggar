@@ -557,12 +557,13 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
 /* ------------------------------ AddMugModal --------------------------- */
 // One dialog for adding a mug: search the catalogue (newest shortlisted) and
 // quick-add with +, or open the camera to scan a whole shelf.
-function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs }) {
+function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
   const t = useT();
   const lang = useLang();
   const [screen, setScreen] = useState("choose"); // choose | browse | match
   const [q, setQ] = useState("");
   const [added, setAdded] = useState(() => new Map()); // nameEn -> "owned" | "wishlist"
+  const [pulsing, setPulsing] = useState(""); // nameEn whose ♥ is popping (wishlist quick-add)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
@@ -571,10 +572,11 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
   const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const camRef = useRef(null), fileRef = useRef(null);
+  const addingRef = useRef(false); // guards against double-tapping the quick-add heart
 
   // Reset on open.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose"); setQ(""); setAdded(new Map()); }
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("choose"); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]);
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
@@ -675,12 +677,28 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
     return [...pinned, ...rest].slice(0, 80);
   }, [q, ownedKeys, added, newest]);
 
+  const draftFor = (e, status) => ({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status,
+    capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
   const add = async (e, status) => {
+    // Wishlisting is low-stakes, so skip the confirmation: pop the heart, toast,
+    // then mark the row. Owned adds still go through the raised confirm dialog.
+    if (status === "wishlist") {
+      if (addingRef.current) return;
+      addingRef.current = true;
+      setPulsing(e.nameEn);
+      const created = await onQuickAdd(draftFor(e, "wishlist"));
+      window.setTimeout(() => {
+        addingRef.current = false;
+        setPulsing("");
+        if (created) setAdded((m) => { const n = new Map(m); n.set(e.nameEn, "wishlist"); return n; });
+      }, 420);
+      if (created) toast.success(t("wishlist_added_toast", { name: catName(e.nameEn, lang) }));
+      return;
+    }
     // Keep the drawer open — the confirmation dialog is raised above it, and the
     // user may want to keep adding more mugs from the list.
-    const created = await onAddRequest({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status,
-      capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
-    if (created) setAdded((m) => { const n = new Map(m); n.set(e.nameEn, status); return n; });
+    const created = await onAddRequest(draftFor(e, "owned"));
+    if (created) setAdded((m) => { const n = new Map(m); n.set(e.nameEn, "owned"); return n; });
   };
 
   const setEntry = (i, entry) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, entry, checked: it.checked || !!entry } : it)));
@@ -713,12 +731,15 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
     </div>
   );
   const footer = items.length ? reviewFooter : screen === "browse" ? browseFooter : screen === "match" ? matchFooter : null;
+  // Each stage of the drawer fades/slides in when it replaces the previous one.
+  const stage = items.length ? "review" : busy ? "busy" : screen;
 
   return (
     <DrawerModal open={open} onClose={onClose} title={t("scan_title")} subtitle={t("scan_subtitle")} footer={footer} tall={screen === "browse"}>
       <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
       <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; run(f); e.target.value = ""; }} />
 
+      <div className="drawerstage" key={stage}>
       {!items.length && !busy && screen === "choose" ? (
         <div className="grid" style={{ gap: 10 }}>
           <button className="primary big" style={{ justifyContent: "center", padding: "16px" }} onClick={() => camRef.current?.click()}><Camera size={20} /> {t("scan_take_photo")}</button>
@@ -739,7 +760,10 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
           ) : results.map((e) => {
             const status = added.get(e.nameEn);
             const owned = isOwned(e.nameEn);
-            const wished = !owned && isWished(e.nameEn);
+            const isPulsing = pulsing === e.nameEn;
+            // Keep showing the buttons while the heart pops, even though the mug is
+            // already in the wishlist by then.
+            const wished = !owned && isWished(e.nameEn) && !isPulsing;
             return (
               <div className="scanrow" key={e.nameEn} style={{ alignItems: "center", opacity: (owned || wished) ? 0.55 : 1 }}>
                 <div className="scanthumb">{e.image ? <img src={e.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={22} />}</div>
@@ -755,7 +779,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
                       ? <Badge kind="wishlist"><Heart size={14} /> {t("status_wishlist")}</Badge>
                       : <div className="row" style={{ gap: 8, flexWrap: "nowrap" }}>
                           <button className="addbtn" aria-label={t("add_to_collection")} title={t("add_to_collection")} onClick={() => add(e, "owned")}><Plus size={20} /></button>
-                          <button className="addbtn wish" aria-label={t("add_to_wishlist")} title={t("add_to_wishlist")} onClick={() => add(e, "wishlist")}><Heart size={20} /></button>
+                          <button className={"addbtn wish" + (isPulsing ? " popping" : "")} aria-label={t("add_to_wishlist")} title={t("add_to_wishlist")} onClick={() => add(e, "wishlist")}><Heart size={20} fill={isPulsing ? "currentColor" : "none"} /></button>
                         </div>}
               </div>
             );
@@ -827,6 +851,7 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs })
           <div className="help">{t("scan_found", { n: items.length })}</div>
         </div>
       ) : null}
+      </div>
     </DrawerModal>
   );
 }
@@ -1067,7 +1092,6 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
     <div className="mugrow" data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
       <div className="mugrow-thumb">
         {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
-        {m.favorite ? <span className="mugrow-fav"><Star size={11} fill="currentColor" /></span> : null}
       </div>
       <div className="mugrow-main">
         <div className="mugrow-name" title={displayName}>{displayName || t("card_untitled")}</div>
@@ -1522,7 +1546,7 @@ export default function App() {
       </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving} />
-      <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} />
+      <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
