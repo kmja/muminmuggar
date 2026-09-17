@@ -249,6 +249,22 @@ function MugMark({ size = 26 }) {
     </svg>
   );
 }
+// Empty-state illustration: a little shelf of mugs, in the accent colour.
+function MugShelf() {
+  return (
+    <svg className="emptyart" viewBox="0 0 160 100" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 88h144" />
+      <path d="M16 88v6M144 88v6" opacity=".45" />
+      <path d="M20 58h24v24a5 5 0 0 1-5 5H25a5 5 0 0 1-5-5z" />
+      <path d="M44 64h5a6 6 0 0 1 0 12h-5" />
+      <path d="M66 44h26v38a5 5 0 0 1-5 5H71a5 5 0 0 1-5-5z" />
+      <path d="M92 54h6a6 6 0 0 1 0 12h-6" />
+      <path d="M75 34c0 3-3 3-3 6M84 34c0 3-3 3-3 6" opacity=".5" />
+      <path d="M112 60h24v22a5 5 0 0 1-5 5h-14a5 5 0 0 1-5-5z" />
+      <path d="M136 66h5a6 6 0 0 1 0 12h-5" />
+    </svg>
+  );
+}
 function ThemeToggle({ theme, setTheme }) {
   const t = useT();
   // `theme` is "light" | "dark" | "system"; resolve what's actually showing.
@@ -852,44 +868,31 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
 /* ------------------------------- AddMenu ------------------------------ */
 // Material-style context menu that springs from the add FAB (or the header Add
 // button): photograph a mug, pick an image, or browse the catalogue.
-function AddMenu({ open, onOpenChange, anchorRef, onBrowse, onPhoto }) {
+function AddMenu({ open, onOpenChange, anchorRef, onBrowse, onCamera, onFile }) {
   const t = useT();
-  const camRef = useRef(null), fileRef = useRef(null);
-  const pick = async (file) => {
-    if (!file) return;
-    const raw = await fileToDataUrl(file);
-    onPhoto(await downscaleImage(raw, 1400, 0.85));
-  };
-  // Click the input synchronously to keep the user gesture (iOS needs it), then
+  // Trigger the shared hidden inputs synchronously to keep the user gesture, then
   // dismiss the menu while the OS picker takes over.
-  const choose = (which) => {
-    (which === "cam" ? camRef : fileRef).current?.click();
-    onOpenChange(false);
-  };
+  const choose = (trigger) => { trigger?.(); onOpenChange(false); };
   const items = [
     { key: "catalog", icon: <Search size={24} />, label: t("add_search_catalog"), onClick: () => { onOpenChange(false); onBrowse(); } },
-    { key: "image", icon: <ImagePlus size={24} />, label: t("scan_choose_image"), onClick: () => choose("file") },
-    { key: "photo", icon: <Camera size={24} />, label: t("scan_take_photo"), onClick: () => choose("cam") },
+    { key: "image", icon: <ImagePlus size={24} />, label: t("scan_choose_image"), onClick: () => choose(onFile) },
+    { key: "photo", icon: <Camera size={24} />, label: t("scan_take_photo"), onClick: () => choose(onCamera) },
   ];
   return (
-    <>
-      <Popover.Root open={open} onOpenChange={onOpenChange}>
-        <Popover.Anchor virtualRef={anchorRef} />
-        <Popover.Portal>
-          <Popover.Content className="addmenu" side="top" align="end" sideOffset={16} collisionPadding={16} aria-label={t("nav_add")}>
-            <div className="addmenu-surface" role="menu">
-              {items.map((it, i) => (
-                <button key={it.key} type="button" role="menuitem" className="addmenu-item" style={{ animationDelay: `${i * 35}ms` }} onClick={it.onClick}>
-                  {it.icon}<span>{it.label}</span>
-                </button>
-              ))}
-            </div>
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-      <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
-      <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
-    </>
+    <Popover.Root open={open} onOpenChange={onOpenChange}>
+      <Popover.Anchor virtualRef={anchorRef} />
+      <Popover.Portal>
+        <Popover.Content className="addmenu" side="top" align="end" sideOffset={16} collisionPadding={16} aria-label={t("nav_add")}>
+          <div className="addmenu-surface" role="menu">
+            {items.map((it, i) => (
+              <button key={it.key} type="button" role="menuitem" className="addmenu-item" style={{ animationDelay: `${i * 35}ms` }} onClick={it.onClick}>
+                {it.icon}<span>{it.label}</span>
+              </button>
+            ))}
+          </div>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
 
@@ -1331,6 +1334,7 @@ export default function App() {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addAnchorRef = useRef(null);      // element the add menu points at
   const [addPhoto, setAddPhoto] = useState(""); // photo handed to the add dialog
+  const camRef = useRef(null), fileRef = useRef(null); // hidden capture/pick inputs
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -1502,6 +1506,11 @@ export default function App() {
   const openAddMenu = (el) => { addAnchorRef.current = el; warmUp(); setAddMenuOpen(true); };
   const startAddBrowse = () => { setAddPhoto(""); setScanOpen(true); };
   const startAddPhoto = (dataUrl) => { setAddPhoto(dataUrl); setScanOpen(true); };
+  const pickPhoto = async (file) => {
+    if (!file) return;
+    const raw = await fileToDataUrl(file);
+    startAddPhoto(await downscaleImage(raw, 1400, 0.85));
+  };
 
   const enableNotifications = async () => {
     setNotifMsg("");
@@ -1709,12 +1718,14 @@ export default function App() {
                     </div>
                   </div>
                 ) : k === "collection" && collectionCount === 0 ? (
-                  <div className="card pad" style={{ textAlign: "center" }}>
-                    <div className="emptyicon"><Camera size={34} /></div>
-                    <div className="t-h2" style={{ fontWeight: 400, marginTop: 8 }}>{t("empty_title")}</div>
+                  <div className="card pad empty">
+                    <MugShelf />
+                    <div className="t-h2" style={{ fontWeight: 400, marginTop: 12 }}>{t("empty_title")}</div>
                     <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
-                    <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
-                      <button className="primary" onClick={(e) => openAddMenu(e.currentTarget)}><Plus size={16} /> {t("nav_add")}</button>
+                    <div className="emptyactions">
+                      <button className="primary accent big" onClick={() => camRef.current?.click()}><Camera size={18} /> {t("scan_take_photo")}</button>
+                      <button className="ghost accent big" onClick={() => fileRef.current?.click()}><ImagePlus size={18} /> {t("scan_choose_image")}</button>
+                      <button className="ghost accent big" onClick={startAddBrowse}><Search size={18} /> {t("add_search_catalog")}</button>
                     </div>
                   </div>
                 ) : panels[k].length === 0 ? (
@@ -1739,7 +1750,10 @@ export default function App() {
       </footer>
 
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving} />
-      <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse} onPhoto={startAddPhoto} />
+      <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse}
+        onCamera={() => camRef.current?.click()} onFile={() => fileRef.current?.click()} />
+      <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+      <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
       <AddMugModal open={scanOpen} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reload} />

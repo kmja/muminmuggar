@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.56.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.57.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -116,6 +116,11 @@ public/
 - **Back gesture:** swiping in from the screen edge (or the Android back button)
   closes the top-most open dialog; with none open it falls through to the browser
   default. Implemented by `useBackToClose` (sentinel history entries).
+- **Empty state (Collection):** a mug-shelf illustration (`MugShelf`, accent
+  colour) plus three purple actions — **Take photo** (filled `primary accent`),
+  **Choose photo** and **Search the catalogue** (outlined `ghost accent`). The
+  camera/file inputs live in `App` (`camRef`/`fileRef`, `pickPhoto`) and are
+  shared by the FAB menu and the empty state.
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
   gold when active (matching the grid card).
 - **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
@@ -278,6 +283,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.57.0** — Reworked the empty collection state: mug-shelf
+  illustration + three purple actions (Take photo / Choose photo / Search).
 - **2026-09-17 · v1.56.0** — Added the **Chrome/Edge extension** (`extension/`):
   one-click Mukify import via a floating button; `POST /api/import/token` +
   HMAC import tokens; import dialog gained a "Browser extension" tab.
