@@ -52,8 +52,8 @@ export async function createMug(d: Partial<Mug>, owner: string): Promise<Mug> {
     `INSERT INTO mugs
       (id, owner, name, series, edition, year, status, condition, condition_notes, location,
        acquired_date, price, currency, favorite, photo_url, est_value_low, est_value_high,
-       est_value_currency, notes, tags, ai_confidence)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+       est_value_currency, notes, tags, ai_confidence, has_tag)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
      RETURNING *`,
     [
       id,
@@ -77,6 +77,7 @@ export async function createMug(d: Partial<Mug>, owner: string): Promise<Mug> {
       strOrNull(d.notes),
       Array.isArray(d.tags) ? d.tags : [],
       numOrNull(d.aiConfidence),
+      Boolean(d.hasTag),
     ],
   );
   return rowToMug(rows[0]);
@@ -95,6 +96,7 @@ const COLS: Record<string, (v: unknown) => unknown> = {
   price: numOrNull,
   currency: strOrNull,
   favorite: (v) => Boolean(v),
+  has_tag: (v) => Boolean(v),
   photo_url: strOrNull,
   est_value_low: numOrNull,
   est_value_high: numOrNull,
@@ -107,6 +109,7 @@ const CAMEL_TO_COL: Record<string, string> = {
   name: "name", series: "series", edition: "edition", year: "year", status: "status",
   condition: "condition", conditionNotes: "condition_notes", location: "location",
   acquiredDate: "acquired_date", price: "price", currency: "currency", favorite: "favorite",
+  hasTag: "has_tag",
   photoUrl: "photo_url", estValueLow: "est_value_low", estValueHigh: "est_value_high",
   estValueCurrency: "est_value_currency", notes: "notes", tags: "tags", aiConfidence: "ai_confidence",
 };

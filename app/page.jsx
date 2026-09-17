@@ -144,7 +144,7 @@ function findDuplicates(cand, mugs) {
 }
 function blankMug() {
   return { name: "", series: "Arabia Moomin", edition: "", year: "", status: "owned", condition: "Good",
-    conditionNotes: "", location: "", acquiredDate: "", price: "", currency: "SEK", favorite: false,
+    conditionNotes: "", location: "", acquiredDate: "", price: "", currency: "SEK", favorite: false, hasTag: false,
     photoUrl: "", estValueLow: null, estValueHigh: null, estValueCurrency: "SEK", notes: "", tags: [], aiConfidence: null };
 }
 // A ready-to-save draft from a catalogue entry (used by the on-device matcher).
@@ -155,13 +155,13 @@ function catalogDraft(e) {
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
-function Modal({ open, title, subtitle, children, onClose, footer, wide }) {
+function Modal({ open, title, subtitle, children, onClose, footer, wide, raised }) {
   const t = useT();
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="overlay" />
-        <Dialog.Content className={"modal" + (wide ? " wide" : "")}>
+        <Dialog.Overlay className={"overlay" + (raised ? " raised" : "")} />
+        <Dialog.Content className={"modal" + (wide ? " wide" : "") + (raised ? " raised" : "")}>
           <div className="head">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div>
@@ -385,50 +385,29 @@ function validateMug(m, t) {
   if (m.price !== "" && m.price != null) { const p = Number(m.price); if (!Number.isFinite(p) || p < 0) e.price = t("err_price"); }
   return e;
 }
-function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
+// Edit an existing mug: only its personal metadata (identity is fixed).
+function MugForm({ open, onClose, initial, onSave, saving }) {
   const t = useT();
   const lang = useLang();
   const [d, setD] = useState(initial);
   const [errors, setErrors] = useState({});
-  const [added, setAdded] = useState(0);   // mugs saved via "add another" without closing
   const [acquired, setAcquired] = useState(false); // wishlist -> collection in this session
   const uploadRef = useRef(null);
-  useEffect(() => { setD(initial); setErrors({}); setAdded(0); setAcquired(false); }, [initial, open]);
-  const dups = useMemo(() => (mode === "create" && d ? findDuplicates(d, mugs || []) : []), [d?.name, d?.year, d?.series, mode, mugs]);
+  useEffect(() => { setD(initial); setErrors({}); setAcquired(false); }, [initial, open]);
   if (!d) return null;
   const up = (patch) => setD((x) => ({ ...x, ...patch }));
-
-  // Pick a catalogue entry → fill in everything derived (series, year, value, image).
-  const pick = (e) => up({
-    name: e.nameEn,
-    year: e.year != null ? e.year : "",
-    series: "Arabia Moomin",
-    edition: "",
-    capacity: e.capacity || d.capacity || "",
-    photoUrl: (d.photoUrl && !reliableImg(e.image)) ? d.photoUrl : (e.image || ""),
-    estValueLow: catSek(e.estLow),
-    estValueHigh: catSek(e.estHigh),
-    estValueCurrency: "SEK",
-  });
 
   // Build a clean record and validate; returns the record or null if invalid.
   const build = () => {
     const next = { ...d, year: d.year === "" ? "" : Number(d.year), price: d.price === "" ? "" : Number(d.price), acquiredDate: toISODate(d.acquiredDate), tags: Array.isArray(d.tags) ? d.tags : [] };
     const e = validateMug(next, t);
-    // Every added mug must map to a catalogue entry (no free-typed mugs).
-    if (mode === "create" && (!next.name || !CATALOG_NAMES.has(foldC(next.name)))) e.name = t("err_pick_catalog");
     setErrors(e);
     return Object.keys(e).length ? null : next;
   };
-  const submit = async (addAnother) => {
+  const submit = async () => {
     const next = build();
     if (!next) return;
-    const ok = await onSave(next, { keepOpen: addAnother });
-    if (ok && addAnother) {
-      // Reset for the next mug but keep the chosen status (usually "owned").
-      setD({ ...blankMug(), status: d.status });
-      setErrors({}); setAdded((n) => n + 1);
-    }
+    await onSave(next);
   };
 
   // A wishlist mug becomes owned here — the only status change that makes sense.
@@ -444,6 +423,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
         <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
         <div className="field"><label>{t("form_acquired")}</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
       </div>
+      <div className="switch"><span className="mini">{t("form_has_tag")}</span><input type="checkbox" checked={!!d.hasTag} onChange={(e) => up({ hasTag: e.target.checked })} style={{ width: "auto" }} /></div>
       <div className="row">
         <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} />{errors.price ? <div className="err">{errors.price}</div> : null}</div>
         <div className="field"><label>{t("form_currency")}</label><select value={d.currency || "SEK"} onChange={(e) => up({ currency: e.target.value })}>{[...new Set([...CURRENCIES, d.currency].filter(Boolean))].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
@@ -464,68 +444,90 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
   const footer = (
     <div className="formactions">
       <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
-      {mode === "create" ? <button className="big" disabled={saving} onClick={() => submit(true)}><Plus size={17} /> {t("save_add_another")}</button> : null}
-      <button className="primary big" disabled={saving} onClick={() => submit(false)}>{saving ? <span className="spin" /> : t("save")}</button>
+      <button className="primary big" disabled={saving} onClick={submit}>{saving ? <span className="spin" /> : t("save")}</button>
     </div>
   );
 
   return (
-    <Modal open={open} title={mode === "edit" ? t("form_edit_title") : t("form_add_title")} subtitle={mode === "edit" ? t("form_edit_subtitle") : t("form_subtitle")} onClose={onClose} footer={footer}>
+    <Modal open={open} title={t("form_edit_title")} subtitle={t("form_edit_subtitle")} onClose={onClose} footer={footer}>
       <div className="grid" style={{ gap: 14 }}>
-        {dups.length ? <div className="note warn">{t("form_dup_warn", { list: dups.map((x) => catName(x.name, lang) + (x.year ? ` (${x.year})` : "")).join(", ") })}</div> : null}
-
-        {mode === "edit" ? (
-          <>
-            {/* An existing mug's identity is fixed — show it, don't edit it. */}
-            <div className="editident">
-              <div className="editident-photo">{d.photoUrl ? <img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /> : <MugMark size={56} />}</div>
-              <div style={{ minWidth: 0 }}>
-                <div className="t-h2 editident-name">{catName(d.name, lang) || t("card_untitled")}</div>
-                <div className="sub" style={{ marginTop: 4 }}>{[d.series, d.year, d.edition].filter(Boolean).join(" · ")}</div>
+        {/* An existing mug's identity is fixed — show it, don't edit it. */}
+        <div className="editident">
+          <div className="editident-photo">{d.photoUrl ? <img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /> : <MugMark size={56} />}</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="t-h2 editident-name">{catName(d.name, lang) || t("card_untitled")}</div>
+            <div className="sub" style={{ marginTop: 4 }}>{[d.series, d.year, d.edition].filter(Boolean).join(" · ")}</div>
+          </div>
+        </div>
+        {d.status === "wishlist" ? (
+          <div className="card pad acquire">
+            <div className="row" style={{ justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontWeight: 500 }}>{t("acquire_title")}</div>
+                <div className="help" style={{ marginTop: 4 }}>{t("acquire_body")}</div>
               </div>
+              <button type="button" className="primary" onClick={acquire}><CheckCircle2 size={16} /> {t("acquire_btn")}</button>
             </div>
-            {d.status === "wishlist" ? (
-              <div className="card pad acquire">
-                <div className="row" style={{ justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontWeight: 500 }}>{t("acquire_title")}</div>
-                    <div className="help" style={{ marginTop: 4 }}>{t("acquire_body")}</div>
-                  </div>
-                  <button type="button" className="primary" onClick={acquire}><CheckCircle2 size={16} /> {t("acquire_btn")}</button>
-                </div>
-              </div>
-            ) : null}
-            {acquired ? <div className="note good">{t("acquire_note")}</div> : null}
-          </>
-        ) : (
-          <>
-            {/* Adding: lead with the catalogue picker — it drives everything else. */}
-            <div className="field bigpick"><label>{t("form_name")}</label>
-              <MugPicker value={d.name} invalid={!!errors.name} onPick={pick} />
-              {errors.name ? <div className="err">{errors.name}</div> : null}
-            </div>
-            <div className="field"><label>{t("form_status")}</label>
-              <div className="segradio" role="radiogroup" aria-label={t("form_status")}>
-                <button type="button" role="radio" aria-checked={d.status !== "wishlist"} className={d.status !== "wishlist" ? "active" : ""} onClick={() => up({ status: "owned" })}>{t("tab_collection")}</button>
-                <button type="button" role="radio" aria-checked={d.status === "wishlist"} className={d.status === "wishlist" ? "active" : ""} onClick={() => up({ status: "wishlist" })}>{t("nav_wishlist")}</button>
-              </div>
-            </div>
-            {d.photoUrl ? <div className="formphoto"><img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /></div> : null}
-            {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
-            {d.verifyReason && !["verified", "unverified"].includes(d.verifyReason) ? <div className="note warn">{t("form_verify_failed")}</div> : null}
-          </>
-        )}
+          </div>
+        ) : null}
+        {acquired ? <div className="note good">{t("acquire_note")}</div> : null}
 
-        {mode === "edit" ? (
-          <div className="grid" style={{ gap: 12 }}>{metaFields}</div>
-        ) : (
-          <details className="moredetails">
-            <summary>{t("form_more_details")}</summary>
-            <div className="grid" style={{ gap: 12, marginTop: 12 }}>{metaFields}</div>
-          </details>
-        )}
+        <div className="grid" style={{ gap: 12 }}>{metaFields}</div>
+      </div>
+    </Modal>
+  );
+}
 
-        {added > 0 ? <div className="note good">{t("form_added_count", { n: added })}</div> : null}
+/* --------------------------- AddConfirmModal --------------------------- */
+// Shown after picking a mug to add (from a catalogue search or a photo): confirm
+// with the optional collector details — price, condition and whether the tag is on.
+function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
+  const t = useT();
+  const lang = useLang();
+  const [d, setD] = useState(draft);
+  useEffect(() => { setD(draft); }, [draft]);
+  if (!d) return null;
+  const up = (patch) => setD((x) => ({ ...x, ...patch }));
+  const status = d.status === "wishlist" ? "wishlist" : "owned";
+  const confirm = () => onConfirm({
+    status,
+    condition: d.condition || "Good",
+    price: d.price === "" || d.price == null ? "" : Number(d.price),
+    currency: d.currency || "SEK",
+    hasTag: !!d.hasTag,
+  });
+  const footer = (
+    <div className="formactions">
+      <button className="linkbtn" onClick={onCancel}>{t("cancel")}</button>
+      <button className="primary big" disabled={saving} onClick={confirm}>{saving ? <span className="spin" /> : t("add_confirm_btn")}</button>
+    </div>
+  );
+  return (
+    <Modal open={!!draft} raised title={t("add_confirm_title")} subtitle={t("add_confirm_sub")} onClose={onCancel} footer={footer}>
+      <div className="grid" style={{ gap: 14 }}>
+        <div className="editident">
+          <div className="editident-photo">{d.photoUrl ? <img src={mugImg(d.photoUrl)} alt={catName(d.name, lang) || "Mug"} /> : <MugMark size={56} />}</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="t-h2 editident-name">{catName(d.name, lang) || t("card_untitled")}</div>
+            <div className="sub" style={{ marginTop: 4 }}>{[d.series, d.year, d.edition].filter(Boolean).join(" · ")}</div>
+          </div>
+        </div>
+        {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
+
+        <div className="field"><label>{t("form_status")}</label>
+          <div className="segradio" role="radiogroup" aria-label={t("form_status")}>
+            <button type="button" role="radio" aria-checked={status !== "wishlist"} className={status !== "wishlist" ? "active" : ""} onClick={() => up({ status: "owned" })}>{t("tab_collection")}</button>
+            <button type="button" role="radio" aria-checked={status === "wishlist"} className={status === "wishlist" ? "active" : ""} onClick={() => up({ status: "wishlist" })}>{t("nav_wishlist")}</button>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} /></div>
+          <div className="field"><label>{t("form_currency")}</label><select value={d.currency || "SEK"} onChange={(e) => up({ currency: e.target.value })}>{[...new Set([...CURRENCIES, d.currency].filter(Boolean))].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+        </div>
+        <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
+        <div className="switch"><span className="mini">{t("form_has_tag")}</span><input type="checkbox" checked={!!d.hasTag} onChange={(e) => up({ hasTag: e.target.checked })} style={{ width: "auto" }} /></div>
+        <div className="help">{t("add_confirm_optional")}</div>
       </div>
     </Modal>
   );
@@ -534,7 +536,7 @@ function MugForm({ open, onClose, initial, onSave, mugs, mode, saving }) {
 /* ------------------------------ AddMugModal --------------------------- */
 // One dialog for adding a mug: search the catalogue (newest shortlisted) and
 // quick-add with +, or open the camera to scan a whole shelf.
-function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
+function AddMugModal({ open, onClose, onAddOne, onAddMany, onAddRequest, mugs }) {
   const t = useT();
   const lang = useLang();
   const [screen, setScreen] = useState("choose"); // choose | browse | match
@@ -648,10 +650,12 @@ function AddMugModal({ open, onClose, onAddOne, onAddMany, onQuickAdd, mugs }) {
     return [...pinned, ...rest].slice(0, 80);
   }, [q, ownedKeys, added, newest]);
 
-  const add = (e, status) => {
-    setAdded((m) => { const n = new Map(m); n.set(e.nameEn, status); return n; });
-    onQuickAdd({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status,
+  const add = async (e, status) => {
+    // Close the drawer, then let the confirmation dialog collect optional details.
+    onClose();
+    const created = await onAddRequest({ ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year != null ? e.year : "", status,
       capacity: e.capacity || "", photoUrl: e.image || "", estValueLow: catSek(e.estLow), estValueHigh: catSek(e.estHigh), estValueCurrency: "SEK" });
+    if (created) setAdded((m) => { const n = new Map(m); n.set(e.nameEn, status); return n; });
   };
 
   const setEntry = (i, entry) => setItems((list) => list.map((it, idx) => (idx === i ? { ...it, entry, checked: it.checked || !!entry } : it)));
@@ -1005,6 +1009,7 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
         <div className="sub">{[m.series || "—", m.year, m.edition].filter(Boolean).join(" · ")}</div>
         <div className="badges">
           {m.condition ? <Badge><CheckCircle2 size={12} /> {condLabel(t, m.condition)}</Badge> : null}
+          {m.hasTag ? <Badge kind="fav"><Tag size={12} /> {t("form_has_tag")}</Badge> : null}
           {m.price !== "" && m.price != null ? <Badge><Coins size={12} /> {formatMoney(m.price, m.currency || "SEK")}</Badge> : null}
           {val ? <Badge title={t("card_est_title")}>≈ {val}</Badge> : null}
           {m.location ? <Badge><MapPin size={12} /> {m.location}</Badge> : null}
@@ -1079,7 +1084,6 @@ export default function App() {
   const [anonNoteHidden, setAnonNoteHidden] = useState(true); // hidden until we know sign-in state
 
   const [formInitial, setFormInitial] = useState(null);
-  const [formMode, setFormMode] = useState("create");
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
@@ -1190,13 +1194,25 @@ export default function App() {
       ensureImages(created);
     } catch (e) { toast.error(t("add_failed", { msg: e.message || e })); }
   };
-  // Quick-add a single mug (from the "add mugs" list) — optimistic, no dialog.
+  // Create a mug; returns it (or null on failure).
   const quickAdd = async (draft) => {
     try {
       const { mug } = await api("/api/mugs", { method: "POST", body: JSON.stringify(draft) });
       setMugs((prev) => [mug, ...prev]);
       if (!mug.photoUrl) ensureImages([mug]);
-    } catch (e) { toast.error(t("add_failed", { msg: e.message || e })); }
+      return mug;
+    } catch (e) { toast.error(t("add_failed", { msg: e.message || e })); return null; }
+  };
+  // Adding a mug always goes through a confirmation dialog (price/condition/tag).
+  const addResolveRef = useRef(null);
+  const [pendingAdd, setPendingAdd] = useState(null);
+  const requestAdd = (draft) => new Promise((resolve) => { addResolveRef.current = resolve; setPendingAdd({ ...draft }); });
+  const finishAdd = (created) => { const r = addResolveRef.current; addResolveRef.current = null; setPendingAdd(null); r?.(created || null); };
+  const confirmAdd = async (patch) => {
+    const d = pendingAdd; if (!d) return;
+    setSaving(true);
+    try { const mug = await quickAdd({ ...d, ...patch }); finishAdd(mug); }
+    finally { setSaving(false); }
   };
   const del = (m) => setConfirmMug(m);
   const doDelete = async () => {
@@ -1225,9 +1241,7 @@ export default function App() {
     finally { setCatalogBusy(false); }
   };
 
-  const openCreate = () => { setFormInitial(blankMug()); setFormMode("create"); setFormOpen(true); };
-  const openEdit = (m) => { setFormInitial({ ...m }); setFormMode("edit"); setFormOpen(true); };
-  const openReview = (draft) => { setFormInitial({ ...draft }); setFormMode("create"); setFormOpen(true); };
+  const openEdit = (m) => { setFormInitial({ ...m }); setFormOpen(true); };
 
   const enableNotifications = async () => {
     setNotifMsg("");
@@ -1462,8 +1476,9 @@ export default function App() {
         <div className="footinner"><span className="footmark"><MugMark size={20} /></span><span>{t("app_title")}</span></div>
       </footer>
 
-      <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mode={formMode} mugs={mugs} onSave={saveMug} saving={saving} />
-      <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={openReview} onAddMany={addMany} onQuickAdd={quickAdd} />
+      <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving} />
+      <AddMugModal open={scanOpen} onClose={() => setScanOpen(false)} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} />
+      <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
       <DeleteDialog mug={confirmMug} onCancel={() => setConfirmMug(null)} onConfirm={doDelete} />

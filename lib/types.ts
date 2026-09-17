@@ -41,6 +41,8 @@ export interface Mug {
   price: number | "" | null;
   currency: string | null;
   favorite: boolean;
+  /** Whether the original price sticker/tag ("etikett") is still present. */
+  hasTag?: boolean;
   photoUrl: string | null;
   estValueLow: number | null;
   estValueHigh: number | null;

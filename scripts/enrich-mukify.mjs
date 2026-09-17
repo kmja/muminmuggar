@@ -104,8 +104,6 @@ function toDetails(node) {
     imagerySources: f.imagery_sources || [],
     material: first("materials"),
     measurements: parseMeasurements(f.measurements),
-    urlEn: node.seoUrlEn ? `https://www.mukify.com/en/${node.seoUrlEn}` : null,
-    urlSv: node.seoUrlSv ? `https://www.mukify.com/sv/${node.seoUrlSv}` : null,
   };
 }
 

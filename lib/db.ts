@@ -130,6 +130,9 @@ CREATE TABLE IF NOT EXISTS mug_models (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Collector flags (added later): original price sticker/tag still present.
+ALTER TABLE mugs ADD COLUMN IF NOT EXISTS has_tag BOOLEAN NOT NULL DEFAULT FALSE;
+
 -- Multi-user: scope collections/subscriptions to a Google account (added later).
 ALTER TABLE mugs ADD COLUMN IF NOT EXISTS owner TEXT;
 ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS owner TEXT;
@@ -188,6 +191,7 @@ export function rowToMug(r: Record<string, unknown>): Mug {
     price: r.price == null ? "" : Number(r.price),
     currency: (r.currency as string) ?? null,
     favorite: Boolean(r.favorite),
+    hasTag: Boolean(r.has_tag),
     photoUrl: (r.photo_url as string) ?? null,
     estValueLow: num(r.est_value_low),
     estValueHigh: num(r.est_value_high),
