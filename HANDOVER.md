@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.49.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.50.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -96,8 +96,10 @@ public/
   button is a fixed **FAB bottom-right**; there is no bottom nav.
 - **Add flow:** from the add drawer (catalogue search `+`/`♥`) or photo
   identification. **`♥` (wishlist) skips the dialog** — the heart pops and a
-  toast confirms. **`+` (owned)** opens the **AddConfirmModal** (price + currency,
-  condition, **"Etikett kvar"**) before saving. The drawer **stays open** behind
+  toast confirms. **`+` (owned)** opens the **AddConfirmModal** — grouped into
+  **Förvärv** (acquisition date, defaulted to today; paid + currency) and
+  **Egenskaper** (condition, **"Etikett kvar"**, notes) — before saving. The
+  drawer **stays open** behind
   the raised confirm so several mugs can be added in a row (photo matches reset
   to the start screen); each stage (choose/browse/match/review) cross-fades in.
   The shelf-scan batch flow still closes the drawer when done.
@@ -224,6 +226,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.50.0** — Add-confirm dialog split into "Förvärv"
+  (acquisition date defaulted to today + payment) and "Egenskaper" (condition,
+  etikett, notes) sections; notes + acquisition date now captured on add.
 - **2026-09-17 · v1.49.0** — Wishlist quick-add skips the confirm (heart pop +
   toast); add-drawer stages cross-fade; list-view star button is gold when
   active and the thumbnail badge is gone.

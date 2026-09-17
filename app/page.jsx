@@ -71,6 +71,8 @@ const CATALOG_UNIQUE = (() => { const seen = new Set(), out = []; for (const e o
 const searchMasterCatalog = createSearch(MASTER_CATALOG, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.years });
 const searchCatalogUnique = createSearch(CATALOG_UNIQUE, { nameEn: (e) => e.nameEn, nameSv: (e) => e.nameSv, years: (e) => e.years });
 const toISODate = (d) => (d ? String(d).slice(0, 10) : "");
+// Local YYYY-MM-DD (toISOString would be UTC and can be a day off near midnight).
+const todayISO = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`; };
 function formatMoney(amount, currency = "SEK") {
   if (amount === "" || amount == null) return "";
   const n = Number(amount);
@@ -509,21 +511,25 @@ function MugForm({ open, onClose, initial, onSave, saving }) {
 
 /* --------------------------- AddConfirmModal --------------------------- */
 // Shown after picking a mug to add (from a catalogue search or a photo): confirm
-// with the optional collector details — price, condition and whether the tag is on.
+// the acquisition details and collector attributes before saving.
 function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
   const t = useT();
   const lang = useLang();
   const [d, setD] = useState(draft);
-  useEffect(() => { setD(draft); }, [draft]);
+  // Default the acquisition date to today so the common case is one tap away.
+  // Layout effect so the date is filled before the first paint (no flash).
+  useIsoLayoutEffect(() => { setD(draft ? { ...draft, acquiredDate: draft.acquiredDate || todayISO() } : draft); }, [draft]);
   if (!d) return null;
   const up = (patch) => setD((x) => ({ ...x, ...patch }));
   const status = d.status === "wishlist" ? "wishlist" : "owned";
   const confirm = () => onConfirm({
     status,
+    acquiredDate: toISODate(d.acquiredDate),
     condition: d.condition || "Good",
     price: d.price === "" || d.price == null ? "" : Number(d.price),
     currency: d.currency || "SEK",
     hasTag: !!d.hasTag,
+    notes: d.notes || "",
   });
   const footer = (
     <div className="formactions">
@@ -543,12 +549,23 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
         </div>
         {d.aiConfidence != null ? <div className="row" style={{ justifyContent: "space-between" }}><Confidence v={d.aiConfidence} /><span className="help">{t("form_auto_identified")}</span></div> : null}
 
-        <div className="row">
-          <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} /></div>
-          <div className="field"><label>{t("form_currency")}</label><select value={d.currency || "SEK"} onChange={(e) => up({ currency: e.target.value })}>{[...new Set([...CURRENCIES, d.currency].filter(Boolean))].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-        </div>
-        <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
-        <div className="switch"><span className="mini">{t("form_has_tag")}</span><input type="checkbox" checked={!!d.hasTag} onChange={(e) => up({ hasTag: e.target.checked })} style={{ width: "auto" }} /></div>
+        <section className="formsect">
+          <div className="formsect-title">{t("confirm_section_acquisition")}</div>
+          <div className="field"><label>{t("form_acquired")}</label><input type="date" value={toISODate(d.acquiredDate)} onChange={(e) => up({ acquiredDate: e.target.value })} /></div>
+          <div className="row">
+            <div className="field"><label>{t("form_paid")}</label><input inputMode="decimal" value={d.price ?? ""} onChange={(e) => up({ price: e.target.value })} placeholder={t("form_paid_ph")} /></div>
+            <div className="field"><label>{t("form_currency")}</label><select value={d.currency || "SEK"} onChange={(e) => up({ currency: e.target.value })}>{[...new Set([...CURRENCIES, d.currency].filter(Boolean))].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+          </div>
+        </section>
+
+        <section className="formsect">
+          <div className="formsect-title">{t("confirm_section_attributes")}</div>
+          <div className="row" style={{ alignItems: "flex-end" }}>
+            <div className="field"><label>{t("form_condition")}</label><select value={d.condition || "Good"} onChange={(e) => up({ condition: e.target.value })}>{CONDITIONS.map((c) => <option key={c} value={c}>{condLabel(t, c)}</option>)}</select></div>
+            <div className="field"><div className="switch"><span className="mini">{t("form_has_tag")}</span><input type="checkbox" checked={!!d.hasTag} onChange={(e) => up({ hasTag: e.target.checked })} style={{ width: "auto" }} /></div></div>
+          </div>
+          <div className="field"><label>{t("form_notes")}</label><textarea value={d.notes || ""} onChange={(e) => up({ notes: e.target.value })} placeholder={t("form_notes_ph")} style={{ minHeight: 64 }} /></div>
+        </section>
       </div>
     </Modal>
   );
