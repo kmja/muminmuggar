@@ -935,7 +935,12 @@ function ImportDialog({ open, onClose, onImported }) {
         setText("");
       }
       onImported?.();
-    } catch (e) { setErr(t("import_failed", { msg: e.message || e })); }
+    } catch (e) {
+      const m = String(e.message || e);
+      if (/public username|AnonymousUser/i.test(m)) setErr(t("import_no_public_username"));
+      else if (/No such user/i.test(m)) setErr(t("import_no_user"));
+      else setErr(t("import_failed", { msg: m }));
+    }
     finally { setBusy(false); }
   };
 
