@@ -355,6 +355,13 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   padding:17px 18px 36px; color:var(--muted); font-size:var(--fs-label); letter-spacing:.02em}
 .footmark{color:var(--accent); display:inline-flex}
 
+/* Draggable Mukify-export bookmarklet (Import dialog). */
+.bookmarklet{display:inline-flex; align-items:center; gap:8px; padding:12px 18px; border-radius:999px; flex:none;
+  border:1.5px solid var(--accent); color:var(--accent); background:transparent; font-size:var(--fs-label);
+  letter-spacing:.02em; text-decoration:none; cursor:grab; font-weight:400; transition:background var(--dur-fast)}
+.bookmarklet:hover{background:color-mix(in srgb, var(--accent) 10%, transparent)}
+.bookmarklet:active{cursor:grabbing}
+
 /* Collection summary strip */
 .summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}
 

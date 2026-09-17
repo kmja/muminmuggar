@@ -17,7 +17,7 @@ import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
   Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
-  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User,
+  ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User, Download,
 } from "lucide-react";
 
 /* ------------------------------- i18n --------------------------------- */
@@ -298,7 +298,7 @@ function LangPicker({ lang, setLang }) {
   );
 }
 /* Top-right avatar → menu with account (or sign-in), theme, language. */
-function AccountMenu({ user, signedIn, theme, setTheme, lang, setLang }) {
+function AccountMenu({ user, signedIn, theme, setTheme, lang, setLang, onImport }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [systemDark, setSystemDark] = useState(false);
@@ -342,6 +342,8 @@ function AccountMenu({ user, signedIn, theme, setTheme, lang, setLang }) {
               <span className="t-h3">{l.flag}</span><span>{l.label}</span>
             </button>
           ))}
+          <div className="menudiv" />
+          <button type="button" className="langitem" role="menuitem" onClick={() => { setOpen(false); onImport?.(); }}><Download size={17} /><span>{t("account_import")}</span></button>
           {signedIn ? (<>
             <div className="menudiv" />
             <button type="button" className="langitem" role="menuitem" onClick={() => signOut()}><LogOut size={17} /><span>{t("sign_out")}</span></button>
@@ -891,6 +893,66 @@ function AddMenu({ open, onOpenChange, anchorRef, onBrowse, onPhoto }) {
   );
 }
 
+/* ----------------------------- ImportDialog --------------------------- */
+// Migrate a collection from Mukify. The user runs this bookmarklet on mukify.com
+// (their session stays in their browser), which copies a JSON export; they paste
+// it here and we create the mugs. We never handle their Mukify credentials.
+const MUKIFY_CODE = `(async()=>{const E="https://database-prod.mukify.com/graphiql/",Q="query($type:Float,$first:Int!,$offset:Int!){collectionItem(type:$type,first:$first,offset:$offset){totalCount edges{node{boughtPrice boughtDate comment stickered signed misprinted item{nameEnUs basicInfo{name} additionalInfo{field rows{columns}}}}}}}";const g=async v=>{const r=await fetch(E,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:Q,variables:v})}),j=await r.json();if(j.errors)throw Error((j.errors[0]&&j.errors[0].message)||"GraphQL error");return j.data.collectionItem};const all=async t=>{const out=[];let o=0,n=Infinity;while(o<n){const c=await g({type:t,first:200,offset:o});n=c.totalCount;const e=c.edges||[];out.push(...e);o+=e.length;if(!e.length)break}return out};const norm=(x,w)=>{const f={};for(const b of (x.item&&x.item.additionalInfo)||[])for(const r of b.rows||[])for(const c of r.columns||[])(f[b.field]=f[b.field]||[]).push(String(c));const s=Number((f.serial_number||[])[0]);return{serial:isFinite(s)?s:null,name:(x.item&&((x.item.basicInfo&&x.item.basicInfo.name)||x.item.nameEnUs))||null,wishlist:!!w,boughtPrice:x.boughtPrice||null,boughtDate:x.boughtDate||null,comment:x.comment||null,stickered:!!x.stickered,signed:!!x.signed,misprinted:!!x.misprinted}};try{let cur="SEK";try{const m=await fetch(E,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:"{me{currency}}"})}),mj=await m.json();cur=(mj.data&&mj.data.me&&mj.data.me.currency)||cur}catch(e){}const owned=(await all(1)).map(x=>norm(x,0)),wish=(await all(2)).map(x=>norm(x,1)),data=JSON.stringify({source:"mukify",currency:cur,items:owned.concat(wish)});try{await navigator.clipboard.writeText(data)}catch(e){window.prompt("Copy this JSON:",data)}alert("Mukify export: "+owned.length+" owned + "+wish.length+" wishlist copied. Paste it into Muminmuggar.")}catch(e){alert("Mukify export failed: "+(e&&e.message?e.message:e)+"\\n\\nMake sure you are logged in and on mukify.com.")}})()`;
+
+function ImportDialog({ open, onClose, onImported }) {
+  const t = useT();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  useEffect(() => { if (open) { setText(""); setBusy(false); setMsg(""); setErr(""); } }, [open]);
+
+  const run = async () => {
+    setErr(""); setMsg("");
+    let payload;
+    try { payload = JSON.parse(text); } catch { setErr(t("import_bad_json")); return; }
+    const items = Array.isArray(payload) ? payload : payload?.items;
+    if (!Array.isArray(items) || !items.length) { setErr(t("import_empty")); return; }
+    setBusy(true);
+    try {
+      const r = await api("/api/import/mukify", { method: "POST", body: JSON.stringify({ items, currency: payload?.currency }) });
+      setMsg(t("import_done", { created: r.created, skipped: r.skipped, unmatched: r.unmatched }));
+      setText("");
+      onImported?.();
+    } catch (e) { setErr(t("import_failed", { msg: e.message || e })); }
+    finally { setBusy(false); }
+  };
+
+  const footer = (
+    <div className="formactions">
+      <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
+      <button className="primary big" disabled={busy || !text.trim()} onClick={run}>{busy ? <span className="spin" /> : t("import_btn")}</button>
+    </div>
+  );
+
+  return (
+    <Modal open={open} onClose={onClose} title={t("import_title")} subtitle={t("import_sub")} footer={footer}>
+      <div className="grid" style={{ gap: 14 }}>
+        <div className="note">{t("import_help")}</div>
+        <div className="row" style={{ gap: 12, alignItems: "center" }}>
+          <a className="bookmarklet" href={"javascript:" + encodeURIComponent(MUKIFY_CODE)} draggable="true" onClick={(e) => e.preventDefault()} title={t("import_drag_hint")}>
+            <Download size={16} /> {t("import_bookmarklet")}
+          </a>
+          <span className="help">{t("import_drag_hint")}</span>
+        </div>
+        <div className="field">
+          <label>{t("import_paste")}</label>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
+            placeholder='{"source":"mukify","items":[...]}'
+            style={{ minHeight: 120, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "var(--fs-caption)" }} />
+        </div>
+        {msg ? <div className="note good">{msg}</div> : null}
+        {err ? <div className="err">{err}</div> : null}
+      </div>
+    </Modal>
+  );
+}
+
 /* ------------------------------ GapFinder ----------------------------- */
 function GapFinder({ open, onClose, mugs, onAddWishlist }) {
   const t = useT();
@@ -1190,6 +1252,7 @@ export default function App() {
   const [addPhoto, setAddPhoto] = useState(""); // photo handed to the add dialog
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [dealsMug, setDealsMug] = useState(null);
   const [confirmMug, setConfirmMug] = useState(null);
@@ -1480,7 +1543,7 @@ export default function App() {
             <button className="hide-mobile" onClick={() => setGapOpen(true)}><Sparkles size={16} /> {t("gaps_btn")}</button>
             <button className="ghost icon" title={t("tab_stats")} aria-label={t("tab_stats")} onClick={() => setStatsOpen(true)}><BarChart3 size={18} /></button>
             <button className="ghost icon" title={t("notif_about_aria")} aria-label={t("about_title")} onClick={() => setAboutOpen(true)}><Bell size={18} /></button>
-            <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} />
+            <AccountMenu user={currentUser} signedIn={signedIn} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} onImport={() => setImportOpen(true)} />
           </div>
         </div>
         <svg className="topwave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,22 C180,40 360,4 720,16 C1080,28 1260,40 1440,14 L1440,0 L0,0 Z" /></svg>
@@ -1598,6 +1661,7 @@ export default function App() {
       <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse} onPhoto={startAddPhoto} />
       <AddMugModal open={scanOpen} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reload} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
       <DeleteDialog mug={confirmMug} onCancel={() => setConfirmMug(null)} onConfirm={doDelete} />

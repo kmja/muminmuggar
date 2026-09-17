@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.53.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.54.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -56,6 +56,7 @@ app/
     cron/check-wishlist    # scheduled notifier
     tradera                # diagnostics: live Tradera search
     match-feedback, label-images, labels, finetune, model
+    import/mukify          # paste-import a Mukify export (bookmarklet)
     health, claim, auth/[...nextauth]
 lib/
   db.ts               # schema (auto-migrates) + rowToMug
@@ -73,6 +74,7 @@ lib/
   motion.js           # motion toolkit: useRipple, useFlip, animateGhost, useCountUp
   master-catalog.json # 201 catalogue entries (source of truth for mugs)
   mug-details.json    # collector attributes per mug (from Mukify; see §6)
+  mukify-import.ts    # map a Mukify collection export → mugs (see §6)
   probe-base.json     # synthetic normal equations for on-device fine-tuning
   version.js
 scripts/
@@ -168,6 +170,21 @@ public/
 - **Do NOT link to Mukify in the app** (user decision). URLs are stripped.
 - Not yet surfaced in the UI — this is ready groundwork.
 
+### Collection migration from Mukify
+
+- Account menu → **"Importera från Mukify"** opens `ImportDialog`: a draggable
+  **bookmarklet** + a paste box. The user runs the bookmarklet **on mukify.com**
+  (their session never leaves their browser), it copies a JSON export to the
+  clipboard, and they paste it in.
+- `POST /api/import/mukify` (`lib/mukify-import.ts`) matches each item to our
+  catalogue by **serial number** (fallback: name), creates owned/wishlist mugs,
+  skips ones already present (folded name), and maps `boughtPrice`/`boughtDate`/
+  `comment`/`stickered`→`hasTag`.
+- The bookmarklet queries `collectionItem(type: 1|2, first/offset)` on
+  `database-prod.mukify.com/graphiql/` with `credentials:"include"` (CORS only
+  allows `https://www.mukify.com`). `type: 1` = collection, `type: 2` = favorites
+  — **verify this split on the first real export**.
+
 ---
 
 ## 7. Environment & deploy
@@ -192,9 +209,10 @@ public/
   `206 Moomin Norway`, `207 Moomin's Day Blue`.
 - [ ] **Surface collector details** (stamps/stickers/characters/colours/special)
   in the UI (edit dialog), **without** a Mukify link.
-- [ ] **Mukify collection migration:** sharing links are a paid feature, so the
-  share-link import is out. Options: a bookmarklet/console snippet the user runs
-  while logged in, or a manual paste/import. Not built yet.
+- [ ] **Mukify migration:** bookmarklet + paste import is built (see §6). Verify
+  the owned/wishlist split (`collectionItem(type:1|2)`) and the
+  `serial_number`/name matching against a real export; add a "already imported"
+  dry-run preview if useful.
 - [ ] **Production env:** add Tradera + VAPID keys in Vercel and redeploy; verify
   `/api/health`, enable notifications, send a test push.
 - [ ] Consider showing the "etikett" flag on list rows too; further deal-row
@@ -237,6 +255,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.54.0** — Mukify migration: draggable bookmarklet (runs in the
+  user's Mukify session) + paste-import dialog + `POST /api/import/mukify`
+  (`lib/mukify-import.ts`). No Mukify credentials touch our servers.
 - **2026-09-17 · v1.53.0** — Clearer button press: fast dip to scale(.92), springy
   bounce-back, inset pressed shadow, stronger ripple.
 - **2026-09-17 · v1.52.1** — Add-menu items are now large Material 3 pill
