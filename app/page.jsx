@@ -865,16 +865,16 @@ function AddMenu({ open, onOpenChange, anchorRef, onBrowse, onPhoto }) {
     onOpenChange(false);
   };
   const items = [
-    { key: "catalog", icon: <Search size={18} />, label: t("add_search_catalog"), onClick: () => { onOpenChange(false); onBrowse(); } },
-    { key: "image", icon: <ImagePlus size={18} />, label: t("scan_choose_image"), onClick: () => choose("file") },
-    { key: "photo", icon: <Camera size={18} />, label: t("scan_take_photo"), onClick: () => choose("cam") },
+    { key: "catalog", icon: <Search size={24} />, label: t("add_search_catalog"), onClick: () => { onOpenChange(false); onBrowse(); } },
+    { key: "image", icon: <ImagePlus size={24} />, label: t("scan_choose_image"), onClick: () => choose("file") },
+    { key: "photo", icon: <Camera size={24} />, label: t("scan_take_photo"), onClick: () => choose("cam") },
   ];
   return (
     <>
       <Popover.Root open={open} onOpenChange={onOpenChange}>
         <Popover.Anchor virtualRef={anchorRef} />
         <Popover.Portal>
-          <Popover.Content className="addmenu" side="top" align="end" sideOffset={12} collisionPadding={16} aria-label={t("nav_add")}>
+          <Popover.Content className="addmenu" side="top" align="end" sideOffset={16} collisionPadding={16} aria-label={t("nav_add")}>
             <div className="addmenu-surface" role="menu">
               {items.map((it, i) => (
                 <button key={it.key} type="button" role="menuitem" className="addmenu-item" style={{ animationDelay: `${i * 35}ms` }} onClick={it.onClick}>
