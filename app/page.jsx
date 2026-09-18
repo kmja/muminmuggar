@@ -1711,7 +1711,7 @@ export default function App() {
                 ) : k === "wishlist" && panels.wishlist.length === 0 ? (
                   <div className="card pad" style={{ textAlign: "center" }}>
                     <div className="emptyicon"><Heart size={34} /></div>
-                    <div className="t-h1" style={{ fontWeight: 400, marginTop: 8 }}>{t("wishlist_empty_title")}</div>
+                    <div className="t-h1" style={{ marginTop: 8 }}>{t("wishlist_empty_title")}</div>
                     <div className="sub" style={{ marginTop: 6 }}>{t("wishlist_empty_sub")}</div>
                     <div className="row" style={{ justifyContent: "center", marginTop: 14 }}>
                       <button className="primary" onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button>
@@ -1720,7 +1720,7 @@ export default function App() {
                 ) : k === "collection" && collectionCount === 0 ? (
                   <div className="card pad empty">
                     <MugShelf />
-                    <div className="t-h1" style={{ fontWeight: 400, marginTop: 12 }}>{t("empty_title")}</div>
+                    <div className="t-h1" style={{ marginTop: 12 }}>{t("empty_title")}</div>
                     <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
                     <div className="emptyactions">
                       <button className="primary accent big" onClick={() => camRef.current?.click()}><Camera size={18} /> {t("scan_take_photo")}</button>

@@ -10,9 +10,11 @@
   /* Type scale — all text sizes derive from these (rem). Scale the whole UI by
      changing html{font-size}. */
   --fs-h1:1.75rem; --fs-h2:1.25rem; --fs-h3:1.125rem; --fs-body:1rem; --fs-ui:0.9375rem;
-  --fs-label:0.875rem; --fs-secondary:0.8125rem; --fs-caption:0.75rem; --fs-tiny:0.6875rem;
+  --fs-label:0.875rem; --fs-secondary:0.8125rem; --fs-caption:0.75rem;
   /* Icon sizes — set in /type. */
   --icon-xs:17px; --icon-sm:16px; --icon-md:16px; --icon-lg:17px; --icon-xl:28px;
+  /* Font weights — set in /type. */
+  --fw-light:300; --fw-regular:400; --fw-medium:500; --fw-semibold:600; --fw-bold:700;
 }
 /* Dark palette: follows the system when no explicit choice is made… */
 @media (prefers-color-scheme: dark){
@@ -63,15 +65,10 @@ body{
   font-size:var(--fs-body);
 }
 /* Type-scale utilities — apply these instead of hard-coded font sizes. */
-.t-h1{font-size:var(--fs-h1)}
-.t-h2{font-size:var(--fs-h2)}
+.t-h1{font-size:var(--fs-h1); font-weight:var(--fw-bold)}
+.t-h2{font-size:var(--fs-h2); font-weight:var(--fw-bold)}
 .t-h3{font-size:var(--fs-h3)}
-.t-body{font-size:var(--fs-body)}
-.t-ui{font-size:var(--fs-ui)}
 .t-label{font-size:var(--fs-label)}
-.t-secondary{font-size:var(--fs-secondary)}
-.t-caption{font-size:var(--fs-caption)}
-.t-tiny{font-size:var(--fs-tiny)}
 /* Icon sizes (tokens set in /type). CSS width/height wins over the SVG attrs. */
 .badge svg, .chip svg{width:var(--icon-xs); height:var(--icon-xs)}
 button svg{width:var(--icon-sm); height:var(--icon-sm)}
@@ -91,7 +88,7 @@ a{color:var(--accent-ink)}
 .brand:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 .title{display:flex;flex-direction:column;gap:0;min-width:0}
 .title h1{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-h1{font-size:var(--fs-h1); margin:0; letter-spacing:.005em; font-weight:300; line-height:1.02}
+h1{font-size:var(--fs-h1); margin:0; letter-spacing:.005em; font-weight:var(--fw-bold); line-height:1.02}
 .ver{display:block; font-size:var(--fs-secondary); color:var(--muted); font-weight:400; letter-spacing:.06em; margin-top:1px}
 .sub{color:var(--muted); font-size:var(--fs-body)}
 .actions{display:flex; gap:9px; flex-wrap:wrap; align-items:center; flex:none; justify-content:flex-end}
@@ -132,8 +129,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
    in keeping with the Arabia Moomin look (no heavy pill buttons). */
 /* Reserve horizontal gestures for tab-swiping; keep vertical scroll native.
    On mobile, min-height keeps a swipe target even when the page is short. */
-.tabpanel{touch-action:pan-y}
-@media (max-width: 719px){ .tabpanel{min-height:62vh} }
 .tabs{display:flex; gap:34px; margin: 10px 0 22px; border-bottom:1px solid var(--border); overflow-x:auto}
 .tabbtn{padding:9px 2px; margin-bottom:-1px; border:none; border-bottom:2px solid transparent; border-radius:0;
   background:transparent; color: var(--muted); font-weight:400; font-size:var(--fs-body); letter-spacing:.04em; white-space:nowrap}
@@ -183,11 +178,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .badge.fav{border-color: color-mix(in srgb, var(--gold) 55%, var(--border)); color:var(--gold)}
 .badge.deal{border-color:transparent; background: color-mix(in srgb, var(--accent2) 18%, transparent); color: var(--accent2)}
 .chip{font-size:var(--fs-secondary);padding:6px 11px;border-radius:999px;background: transparent;border:1px solid var(--border); display:inline-flex; align-items:center; gap:4px}
-.abschip{position:absolute; top:10px; left:10px; display:flex; gap:6px}
-.abschip .badge{background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(6px); color: var(--text); border:1px solid var(--border); border-radius:4px; font-weight:400}
-.abschip .badge.owned{color: var(--accent-ink)}
-.abschip .badge.wishlist{color: var(--accent)}
-.abschip .badge.fav{color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, var(--border))}
 .mugfoot{display:flex; gap:9px; margin-top:auto; padding-top:11px}
 .mugfoot button{flex:1; padding:9px 6px; justify-content:center}
 .divider{height:1px;background:var(--border);margin:9px 0}
@@ -200,7 +190,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius: 10px;box-shadow: 0 20px 60px rgba(27,20,35,.18);max-height: 90vh;overflow:auto}
 .modal.wide{width:min(920px, calc(100vw - 24px))}
 .modal .head{padding:18px 18px 0; position:sticky; top:0; background: var(--card); z-index:2}
-.modal h2{margin:0;font-size:var(--fs-h2); font-weight:400}
+.modal h2{margin:0;font-size:var(--fs-h2); font-weight:var(--fw-bold)}
 .modal .body{padding:16px 18px 18px}
 .modal .foot{padding:13px 18px 18px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; position:sticky; bottom:0; background: var(--card)}
 .help{font-size:var(--fs-body);color:var(--muted)}
@@ -263,17 +253,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .bar > span{display:block;height:100%;background: var(--accent)}
 .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
 .drop{border:1.5px dashed var(--border); border-radius:10px; padding:22px; text-align:center; color:var(--muted); background: var(--bg2)}
-/* camera viewfinder */
-.vfwrap{position:relative; border-radius:12px; overflow:hidden; background:#12101a}
-.viewfinder{width:100%; aspect-ratio:3/4; max-height:56vh; object-fit:cover; display:block; background:#12101a}
-.vfplaceholder{aspect-ratio:3/4; max-height:44vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  color:var(--muted); background: var(--lilac); padding:20px; text-align:center}
-.vfplaceholder svg{color: var(--accent); opacity:.6}
-.vfcapture{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); width:66px; height:66px; padding:0;
-  border-radius:999px; background:transparent; border:3px solid rgba(255,255,255,.85); box-shadow:0 3px 12px rgba(0,0,0,.35)}
-.vfcapture::after{content:""; display:block; width:48px; height:48px; border-radius:999px; background:#fff; margin:0 auto}
-.vfcapture:hover{background:transparent}
-.vfcapture:active::after{background: var(--lilac)}
 .scanrow{display:flex; gap:13px; align-items:flex-start; padding:13px; border:1px solid var(--border); border-radius:10px}
 .scanthumb{width:54px; height:54px; flex:none; border-radius:8px; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 /* On-device match candidates: a 2x2 grid of large product images. */
@@ -313,11 +292,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* mug picker (catalogue-locked name selector) */
 .mugpicker{position:relative}
 .mugpicker input.invalid{border-color:var(--danger)}
-/* The manual-add form leads with a large catalogue picker. */
-.bigpick .mugpicker input{font-size:var(--fs-body); padding:15px 16px; height:auto}
-/* Catalogue product shot: show the whole mug, modestly sized. */
-.formphoto{display:flex; justify-content:center; align-items:center; background:transparent; border-radius:10px; padding:12px}
-.formphoto img{max-height:160px; max-width:100%; object-fit:contain; display:block}
 /* Edit dialog: read-only mug identity (name/catalogue can't be changed). */
 .editident{display:flex; gap:16px; align-items:center}
 .editident-photo{width:112px; height:112px; flex:none; display:flex; align-items:center; justify-content:center; color:var(--accent)}
@@ -337,13 +311,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   .formactions .big, .formactions .linkbtn{width:100%; justify-content:center; margin-right:0}
 }
 /* Collapsed "more details" section for the optional/personal fields. */
-.moredetails{border:1px solid var(--border); border-radius:10px}
-.moredetails>summary{cursor:pointer; list-style:none; display:flex; align-items:center; gap:9px; padding:14px 16px; color:var(--muted); font-size:var(--fs-label); letter-spacing:.02em}
-.moredetails>summary::-webkit-details-marker{display:none}
-.moredetails>summary::before{content:"›"; font-size:var(--fs-h3); line-height:1; transition:transform .15s ease; color:var(--muted)}
-.moredetails[open]>summary{color:var(--ink); border-bottom:1px solid var(--border)}
-.moredetails[open]>summary::before{transform:rotate(90deg)}
-.moredetails>.grid{padding:14px 16px 16px; margin-top:0 !important}
 .pickmenu{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:70; max-height:min(340px, 52vh); overflow:auto;
   background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 30px rgba(27,20,35,.18); padding:6px}
 .pickitem{display:flex; align-items:center; gap:11px; width:100%; justify-content:flex-start; border:none; background:transparent;
@@ -387,8 +354,6 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .segtabs button:hover{background:transparent; color:var(--ink)}
 .segtabs button.active{color:var(--accent); border-bottom-color:var(--accent); font-weight:500}
 
-/* Collection summary strip */
-.summary-val{font-size:var(--fs-h1); font-weight:300; margin-top:4px; letter-spacing:.01em}
 
 /* Fixed app shell: header/tabs/search stay put; only the list scrolls. The three
    tabs live in a horizontal track that follows the finger when swiping. */

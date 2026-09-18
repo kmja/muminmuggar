@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.61.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.62.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -124,8 +124,9 @@ public/
   shared by the FAB menu and the empty state.
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
   gold when active (matching the grid card). The row's **name uses `h3`**.
-- **`/type` (dev tool):** a noindex playground. Sliders tune the 9 type steps
-  **and 5 icon sizes**; a class picker per atom; and live **composites** (list
+- **`/type` (dev tool):** a noindex playground. Sliders tune the type steps,
+  **5 icon sizes** and **5 font weights**; per-atom class + weight pickers; and
+  live **composites** (list
   view, grid view, search + filters, add dialog, edit dialog, add menu, empty
   state, deal row, stats) that follow the atom picks. "Copy spec" yields a text
   spec the user can send to request type/icon changes.
@@ -271,10 +272,13 @@ public/
   history entry; closing programmatically calls `history.back()` with a
   `suppressPops` counter so our own traversal doesn't close the dialog below it.
   Dialogs are stacked so only the top-most responds.
-- Type scale: 9 rem-based steps in `app/globals.css` (`--fs-tiny` .6875 →
-  `--fs-h1` 1.75, `--fs-body` = **1rem**) with matching `.t-*` utilities. Scale
-  the whole UI by changing `html{font-size}`; never hard-code font sizes. Use
-  `/type` to experiment (see §4).
+- Type scale: rem steps in `app/globals.css` (`--fs-h1` 1.75 → `--fs-caption`
+  .75, `--fs-body` = **1rem**; `--fs-tiny` was dropped). Only `.t-h1/.t-h2/.t-h3/
+  .t-label` utilities remain (the rest were unused). Scale the whole UI by
+  changing `html{font-size}`; never hard-code font sizes. Use `/type` to
+  experiment (see §4).
+- Font weights: `--fw-light/regular/medium/semibold/bold` (300–700; Jost 300–700
+  loaded). Headings (`h1`, `.t-h1`, `.t-h2`, `.modal h2`) are bold. Set in `/type`.
 - Icon sizes: `--icon-xs/sm/md/lg/xl` (17/16/16/17/28px), applied by context via
   CSS (`.badge svg`, `button svg`, `.icon svg`, `.addbtn svg`, `.addmenu-item
   svg`, `.fab svg`) — CSS width/height beats the SVG attributes. Set in `/type`.
@@ -296,6 +300,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.62.0** — Cleanup: removed 10 dead CSS classes and the unused
+  `.t-body/.t-ui/.t-secondary/.t-caption/.t-tiny` utilities + `--fs-tiny`. Added
+  **font-weight tokens** (`--fw-*`, Jost 700 loaded), made headings bold, and
+  added weight sliders + per-atom weight pickers to `/type`.
 - **2026-09-17 · v1.61.0** — Applied the `/type` spec: most atoms moved to
   `body`/`secondary` (buttons, inputs, labels, `.mini`, `.help`, `.sub`, chips),
   `mugname`/`pickname` → `h3`, empty title → `h1`, `deal-price` → `h3`; added

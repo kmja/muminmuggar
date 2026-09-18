@@ -20,11 +20,10 @@ const SCALE = [
   { cls: "t-label", name: "label", v: "--fs-label" },
   { cls: "t-secondary", name: "secondary", v: "--fs-secondary" },
   { cls: "t-caption", name: "caption", v: "--fs-caption" },
-  { cls: "t-tiny", name: "tiny", v: "--fs-tiny" },
 ];
 const VAR_OF = Object.fromEntries(SCALE.map((s) => [s.cls, s.v]));
 const STORAGE_KEY = "muminmuggar-type-tool-v3";
-const DEFAULT_SCALE = { "t-h1": 1.75, "t-h2": 1.25, "t-h3": 1.125, "t-body": 1, "t-ui": 0.9375, "t-label": 0.875, "t-secondary": 0.8125, "t-caption": 0.75, "t-tiny": 0.6875 };
+const DEFAULT_SCALE = { "t-h1": 1.75, "t-h2": 1.25, "t-h3": 1.125, "t-body": 1, "t-ui": 0.9375, "t-label": 0.875, "t-secondary": 0.8125, "t-caption": 0.75 };
 
 const ICONS = [
   { id: "xs", label: "Badge", def: 17, v: "--icon-xs" },
@@ -34,6 +33,16 @@ const ICONS = [
   { id: "xl", label: "Large (FAB)", def: 28, v: "--icon-xl" },
 ];
 const DEFAULT_ICONS = Object.fromEntries(ICONS.map((i) => [i.id, i.def]));
+
+const WEIGHTS = [
+  { id: "light", label: "Light", v: "--fw-light", def: 300 },
+  { id: "regular", label: "Regular", v: "--fw-regular", def: 400 },
+  { id: "medium", label: "Medium", v: "--fw-medium", def: 500 },
+  { id: "semibold", label: "Semibold", v: "--fw-semibold", def: 600 },
+  { id: "bold", label: "Bold", v: "--fw-bold", def: 700 },
+];
+const DEFAULT_WEIGHTS = Object.fromEntries(WEIGHTS.map((w) => [w.id, w.def]));
+const FW_VAR = Object.fromEntries(WEIGHTS.map((w) => [w.id, w.v]));
 
 const Mug = ({ size = 26 }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -288,12 +297,14 @@ const COMPONENTS = [
 const defaults = () => ({
   scale: { ...DEFAULT_SCALE },
   icons: { ...DEFAULT_ICONS },
-  vals: Object.fromEntries(ATOMS.map((el) => [el.id, { cls: el.def, rem: 1 }])),
+  weights: { ...DEFAULT_WEIGHTS },
+  vals: Object.fromEntries(ATOMS.map((el) => [el.id, { cls: el.def, rem: 1, fw: "" }])),
 });
 
 export default function TypeTool() {
   const [scale, setScale] = useState(DEFAULT_SCALE);
   const [icons, setIcons] = useState(DEFAULT_ICONS);
+  const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [vals, setVals] = useState(() => defaults().vals);
   const [copied, setCopied] = useState(false);
 
@@ -309,6 +320,7 @@ export default function TypeTool() {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
       if (saved?.vals) setVals((v) => ({ ...v, ...saved.vals }));
       if (saved?.icons) setIcons((i) => ({ ...i, ...saved.icons }));
+      if (saved?.weights) setWeights((w) => ({ ...w, ...saved.weights }));
     } catch { /* ignore */ }
     const cs = getComputedStyle(document.documentElement);
     const m = {};
@@ -323,11 +335,22 @@ export default function TypeTool() {
       if (Number.isFinite(n) && n > 0) mi[i.id] = n;
     }
     if (Object.keys(mi).length) setIcons((ic) => ({ ...ic, ...mi }));
+    const mw = {};
+    for (const w of WEIGHTS) {
+      const n = parseFloat(cs.getPropertyValue(w.v));
+      if (Number.isFinite(n) && n > 0) mw[w.id] = n;
+    }
+    if (Object.keys(mw).length) setWeights((x) => ({ ...x, ...mw }));
   }, []);
-  useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ scale, icons, vals })); } catch { /* ignore */ } }, [scale, icons, vals]);
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ scale, icons, weights, vals })); } catch { /* ignore */ } }, [scale, icons, weights, vals]);
 
   const update = (id, patch) => setVals((v) => ({ ...v, [id]: { ...v[id], ...patch } }));
-  const styleFor = (val) => (!val ? {} : val.cls === "custom" ? { fontSize: `${val.rem}rem` } : { fontSize: `var(${VAR_OF[val.cls]})` });
+  const styleFor = (val) => {
+    if (!val) return {};
+    const st = { fontSize: val.cls === "custom" ? `${val.rem}rem` : `var(${VAR_OF[val.cls]})` };
+    if (val.fw && FW_VAR[val.fw]) st.fontWeight = `var(${FW_VAR[val.fw]})`;
+    return st;
+  };
   const scaleStyle = Object.fromEntries(SCALE.map((s) => [s.v, `${scale[s.cls]}rem`]));
 
   const specText = () => {
@@ -335,10 +358,14 @@ export default function TypeTool() {
     for (const s of SCALE) out.push(`  ${s.name.padEnd(9)} ${scale[s.cls]}rem`);
     out.push("", "Icons:");
     for (const i of ICONS) out.push(`  ${i.label.padEnd(14)} ${icons[i.id]}px`);
+    out.push("", "Weights:");
+    for (const w of WEIGHTS) out.push(`  ${w.label.padEnd(9)} ${weights[w.id]}`);
     out.push("", "Atoms:");
     for (const el of ATOMS) {
       const v = vals[el.id];
-      out.push(`  ${el.id.padEnd(18)} ${(v.cls === "custom" ? `${v.rem}rem (custom)` : v.cls).padEnd(14)} ${el.css}`);
+      const size = v.cls === "custom" ? `${v.rem}rem (custom)` : v.cls;
+      const fw = v.fw ? `fw:${v.fw}` : "—";
+      out.push(`  ${el.id.padEnd(18)} ${size.padEnd(14)} ${fw.padEnd(12)} ${el.css}`);
     }
     return out.join("\n");
   };
@@ -347,7 +374,7 @@ export default function TypeTool() {
     try { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 2500); }
     catch { window.prompt("Copy this:", text); }
   };
-  const reset = () => { const d = defaults(); setScale(d.scale); setIcons(d.icons); setVals(d.vals); };
+  const reset = () => { const d = defaults(); setScale(d.scale); setIcons(d.icons); setWeights(d.weights); setVals(d.vals); };
   const toggleTheme = () => {
     const el = document.documentElement;
     const isDark = el.getAttribute("data-theme") === "dark"
@@ -399,6 +426,20 @@ export default function TypeTool() {
         </div>
       </section>
 
+      <section className={css.panel}>
+        <div className={css.panelTitle}>Font weights</div>
+        <div className={css.panelGrid}>
+          {WEIGHTS.map((w) => (
+            <label key={w.id} className={css.row}>
+              <span className={css.rowName}>{w.label}</span>
+              <input type="range" min="100" max="900" step="100" value={weights[w.id]}
+                onChange={(e) => setWeights((x) => ({ ...x, [w.id]: Number(e.target.value) }))} aria-label={w.label} />
+              <b className={css.rowVal}>{weights[w.id]}</b>
+            </label>
+          ))}
+        </div>
+      </section>
+
       <div style={scaleStyle}>
         <h2 className={css.groupTitle}>Components</h2>
         <div className={css.compList}>
@@ -432,6 +473,10 @@ export default function TypeTool() {
                         <b>{v.rem}rem</b>
                       </span>
                     ) : <span className={css.val}>{scale[v.cls]}rem</span>}
+                    <select className={css.select} value={v.fw || ""} onChange={(e) => update(el.id, { fw: e.target.value })} aria-label={`${el.label} weight`}>
+                      <option value="">weight —</option>
+                      {WEIGHTS.map((w) => <option key={w.id} value={w.id}>{w.label} {weights[w.id]}</option>)}
+                    </select>
                   </div>
                 </div>
                 <div className={css.preview}>{el.render(ctxFor(el.id))}</div>
