@@ -1532,6 +1532,7 @@ export default function App() {
     pendingDeletes.current.set(m.id, { timer });
     const tid = toast(t("deleted_toast", { name: catName(m.name, lang) }), {
       duration: UNDO_MS,
+      classNames: { toast: "toast-long" },
       action: {
         label: t("undo"),
         onClick: () => {
