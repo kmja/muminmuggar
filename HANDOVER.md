@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.65.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.66.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -291,6 +291,12 @@ public/
 - Icon sizes: `--icon-xs/sm/md/lg/xl` (17/16/16/17/28px), applied by context via
   CSS (`.badge svg`, `button svg`, `.icon svg`, `.addbtn svg`, `.addmenu-item
   svg`, `.fab svg`) — CSS width/height beats the SVG attributes. Set in `/type`.
+- Size tokens (use these, not raw px): radii `--radius-xs/sm/md/lg/xl/2xl/pill`
+  (`--radius` aliases `--radius-sm`); a 2px space scale `--space-2 … --space-48`
+  for padding/margin/gap **and** top/right/bottom/left (negatives are
+  `calc(-1 * var(--space-N))`); controls `--tap-min` (44), `--control-sm` (36),
+  `--control` (38), `--control-lg` (46), `--control-xl` (64), `--thumb-sm` (54),
+  `--thumb` (78), `--photo` (112).
 - i18n: add keys to **both** `sv` and `en` in `lib/i18n.js`.
 - Secrets never in git; `.env.local` is ignored.
 
@@ -309,6 +315,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.66.0** — Added a **size token layer** (radii, 2px space scale,
+  control/touch sizes) and swept the whole stylesheet onto it; toast now uses
+  those tokens (X → `--icon-lg`).
 - **2026-09-17 · v1.65.1** — Toasts bigger still (h3 text, 36px close X, 44px
   pill Undo); Undo now restores a mug to its previous position (re-inserted after
   the row that was above it) instead of the top of the list.

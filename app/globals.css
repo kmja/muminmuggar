@@ -2,7 +2,17 @@
   --bg:#ffffff; --bg2:#f5f1f8; --card:#ffffff; --muted:#6a6472; --text:#1b1b1b;
   --ink:#1b1b1b; --border:#e7e2ee; --accent:#6b4e8c; --accent-ink:#553a73; --lilac:#efe9f6;
   --accent2:#a06a9a; --gold:#b8862f; --danger:#b3453b; --foot:#f4f0e8;
-  --shadow: 0 1px 2px rgba(27,27,27,.05); --radius: 6px;
+  --shadow: 0 1px 2px rgba(27,27,27,.05);
+  /* Radii */
+  --radius-xs:4px; --radius-sm:6px; --radius-md:8px; --radius-lg:10px; --radius-xl:12px; --radius-2xl:16px; --radius-pill:999px;
+  --radius: var(--radius-sm);
+  /* Space scale (2px grid) — use for padding / margin / gap. */
+  --space-2:2px; --space-4:4px; --space-6:6px; --space-8:8px; --space-10:10px; --space-12:12px;
+  --space-14:14px; --space-16:16px; --space-18:18px; --space-20:20px; --space-24:24px; --space-28:28px;
+  --space-32:32px; --space-36:36px; --space-40:40px; --space-48:48px;
+  /* Controls & touch targets */
+  --tap-min:44px; --control-sm:36px; --control:38px; --control-lg:46px; --control-xl:64px;
+  --thumb-sm:54px; --thumb:78px; --photo:112px;
   /* Custom select chevron (data URI so it can be themed via this variable). */
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236a6472' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   /* Add-menu pills (Material 3 style). */
@@ -38,23 +48,23 @@
 }
 *{box-sizing:border-box}
 /* "Not signed in" note */
-.anonnote{display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap;
-  background:var(--lilac); border:1px solid var(--border); border-radius:12px; padding:11px 12px 11px 15px; margin-bottom:12px}
+.anonnote{display:flex; align-items:center; gap:var(--space-12); justify-content:space-between; flex-wrap:wrap;
+  background:var(--lilac); border:1px solid var(--border); border-radius:var(--radius-xl); padding:var(--space-12) var(--space-12) var(--space-12) var(--space-16); margin-bottom:var(--space-12)}
 .anonnote .mini{flex:1; min-width:180px; color:var(--ink); line-height:1.4}
-.anonnote-actions{display:flex; align-items:center; gap:8px; flex:none}
+.anonnote-actions{display:flex; align-items:center; gap:var(--space-8); flex:none}
 .avatarbtn.anon{background:var(--lilac); color:var(--accent); border-color:var(--border)}
 .avatarbtn.anon:hover{background:var(--lilac); border-color:var(--muted)}
 /* Top-right avatar button + its dropdown menu */
-.avatarbtn{width:40px; height:40px; padding:0; flex:none; border-radius:999px; overflow:hidden; border:1.5px solid var(--border);
+.avatarbtn{width:var(--tap-min); height:var(--tap-min); padding:0; flex:none; border-radius:var(--radius-pill); overflow:hidden; border:1.5px solid var(--border);
   background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:var(--fs-body); font-weight:500}
 .avatarbtn:hover{border-color:var(--muted); background:var(--accent)}
 .avatarbtn img{width:100%; height:100%; object-fit:cover}
-.accountmenu{position:absolute; right:0; top:calc(100% + 8px); background:var(--card); border:1px solid var(--border);
-  border-radius:12px; box-shadow:0 14px 34px rgba(27,20,35,.18); padding:6px; z-index:60; min-width:210px;
-  display:flex; flex-direction:column; gap:2px}
-.accthead{padding:9px 11px 7px}
+.accountmenu{position:absolute; right:0; top:calc(100% + var(--space-8)); background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-xl); box-shadow:0 14px 34px rgba(27,20,35,.18); padding:var(--space-6); z-index:60; min-width:210px;
+  display:flex; flex-direction:column; gap:var(--space-2)}
+.accthead{padding:var(--space-10) var(--space-12) var(--space-8)}
 .acctemail{font-size:var(--fs-label); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.menudiv{height:1px; background:var(--border); margin:4px 2px}
+.menudiv{height:1px; background:var(--border); margin:var(--space-4) var(--space-2)}
 html{height:100%; font-size:100%}
 body{
   margin:0;
@@ -77,24 +87,24 @@ button svg{width:var(--icon-sm); height:var(--icon-sm)}
 .addmenu-item svg{width:var(--icon-lg); height:var(--icon-lg)}
 .fab svg{width:var(--icon-xl); height:var(--icon-xl)}
 a{color:var(--accent-ink)}
-.wrap{max-width:1120px;margin:0 auto;padding:18px 18px 122px}
+.wrap{max-width:1120px;margin:0 auto;padding:var(--space-18) var(--space-18) var(--space-48)}
 .top{display:flex; flex-direction:column; align-items:stretch; gap:0; flex-wrap:nowrap;
-  position:sticky; top:0; z-index:30; margin:0 -18px 6px; background:transparent}
+  position:sticky; top:0; z-index:30; margin:0 calc(-1 * var(--space-18)) var(--space-6); background:transparent}
 /* Cream header bar with the signature Moomin wave along its bottom edge. */
-.topbar{display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:nowrap;
-  background:var(--foot); padding:14px 18px 10px}
+.topbar{display:flex; gap:var(--space-14); align-items:center; justify-content:space-between; flex-wrap:nowrap;
+  background:var(--foot); padding:var(--space-14) var(--space-18) var(--space-10)}
 .topwave{display:block; width:100%; height:18px; fill:var(--foot); margin-top:-1px}
-.brand{display:flex;align-items:center;gap:13px;min-width:0; flex:1; cursor:pointer; border-radius:10px}
+.brand{display:flex;align-items:center;gap:var(--space-14);min-width:0; flex:1; cursor:pointer; border-radius:var(--radius-lg)}
 .brand:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 .title{display:flex;flex-direction:column;gap:0;min-width:0}
 .title h1{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 h1{font-size:var(--fs-h1); margin:0; letter-spacing:.005em; font-weight:var(--fw-bold); line-height:1.02}
 .ver{display:block; font-size:var(--fs-secondary); color:var(--muted); font-weight:400; letter-spacing:.06em; margin-top:1px}
 .sub{color:var(--muted); font-size:var(--fs-body)}
-.actions{display:flex; gap:9px; flex-wrap:wrap; align-items:center; flex:none; justify-content:flex-end}
+.actions{display:flex; gap:var(--space-10); flex-wrap:wrap; align-items:center; flex:none; justify-content:flex-end}
 button,.btn{appearance:none; border:1.5px solid var(--ink); background: transparent; color: var(--ink);
-  padding:11px 18px; border-radius: 999px; cursor:pointer; font-weight:400; font-size:var(--fs-body); letter-spacing:.02em;
-  display:inline-flex; align-items:center; gap:8px; line-height:1; transition: border-color .15s, background .15s, color .15s, transform .05s}
+  padding:var(--space-12) var(--space-18); border-radius:var(--radius-pill); cursor:pointer; font-weight:400; font-size:var(--fs-body); letter-spacing:.02em;
+  display:inline-flex; align-items:center; gap:var(--space-8); line-height:1; transition: border-color .15s, background .15s, color .15s, transform .05s}
 button svg{flex:none}
 button:hover{background: color-mix(in srgb, var(--ink) 6%, transparent)}
 button:active{transform: translateY(1px)}
@@ -105,109 +115,109 @@ button:disabled{opacity:.4; cursor:not-allowed}
 .ghost:hover{border-color: var(--muted); background:transparent}
 .ghost.icon.active{background: var(--lilac); border-color: var(--accent); color: var(--accent)}
 .danger{border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); color: var(--danger); background:transparent}
-.icon{padding:10px; width:42px; height:42px; justify-content:center; border-color: var(--border); color: var(--text)}
-.pill{padding:7px 13px; border-radius:999px; border:1px solid var(--border); font-size:var(--fs-secondary); color: var(--muted); background: transparent}
-.grid{display:grid; gap:14px; grid-template-columns:minmax(0,1fr)}
-.card{background: var(--card); border:1px solid var(--border); border-radius: var(--radius); box-shadow: none}
-.card.pad{padding:18px}
-.row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
-.field{display:flex; flex-direction:column; gap:7px; flex:1; min-width:150px}
+.icon{padding:var(--space-10); width:var(--tap-min); height:var(--tap-min); justify-content:center; border-color: var(--border); color: var(--text)}
+.pill{padding:var(--space-8) var(--space-14); border-radius:var(--radius-pill); border:1px solid var(--border); font-size:var(--fs-secondary); color: var(--muted); background: transparent}
+.grid{display:grid; gap:var(--space-14); grid-template-columns:minmax(0,1fr)}
+.card{background: var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow: none}
+.card.pad{padding:var(--space-18)}
+.row{display:flex; gap:var(--space-12); flex-wrap:wrap; align-items:center}
+.field{display:flex; flex-direction:column; gap:var(--space-8); flex:1; min-width:150px}
 label{font-size:var(--fs-body); color: var(--muted); letter-spacing:.02em}
-input, textarea, select{width:100%; padding:12px 14px; border-radius: 6px; border:1px solid var(--border); background: var(--bg); color: var(--text); font-size:var(--fs-body); outline:none; font-family:inherit}
+input, textarea, select{width:100%; padding:var(--space-12) var(--space-14); border-radius:var(--radius-sm); border:1px solid var(--border); background: var(--bg); color: var(--text); font-size:var(--fs-body); outline:none; font-family:inherit}
 input:focus, textarea:focus, select:focus{border-color: var(--accent)}
 /* Replace the tiny native dropdown arrow with a larger, bolder chevron that
    lines up with the field's left padding. */
 select{appearance:none; -webkit-appearance:none; -moz-appearance:none;
   background-image:var(--chev); background-repeat:no-repeat; background-position:right 14px center;
-  background-size:20px 20px; padding-right:44px}
+  background-size:20px 20px; padding-right:var(--space-48)}
 textarea{min-height:84px; resize:vertical}
 input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted) 90%, transparent)}
 .searchfield{position:relative}
-.searchfield .searchicon{position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none}
-.searchfield input{padding-left:42px}
+.searchfield .searchicon{position:absolute; left:var(--space-14); top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none}
+.searchfield input{padding-left:var(--space-40)}
 /* Understated tab strip — a shared baseline with an underline on the active tab,
    in keeping with the Arabia Moomin look (no heavy pill buttons). */
 /* Reserve horizontal gestures for tab-swiping; keep vertical scroll native.
    On mobile, min-height keeps a swipe target even when the page is short. */
-.tabs{display:flex; gap:34px; margin: 10px 0 22px; border-bottom:1px solid var(--border); overflow-x:auto}
-.tabbtn{padding:9px 2px; margin-bottom:-1px; border:none; border-bottom:2px solid transparent; border-radius:0;
+.tabs{display:flex; gap:var(--space-36); margin:var(--space-10) 0 var(--space-24); border-bottom:1px solid var(--border); overflow-x:auto}
+.tabbtn{padding:var(--space-10) var(--space-2); margin-bottom:-1px; border:none; border-bottom:2px solid transparent; border-radius:0;
   background:transparent; color: var(--muted); font-weight:400; font-size:var(--fs-body); letter-spacing:.04em; white-space:nowrap}
 .tabbtn:hover{background:transparent; color: var(--ink); border-color:transparent; border-bottom:2px solid transparent}
 .tabbtn.active{background:transparent; color: var(--accent); border-bottom:2px solid var(--accent); font-weight:500}
 .tabbtn.active:hover{background:transparent; color: var(--accent); border-bottom:2px solid var(--accent)}
-@media (max-width: 719px){ .tabs{gap:0; margin:6px 0 16px} .tabbtn{flex:1; justify-content:center; text-align:center; padding:13px 6px; font-size:var(--fs-body)} }
-.muggrid{display:grid; gap:14px; grid-template-columns:1fr 1fr}
+@media (max-width: 719px){ .tabs{gap:0; margin:var(--space-6) 0 var(--space-16)} .tabbtn{flex:1; justify-content:center; text-align:center; padding:var(--space-14) var(--space-6); font-size:var(--fs-body)} }
+.muggrid{display:grid; gap:var(--space-14); grid-template-columns:1fr 1fr}
 @media (min-width: 980px){ .muggrid{grid-template-columns:1fr 1fr 1fr} }
 /* View toggle (list / grid) */
-.viewtoggle{display:flex; gap:4px; flex:none}
+.viewtoggle{display:flex; gap:var(--space-4); flex:none}
 /* Compact table view: image · name/meta · actions per row */
-.muglist{display:flex; flex-direction:column; gap:8px}
-.mugrow{display:flex; align-items:center; gap:14px; padding:10px 12px 10px 10px; border:1px solid var(--border); border-radius:12px; background:var(--card)}
-.mugrow-thumb{position:relative; width:78px; height:78px; flex:none; border-radius:10px; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
-.mugrow-thumb img{width:100%; height:100%; object-fit:contain; padding:5px; display:block}
+.muglist{display:flex; flex-direction:column; gap:var(--space-8)}
+.mugrow{display:flex; align-items:center; gap:var(--space-14); padding:var(--space-10) var(--space-12) var(--space-10) var(--space-10); border:1px solid var(--border); border-radius:var(--radius-xl); background:var(--card)}
+.mugrow-thumb{position:relative; width:var(--thumb); height:var(--thumb); flex:none; border-radius:var(--radius-lg); background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.mugrow-thumb img{width:100%; height:100%; object-fit:contain; padding:var(--space-6); display:block}
 .mugrow-main{flex:1; min-width:0}
 .mugrow-name{font-weight:400; font-size:var(--fs-h3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.mugrow-actions{display:flex; gap:6px; flex:none}
-.mugrow-actions .icon{width:38px; height:38px; padding:8px}
+.mugrow-actions{display:flex; gap:var(--space-6); flex:none}
+.mugrow-actions .icon{width:var(--control); height:var(--control); padding:var(--space-8)}
 /* List rows: swipe left to delete (right-swipe switches tabs). */
-.mugrow-swipe{position:relative; border-radius:12px; overflow:hidden; touch-action:pan-y}
+.mugrow-swipe{position:relative; border-radius:var(--radius-xl); overflow:hidden; touch-action:pan-y}
 .mugrow-swipe>.mugrow{position:relative; z-index:1}
-.mugrow-delete{position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-end; gap:8px;
-  padding:0 20px; background:var(--danger); color:#fff; font-size:var(--fs-label); letter-spacing:.02em}
+.mugrow-delete{position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-end; gap:var(--space-8);
+  padding:0 var(--space-20); background:var(--danger); color:#fff; font-size:var(--fs-label); letter-spacing:.02em}
 .mugrow-delete.left{justify-content:flex-start}
 .mugrow-delete.right{justify-content:flex-end}
 /* Marketplace deal row — mirrors the compact mug row, as a whole-row link. */
-.dealrow{display:flex; align-items:center; gap:14px; padding:10px 12px 10px 10px; border:1px solid var(--border); border-radius:12px; background:var(--card); color:inherit; text-decoration:none}
+.dealrow{display:flex; align-items:center; gap:var(--space-14); padding:var(--space-10) var(--space-12) var(--space-10) var(--space-10); border:1px solid var(--border); border-radius:var(--radius-xl); background:var(--card); color:inherit; text-decoration:none}
 .dealrow:hover{border-color:var(--muted)}
-.dealrow-thumb{width:78px; height:78px; flex:none; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--accent); overflow:hidden}
-.dealrow-thumb img{width:100%; height:100%; object-fit:cover; border-radius:10px; display:block}
-.dealrow-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
+.dealrow-thumb{width:var(--thumb); height:var(--thumb); flex:none; border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; color:var(--accent); overflow:hidden}
+.dealrow-thumb img{width:100%; height:100%; object-fit:cover; border-radius:var(--radius-lg); display:block}
+.dealrow-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--space-6)}
 .dealrow-title{font-weight:400; font-size:var(--fs-body); color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.dealrow-price{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+.dealrow-price{display:flex; align-items:baseline; gap:var(--space-10); flex-wrap:wrap}
 .dealrow-price-main{font-size:var(--fs-h3); font-weight:500; letter-spacing:.01em}
 .dealrow-price-alt{font-size:var(--fs-secondary); color:var(--muted)}
 .dealrow-foot{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.mug{padding:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border); border-radius:12px; background:var(--card)}
+.mug{padding:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-xl); background:var(--card)}
 /* Mug photos are transparent WebP, so they float directly on the card. */
 .mugphoto{aspect-ratio: 4/3; background: var(--card); position:relative; display:flex; align-items:center; justify-content:center; border-radius:0; overflow:hidden}
-.mugphoto img{width:100%; height:100%; object-fit:contain; display:block; padding:6px}
+.mugphoto img{width:100%; height:100%; object-fit:contain; display:block; padding:var(--space-6)}
 .mugphoto .ph{opacity:.55; color: var(--accent)}
-.mugbody{padding:12px 14px 14px; display:flex; flex-direction:column; gap:7px; flex:1}
+.mugbody{padding:var(--space-12) var(--space-14) var(--space-14); display:flex; flex-direction:column; gap:var(--space-8); flex:1}
 .mugname{font-weight:400; font-size:var(--fs-h3); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:.005em}
 .muted{color:var(--muted)}
 .mugbody .sub{color: var(--accent); font-size:var(--fs-body); text-transform:none; letter-spacing:normal; font-weight:400}
-.badges{display:flex; flex-wrap:wrap; gap:7px}
-.badge{font-size:var(--fs-secondary); padding:6px 11px; border-radius:999px; border:1px solid var(--border); background: transparent; color: var(--muted); display:inline-flex; align-items:center; gap:5px; letter-spacing:.02em}
+.badges{display:flex; flex-wrap:wrap; gap:var(--space-8)}
+.badge{font-size:var(--fs-secondary); padding:var(--space-6) var(--space-12); border-radius:var(--radius-pill); border:1px solid var(--border); background: transparent; color: var(--muted); display:inline-flex; align-items:center; gap:var(--space-6); letter-spacing:.02em}
 .badge svg{flex:none}
 .badge.owned{border-color:transparent; background: var(--lilac); color: var(--accent-ink)}
 .badge.wishlist{border-color: var(--accent); color: var(--accent)}
 .badge.sold{opacity:.8}
 .badge.fav{border-color: color-mix(in srgb, var(--gold) 55%, var(--border)); color:var(--gold)}
 .badge.deal{border-color:transparent; background: color-mix(in srgb, var(--accent2) 18%, transparent); color: var(--accent2)}
-.chip{font-size:var(--fs-secondary);padding:6px 11px;border-radius:999px;background: transparent;border:1px solid var(--border); display:inline-flex; align-items:center; gap:4px}
-.mugfoot{display:flex; gap:9px; margin-top:auto; padding-top:11px}
-.mugfoot button{flex:1; padding:9px 6px; justify-content:center}
-.divider{height:1px;background:var(--border);margin:9px 0}
+.chip{font-size:var(--fs-secondary);padding:var(--space-6) var(--space-12);border-radius:var(--radius-pill);background: transparent;border:1px solid var(--border); display:inline-flex; align-items:center; gap:var(--space-4)}
+.mugfoot{display:flex; gap:var(--space-10); margin-top:auto; padding-top:var(--space-12)}
+.mugfoot button{flex:1; padding:var(--space-10) var(--space-6); justify-content:center}
+.divider{height:1px;background:var(--border);margin:var(--space-10) 0}
 .lineclamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .overlay{position:fixed;inset:0;background:rgba(27,20,35,.5);z-index:50; backdrop-filter: blur(2px)}
 /* "Raised" dialogs sit above the add-mug dialog. */
 .overlay.raised{z-index:70}
 .modal.raised{z-index:71}
 .modal{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:51; outline:none;
-  width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius: 10px;box-shadow: 0 20px 60px rgba(27,20,35,.18);max-height: 90vh;overflow:auto}
+  width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow: 0 20px 60px rgba(27,20,35,.18);max-height: 90vh;overflow:auto}
 .modal.wide{width:min(920px, calc(100vw - 24px))}
-.modal .head{padding:18px 18px 0; position:sticky; top:0; background: var(--card); z-index:2}
+.modal .head{padding:var(--space-18) var(--space-18) 0; position:sticky; top:0; background: var(--card); z-index:2}
 .modal h2{margin:0;font-size:var(--fs-h2); font-weight:var(--fw-bold)}
-.modal .body{padding:16px 18px 18px}
-.modal .foot{padding:13px 18px 18px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; position:sticky; bottom:0; background: var(--card)}
+.modal .body{padding:var(--space-16) var(--space-18) var(--space-18)}
+.modal .foot{padding:var(--space-14) var(--space-18) var(--space-18); display:flex; gap:var(--space-10); justify-content:flex-end; flex-wrap:wrap; position:sticky; bottom:0; background: var(--card)}
 .help{font-size:var(--fs-body);color:var(--muted)}
-.err{font-size:var(--fs-secondary);color:var(--danger);margin-top:6px}
-.note{font-size:var(--fs-secondary); padding:11px 13px; border-radius:8px; border:1px solid var(--border); background: transparent; color:var(--muted)}
+.err{font-size:var(--fs-secondary);color:var(--danger);margin-top:var(--space-6)}
+.note{font-size:var(--fs-secondary); padding:var(--space-12) var(--space-14); border-radius:var(--radius-md); border:1px solid var(--border); background: transparent; color:var(--muted)}
 .note.warn{border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); color: color-mix(in srgb, var(--gold) 80%, var(--text))}
 .note.good{border-color:transparent; background: var(--lilac); color: var(--accent-ink)}
 /* Floating "add mug" action — bottom-right on phones only. */
-.fab{position:fixed; right:18px; bottom:calc(18px + env(safe-area-inset-bottom)); width:64px; height:64px; padding:0;
-  border-radius:999px; display:flex; align-items:center; justify-content:center; box-shadow: 0 8px 22px rgba(107,78,140,.38);
+.fab{position:fixed; right:var(--space-18); bottom:calc(var(--space-18) + env(safe-area-inset-bottom)); width:var(--control-xl); height:var(--control-xl); padding:0;
+  border-radius:var(--radius-pill); display:flex; align-items:center; justify-content:center; box-shadow: 0 8px 22px rgba(107,78,140,.38);
   z-index:40; background: var(--accent); color:#fff; border:1.5px solid var(--accent)}
 .fab:hover{background: var(--accent-ink); border-color: var(--accent-ink)}
 .fab:active{transform:translateY(1px)}
@@ -218,10 +228,10 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 
 /* Material 3-style add menu: large pill actions springing from the FAB. */
 .addmenu{outline:none; z-index:70}
-.addmenu-surface{display:flex; flex-direction:column; align-items:flex-end; gap:12px;
+.addmenu-surface{display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-12);
   transform-origin:var(--radix-popover-content-transform-origin)}
-.addmenu-item{display:inline-flex; align-items:center; gap:14px; min-height:56px; width:auto;
-  padding:0 26px 0 22px; border:none; border-radius:999px; background:var(--fabitem); color:var(--fabitem-ink);
+.addmenu-item{display:inline-flex; align-items:center; gap:var(--space-14); min-height:56px; width:auto;
+  padding:0 var(--space-28) 0 var(--space-24); border:none; border-radius:var(--radius-pill); background:var(--fabitem); color:var(--fabitem-ink);
   font-size:var(--fs-h3); font-weight:400; letter-spacing:.01em; text-align:left;
   box-shadow:0 6px 18px rgba(27,20,35,.16); transition:background var(--dur-fast), transform .4s var(--ease-spring), box-shadow var(--dur) var(--ease-out)}
 .addmenu-item:hover{background:color-mix(in srgb, var(--fabitem-ink) 10%, var(--fabitem))}
@@ -239,7 +249,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 }
 
 /* Wishlist nudge to turn on notifications. */
-.notifblurb{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:12px}
+.notifblurb{display:flex; gap:var(--space-14); align-items:center; flex-wrap:wrap; margin-bottom:var(--space-12)}
 .notifblurb .nbicon{color:var(--accent); flex:none; display:flex; align-items:center}
 .notifblurb .nbtext{flex:1; min-width:190px}
 .notifblurb .nbtext .t-h3{font-weight:400}
@@ -248,23 +258,23 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   .notifblurb .nbicon{justify-content:center}
   .notifblurb button{justify-content:center}
 }
-.kpi{display:grid; gap:16px; grid-template-columns:1fr 1fr}
+.kpi{display:grid; gap:var(--space-16); grid-template-columns:1fr 1fr}
 @media(min-width: 820px){ .kpi{grid-template-columns:repeat(4,1fr)} }
-.kpicard{padding:18px}
+.kpicard{padding:var(--space-18)}
 .kpilabel{font-size:var(--fs-body);color:var(--accent); text-transform:none; letter-spacing:normal; font-weight:400}
-.kpivalue{font-size:var(--fs-h1);font-weight:300;margin-top:8px; letter-spacing:.01em}
+.kpivalue{font-size:var(--fs-h1);font-weight:300;margin-top:var(--space-8); letter-spacing:.01em}
 .mini{font-size:var(--fs-body);color:var(--muted)}
-.list{display:grid; gap:9px}
-.listrow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 15px; border:1px solid var(--border); border-radius: 8px}
-.bar{height:8px;border-radius:999px;background: var(--lilac);overflow:hidden;flex:1;min-width:80px}
+.list{display:grid; gap:var(--space-10)}
+.listrow{display:flex; align-items:center; justify-content:space-between; gap:var(--space-10); padding:var(--space-12) var(--space-16); border:1px solid var(--border); border-radius:var(--radius-md)}
+.bar{height:8px;border-radius:var(--radius-pill);background: var(--lilac);overflow:hidden;flex:1;min-width:80px}
 .bar > span{display:block;height:100%;background: var(--accent)}
-.sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
-.drop{border:1.5px dashed var(--border); border-radius:10px; padding:22px; text-align:center; color:var(--muted); background: var(--bg2)}
-.scanrow{display:flex; gap:13px; align-items:flex-start; padding:13px; border:1px solid var(--border); border-radius:10px}
-.scanthumb{width:54px; height:54px; flex:none; border-radius:8px; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.sr-only{position:absolute;left:calc(-1 * var(--space-48));top:auto;width:1px;height:1px;overflow:hidden}
+.drop{border:1.5px dashed var(--border); border-radius:var(--radius-lg); padding:var(--space-24); text-align:center; color:var(--muted); background: var(--bg2)}
+.scanrow{display:flex; gap:var(--space-14); align-items:flex-start; padding:var(--space-14); border:1px solid var(--border); border-radius:var(--radius-lg)}
+.scanthumb{width:var(--thumb-sm); height:var(--thumb-sm); flex:none; border-radius:var(--radius-md); overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 /* On-device match candidates: a 2x2 grid of large product images. */
-.matchgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.matchcard{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;text-align:center;transition:background .15s, border-color .15s}
+.matchgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-12)}
+.matchcard{display:flex;flex-direction:column;align-items:center;gap:var(--space-6);padding:var(--space-12);border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);cursor:pointer;text-align:center;transition:background .15s, border-color .15s}
 .matchcard:hover{background:var(--lilac);border-color:var(--muted)}
 .matchcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .matchcard.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
@@ -272,24 +282,24 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .matchcard .mname{font-size:var(--fs-label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .matchcard .mmeta{font-size:var(--fs-caption);color:var(--muted)}
 /* Quick-add "+" on each row of the add-mugs list. */
-.addbtn{flex:none; width:46px; height:46px; padding:0; justify-content:center; border-radius:999px; border:1.5px solid var(--accent); color:var(--accent); background:transparent}
+.addbtn{flex:none; width:var(--control-lg); height:var(--control-lg); padding:0; justify-content:center; border-radius:var(--radius-pill); border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}
 .addbtn.wish{border-color:var(--accent2); color:var(--accent2)}
 .addbtn.wish:hover{background:var(--accent2); color:#fff; border-color:var(--accent2)}
 .scanthumb img{width:100%; height:100%; object-fit:contain; display:block}
-.spin{width:16px;height:16px;border-radius:999px;border:2px solid color-mix(in srgb,var(--accent) 30%, transparent);border-top-color: var(--accent);animation:sp .7s linear infinite;display:inline-block}
+.spin{width:16px;height:16px;border-radius:var(--radius-pill);border:2px solid color-mix(in srgb,var(--accent) 30%, transparent);border-top-color: var(--accent);animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
-.conf{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-caption)}
+.conf{display:inline-flex;align-items:center;gap:var(--space-6);font-size:var(--fs-caption)}
 .conf b{color:var(--text)}
 /* Toggle row — styled to sit level with the inputs/selects around it. */
-.switch{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:6px;font-size:var(--fs-ui)}
+.switch{display:flex;align-items:center;gap:var(--space-8);justify-content:space-between;padding:var(--space-12) var(--space-14);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:var(--fs-ui)}
 .switch>span{font-size:var(--fs-ui); color:var(--text)}
 .link{color:var(--accent);text-decoration:none;word-break:break-word}
 .emptyicon{color:var(--accent); display:flex; align-items:center; justify-content:center}
 /* Empty collection: a shelf illustration + the three ways to add a mug. */
 .empty{text-align:center}
-.emptyart{display:block; width:172px; max-width:72%; height:auto; margin:2px auto 0; color:var(--accent)}
-.emptyactions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px}
+.emptyart{display:block; width:172px; max-width:72%; height:auto; margin:var(--space-2) auto 0; color:var(--accent)}
+.emptyactions{display:flex; gap:var(--space-10); justify-content:center; flex-wrap:wrap; margin-top:var(--space-18)}
 @media (max-width: 719px){ .emptyactions{flex-direction:column; align-items:stretch} }
 .primary.accent{background:var(--accent); border-color:var(--accent); color:#fff}
 .primary.accent:hover{background:var(--accent-ink); border-color:var(--accent-ink)}
@@ -300,30 +310,30 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .mugpicker{position:relative}
 .mugpicker input.invalid{border-color:var(--danger)}
 /* Edit dialog: read-only mug identity (name/catalogue can't be changed). */
-.editident{display:flex; gap:16px; align-items:center}
-.editident-photo{width:112px; height:112px; flex:none; display:flex; align-items:center; justify-content:center; color:var(--accent)}
+.editident{display:flex; gap:var(--space-16); align-items:center}
+.editident-photo{width:var(--photo); height:var(--photo); flex:none; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 .editident-photo img{width:100%; height:100%; object-fit:contain; display:block}
 .editident-name{font-weight:400; line-height:1.15}
 /* Grouped sections in the add-confirm dialog (Förvärv / Egenskaper). */
-.formsect{display:flex; flex-direction:column; gap:12px; border:1px solid var(--border); border-radius:10px; padding:14px}
+.formsect{display:flex; flex-direction:column; gap:var(--space-12); border:1px solid var(--border); border-radius:var(--radius-lg); padding:var(--space-14)}
 .formsect-title{font-size:var(--fs-secondary); color:var(--accent); letter-spacing:.06em; font-weight:500}
 /* Form footer actions — big, mobile-first, with a quiet cancel. */
-.formactions{display:flex; gap:10px; width:100%; align-items:center; justify-content:flex-end; flex-wrap:wrap}
+.formactions{display:flex; gap:var(--space-10); width:100%; align-items:center; justify-content:flex-end; flex-wrap:wrap}
 .formactions .linkbtn{margin-right:auto}   /* quiet cancel, far left on desktop */
-.big{padding:14px 22px; font-size:var(--fs-body); border-radius:12px}
-.linkbtn{border:none; background:transparent; color:var(--muted); padding:14px 12px; font-size:var(--fs-body)}
+.big{padding:var(--space-14) var(--space-24); font-size:var(--fs-body); border-radius:var(--radius-xl)}
+.linkbtn{border:none; background:transparent; color:var(--muted); padding:var(--space-14) var(--space-12); font-size:var(--fs-body)}
 .linkbtn:hover{background:transparent; color:var(--ink)}
 @media (max-width: 719px){
-  .formactions{flex-direction:column-reverse; align-items:stretch; gap:9px}   /* primary on top, cancel at the bottom */
+  .formactions{flex-direction:column-reverse; align-items:stretch; gap:var(--space-10)}   /* primary on top, cancel at the bottom */
   .formactions .big, .formactions .linkbtn{width:100%; justify-content:center; margin-right:0}
 }
 /* Collapsed "more details" section for the optional/personal fields. */
-.pickmenu{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:70; max-height:min(340px, 52vh); overflow:auto;
-  background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 30px rgba(27,20,35,.18); padding:6px}
-.pickitem{display:flex; align-items:center; gap:11px; width:100%; justify-content:flex-start; border:none; background:transparent;
-  padding:8px 9px; border-radius:8px; text-align:left}
+.pickmenu{position:absolute; left:0; right:0; top:calc(100% + var(--space-4)); z-index:70; max-height:min(340px, 52vh); overflow:auto;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 30px rgba(27,20,35,.18); padding:var(--space-6)}
+.pickitem{display:flex; align-items:center; gap:var(--space-12); width:100%; justify-content:flex-start; border:none; background:transparent;
+  padding:var(--space-8) var(--space-10); border-radius:var(--radius-md); text-align:left}
 .pickitem:hover{background:var(--lilac)}
-.pickthumb{width:38px; height:38px; flex:none; border-radius:6px; overflow:hidden; background:transparent;
+.pickthumb{width:var(--control); height:var(--control); flex:none; border-radius:var(--radius-sm); overflow:hidden; background:transparent;
   display:flex; align-items:center; justify-content:center; color:var(--accent)}
 .pickthumb img{width:100%; height:100%; object-fit:contain}
 .pickname{display:flex; flex-direction:column; min-width:0; font-weight:500; font-size:var(--fs-h3); color:var(--text)}
@@ -331,33 +341,33 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 
 /* language picker */
 .langpick{position:relative}
-.langmenu{position:absolute; right:0; top:calc(100% + 6px); background:var(--card); border:1px solid var(--border);
-  border-radius:10px; box-shadow:0 12px 30px rgba(27,20,35,.16); padding:6px; z-index:60; min-width:164px;
-  display:flex; flex-direction:column; gap:2px}
-.langitem{justify-content:flex-start; border:none; background:transparent; color:var(--text); padding:10px 11px;
-  border-radius:7px; width:100%; font-weight:500; font-size:var(--fs-label)}
+.langmenu{position:absolute; right:0; top:calc(100% + var(--space-6)); background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); box-shadow:0 12px 30px rgba(27,20,35,.16); padding:var(--space-6); z-index:60; min-width:164px;
+  display:flex; flex-direction:column; gap:var(--space-2)}
+.langitem{justify-content:flex-start; border:none; background:transparent; color:var(--text); padding:var(--space-10) var(--space-12);
+  border-radius:var(--radius-md); width:100%; font-weight:500; font-size:var(--fs-label)}
 .langitem:hover{background:var(--lilac)}
 .langitem.active{color:var(--accent); background:var(--lilac)}
 /* on mobile the picker sits at the left, so open the menu leftward-aligned */
 @media (max-width: 719px){ .langmenu{left:0; right:auto} }
 
 /* wavy cream footer (Moomin Arabia signature) — desktop only; mobile gets the wave on the bottom nav instead */
-.sitefoot{margin:48px -18px 0; position:relative}
+.sitefoot{margin:var(--space-48) calc(-1 * var(--space-18)) 0; position:relative}
 .sitefoot .wave{display:block; width:100%; height:44px; fill:var(--foot); margin-bottom:-1px}
-.footinner{background:var(--foot); display:flex; align-items:center; justify-content:center; gap:10px;
-  padding:17px 18px 36px; color:var(--muted); font-size:var(--fs-label); letter-spacing:.02em}
+.footinner{background:var(--foot); display:flex; align-items:center; justify-content:center; gap:var(--space-10);
+  padding:var(--space-18) var(--space-18) var(--space-36); color:var(--muted); font-size:var(--fs-label); letter-spacing:.02em}
 .footmark{color:var(--accent); display:inline-flex}
 
 /* Draggable Mukify-export bookmarklet (Import dialog). */
-.bookmarklet{display:inline-flex; align-items:center; gap:8px; padding:12px 18px; border-radius:999px; flex:none;
+.bookmarklet{display:inline-flex; align-items:center; gap:var(--space-8); padding:var(--space-12) var(--space-18); border-radius:var(--radius-pill); flex:none;
   border:1.5px solid var(--accent); color:var(--accent); background:transparent; font-size:var(--fs-label);
   letter-spacing:.02em; text-decoration:none; cursor:grab; font-weight:400; transition:background var(--dur-fast)}
 .bookmarklet:hover{background:color-mix(in srgb, var(--accent) 10%, transparent)}
 .bookmarklet:active{cursor:grabbing}
 /* Simple segmented tabs inside a dialog (import mode). */
-.segtabs{display:flex; gap:8px; border-bottom:1px solid var(--border)}
+.segtabs{display:flex; gap:var(--space-8); border-bottom:1px solid var(--border)}
 .segtabs button{flex:1; justify-content:center; border:none; border-radius:0; background:transparent; color:var(--muted);
-  padding:10px 4px; border-bottom:2px solid transparent; font-size:var(--fs-ui)}
+  padding:var(--space-10) var(--space-4); border-bottom:2px solid transparent; font-size:var(--fs-ui)}
 .segtabs button:hover{background:transparent; color:var(--ink)}
 .segtabs button.active{color:var(--accent); border-bottom-color:var(--accent); font-weight:500}
 
@@ -365,18 +375,18 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* Fixed app shell: header/tabs/search stay put; only the list scrolls. The three
    tabs live in a horizontal track that follows the finger when swiping. */
 body{overflow:hidden}
-.wrap{display:flex; flex-direction:column; height:100dvh; max-width:1120px; margin:0 auto; padding:0 18px}
+.wrap{display:flex; flex-direction:column; height:100dvh; max-width:1120px; margin:0 auto; padding:0 var(--space-18)}
 .top,.tabs{flex:none}
 .pager{flex:1; min-height:0; position:relative; overflow:hidden}
-.track{display:flex; height:100%; gap:16px}   /* breathing room between swiped tabs */
+.track{display:flex; height:100%; gap:var(--space-16)}   /* breathing room between swiped tabs */
 .panel{flex:0 0 100%; min-width:0; height:100%; display:flex; flex-direction:column}
-.panel-scroll{flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:96px}
-@media (min-width: 720px){ .panel-scroll{padding-bottom:24px} }
-.sitefoot{flex:none; margin:6px -18px 0}
+.panel-scroll{flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:var(--space-48)}
+@media (min-width: 720px){ .panel-scroll{padding-bottom:var(--space-24)} }
+.sitefoot{flex:none; margin:var(--space-6) calc(-1 * var(--space-18)) 0}
 .sitefoot .wave{height:24px}
-.sitefoot .footinner{padding:8px 18px 12px}
+.sitefoot .footinner{padding:var(--space-8) var(--space-18) var(--space-12)}
 /* Favorite toggle, top-right of a grid card. */
-.favfab{position:absolute; top:8px; right:8px; width:36px; height:36px; padding:0; justify-content:center; border-radius:999px;
+.favfab{position:absolute; top:var(--space-8); right:var(--space-8); width:var(--control-sm); height:var(--control-sm); padding:0; justify-content:center; border-radius:var(--radius-pill);
   border:1px solid var(--border); background:color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter:blur(6px); color:var(--muted)}
 .favfab.on{color:var(--gold); border-color:color-mix(in srgb, var(--gold) 55%, var(--border))}
 .mug,.mugrow{cursor:pointer}
@@ -417,7 +427,7 @@ button:not(:disabled):active,.btn:not(:disabled):active{
 .fab:not(:disabled):active{box-shadow:0 3px 10px rgba(107,78,140,.45)}
 
 /* Ripple injected by useRipple(). */
-.ripple{position:absolute; border-radius:999px; pointer-events:none; background:currentColor; opacity:.32; transform:scale(0); animation:ripple .5s var(--ease-out) forwards}
+.ripple{position:absolute; border-radius:var(--radius-pill); pointer-events:none; background:currentColor; opacity:.32; transform:scale(0); animation:ripple .5s var(--ease-out) forwards}
 @keyframes ripple{0%{transform:scale(0); opacity:.32}55%{opacity:.2}100%{transform:scale(1); opacity:0}}
 
 /* Favourite: the star pops, the button emits a golden ring. */
@@ -439,7 +449,7 @@ button:not(:disabled):active,.btn:not(:disabled):active{
 
 /* Tab strip: the active underline slides between tabs. */
 .tabs{position:relative}
-.tabind{position:absolute; left:0; bottom:0; height:2px; border-radius:2px; background:var(--accent); pointer-events:none;
+.tabind{position:absolute; left:0; bottom:0; height:2px; border-radius:var(--radius-xs); background:var(--accent); pointer-events:none;
   transition:transform .3s var(--ease-out), width .3s var(--ease-out)}
 .tabbtn.active,.tabbtn.active:hover{border-bottom-color:transparent}
 
@@ -473,15 +483,15 @@ button:not(:disabled):active,.btn:not(:disabled):active{
 [data-sonner-toast][data-styled="true"]{font-size:var(--fs-h3) !important}
 [data-sonner-toast][data-styled="true"] [data-title]{font-size:var(--fs-h3) !important}
 [data-sonner-toast][data-styled="true"] [data-description]{font-size:var(--fs-body) !important}
-/* Big, thumb-friendly action (Undo) — 44px min touch target. */
+/* Big, thumb-friendly action (Undo) — minimum touch target. */
 [data-sonner-toast][data-styled="true"] [data-button]{
-  font-size:var(--fs-body) !important; font-weight:500 !important;
-  min-height:44px !important; height:auto !important; padding:0 18px !important; border-radius:999px !important;
+  font-size:var(--fs-body) !important; font-weight:var(--fw-medium) !important;
+  min-height:var(--tap-min) !important; height:auto !important; padding:0 var(--space-18) !important; border-radius:var(--radius-pill) !important;
 }
 /* Big close button / X, pulled a little more inside the corner. */
 [data-sonner-toaster][dir="ltr"]{--toast-close-button-transform:translate(-30%,-30%)}
-[data-sonner-toast][data-styled="true"] [data-close-button]{height:36px !important; width:36px !important}
-[data-sonner-toast][data-styled="true"] [data-close-button] svg{width:20px !important; height:20px !important}
+[data-sonner-toast][data-styled="true"] [data-close-button]{height:var(--control-sm) !important; width:var(--control-sm) !important}
+[data-sonner-toast][data-styled="true"] [data-close-button] svg{width:var(--icon-lg) !important; height:var(--icon-lg) !important}
 [data-sonner-toast]::before{
   content:""; position:absolute; left:0; right:0; bottom:0; height:3px;
   background:currentColor; opacity:.45; pointer-events:none;
