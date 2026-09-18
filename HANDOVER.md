@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.67.2** (keep in sync with `lib/version.js`)
+- **Current version:** **1.67.3** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -324,6 +324,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.67.3** — Dialog scroll fix: `.modal` is now a flex column and
+  the **body scrolls** (head/foot fixed), instead of scrolling the transformed
+  `position:fixed` dialog itself — which didn't scroll on iOS Safari.
 - **2026-09-17 · v1.67.2** — Fixed red flashes on press/favourite: the list row's
   red delete layer is now painted only while a delete swipe is active.
 - **2026-09-17 · v1.67.1** — Cut out the Moominvalley Park Japan 2023/2026 mug

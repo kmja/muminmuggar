@@ -207,13 +207,17 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* "Raised" dialogs sit above the add-mug dialog. */
 .overlay.raised{z-index:70}
 .modal.raised{z-index:71}
+/* Flex column: head/foot stay put and the BODY scrolls. Scrolling an inner
+   element (rather than the transformed, position:fixed dialog itself) is what
+   works reliably on iOS Safari. */
 .modal{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:51; outline:none;
-  width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow: 0 20px 60px rgba(27,20,35,.18);max-height: 90vh;overflow:auto}
+  width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow: 0 20px 60px rgba(27,20,35,.18);
+  max-height:90vh; display:flex; flex-direction:column; overflow:hidden}
 .modal.wide{width:min(920px, calc(100vw - 24px))}
-.modal .head{padding:var(--space-18) var(--space-18) 0; position:sticky; top:0; background: var(--card); z-index:2}
+.modal .head{padding:var(--space-18) var(--space-18) 0; flex:none; background: var(--card); z-index:2}
 .modal h2{margin:0;font-size:var(--fs-h2); font-weight:var(--fw-bold)}
-.modal .body{padding:var(--space-16) var(--space-18) var(--space-18)}
-.modal .foot{padding:var(--space-14) var(--space-18) var(--space-18); display:flex; gap:var(--space-10); justify-content:flex-end; flex-wrap:wrap; position:sticky; bottom:0; background: var(--card)}
+.modal .body{padding:var(--space-16) var(--space-18) var(--space-18); flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
+.modal .foot{padding:var(--space-14) var(--space-18) var(--space-18); flex:none; display:flex; gap:var(--space-10); justify-content:flex-end; flex-wrap:wrap; background: var(--card)}
 .help{font-size:var(--fs-body);color:var(--muted)}
 .err{font-size:var(--fs-secondary);color:var(--danger);margin-top:var(--space-6)}
 .note{font-size:var(--fs-secondary); padding:var(--space-12) var(--space-14); border-radius:var(--radius-md); border:1px solid var(--border); background: transparent; color:var(--muted)}
