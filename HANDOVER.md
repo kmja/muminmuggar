@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.66.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.67.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -129,7 +129,9 @@ public/
   Collection, left on Wishlist** (`deleteDir`). The opposite direction stays with
   Embla for tab switching (which still follows the finger live). `MugRow` uses
   **native** touch listeners (React's are delegated too high) and
-  `stopPropagation`s the delete direction so Embla doesn't over-scroll.
+  `stopPropagation`s the delete direction so Embla doesn't over-scroll. There's a
+  **dead zone** (`SWIPE_LOCK` 12px, `SWIPE_REVEAL` 24px) so a small nudge never
+  reveals the red layer; delete needs `SWIPE_TRIGGER` (72px).
 - Deletes are **soft**: the row leaves at once, the server call is deferred 6 s
   (`UNDO_MS`), and a stacked Sonner toast offers **Undo** (restores from
   `pendingDeletes`). A `pagehide` handler commits pending deletes.
@@ -139,10 +141,10 @@ public/
   view, grid view, search + filters, add dialog, edit dialog, add menu, empty
   state, deal row, stats) that follow the atom picks. "Copy spec" yields a text
   spec the user can send to request type/icon changes.
-- **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed.
-  Editable: condition, acquired date, **etikett**, price/currency, favourite,
-  photo, notes. Wishlist mugs get a one-tap **"Jag har köpt den"** (acquire)
-  flow → owned.
+- **Edit dialog:** metadata-only — the mug identity (name/catalogue) is fixed,
+  and the **estimated value** is shown read-only under it. Editable: condition,
+  acquired date, **etikett**, price/currency, favourite, photo, notes. Wishlist
+  mugs get a one-tap **"Jag har köpt den"** (acquire) flow → owned.
 - **Per-mug `hasTag`** ("etikett"): DB column `mugs.has_tag`, shown as a card
   badge and editable in the edit + add-confirm dialogs.
 - **Marketplace search = Tradera only** for now. `lib/marketplaces.ts`
@@ -183,6 +185,10 @@ public/
 - Names are stored **English** (they drive matching); Swedish is display-only
   via `nameSv`. Images live in `public/mugs/*.webp`.
 - Changing this file requires `npm run build:embeddings`.
+- The two **Moominvalley Park Japan re-releases** (2023, 2026) are distinct
+  designs and now have their own images (`moominvalley-park-japan-2023.webp` /
+  `…-2026.webp`) — Mukify photos (with a light background), unlike the transparent
+  Arabia product shots.
 
 ---
 
@@ -315,6 +321,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.67.0** — Edit dialog shows the estimated value; swipe-delete
+  gained a dead zone (no red layer for small nudges); gave the Moominvalley Park
+  Japan 2023/2026 mugs their own images (rebuilt embeddings).
 - **2026-09-17 · v1.66.1** — Collection tab header now shows its `(n)` count,
   like Wishlist.
 - **2026-09-17 · v1.66.0** — Added a **size token layer** (radii, 2px space scale,

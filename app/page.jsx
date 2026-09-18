@@ -474,6 +474,12 @@ function MugForm({ open, onClose, initial, onSave, onDelete, saving }) {
           <div style={{ minWidth: 0 }}>
             <div className="t-h2 editident-name">{catName(d.name, lang) || t("card_untitled")}</div>
             <div className="sub" style={{ marginTop: 4 }}>{[d.series, d.year, d.edition].filter(Boolean).join(" · ")}</div>
+            {(() => {
+              const v = (d.estValueLow != null || d.estValueHigh != null)
+                ? `${formatMoney(d.estValueLow ?? d.estValueHigh, d.estValueCurrency || "SEK")}${d.estValueLow != null && d.estValueHigh != null ? "–" + formatMoney(d.estValueHigh, d.estValueCurrency || "SEK") : ""}`
+                : "";
+              return v ? <div className="badges" style={{ marginTop: 8 }}><Badge title={t("card_est_title")}>≈ {v}</Badge></div> : null;
+            })()}
           </div>
         </div>
         {d.status === "wishlist" ? (
@@ -1242,7 +1248,9 @@ function MugCard({ m, onEdit, onFav, onDeals }) {
 
 /* ------------------------------- MugRow ------------------------------- */
 // Compact one-row layout: image · name/meta · actions. Swipe left to delete.
-const SWIPE_TRIGGER = 72;
+const SWIPE_LOCK = 12;    // decide horizontal vs vertical
+const SWIPE_REVEAL = 24;  // dead zone before the red layer appears
+const SWIPE_TRIGGER = 72; // release past this to delete
 // `deleteDir` is the direction that deletes on this tab: "right" on Collection
 // (where dragging right is Embla's no-op over-scroll) and "left" on Wishlist.
 // The opposite direction is left entirely to Embla for switching tabs.
@@ -1274,7 +1282,7 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
       const tc = e.touches[0];
       const dx = tc.clientX - d.x, dy = tc.clientY - d.y;
       if (!d.mode) {
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        if (Math.abs(dx) < SWIPE_LOCK && Math.abs(dy) < SWIPE_LOCK) return;
         if (Math.abs(dx) <= Math.abs(dy)) { d.mode = "y"; return; }
         const wantDelete = dirRef.current === "right" ? dx > 0 : dx < 0;
         d.mode = wantDelete ? "delete" : "tab";
@@ -1282,18 +1290,20 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
       if (d.mode !== "delete") return;
       e.stopPropagation();
       d.dx = dx;
+      // Don't reveal the red layer until the finger has travelled past a small
+      // dead zone — a tiny nudge while scrolling shouldn't look like a delete.
+      const travel = Math.abs(dx) - SWIPE_REVEAL;
       const el = rowRef.current;
       if (el) {
-        const clamped = dirRef.current === "right" ? Math.min(dx, 120) : Math.max(dx, -120);
         el.style.transition = "none";
-        el.style.transform = `translateX(${clamped}px)`;
+        el.style.transform = travel > 0 ? `translateX(${Math.sign(dx) * Math.min(travel, 120)}px)` : "translateX(0)";
       }
     };
     const onEnd = () => {
       const d = dragRef.current;
       const el = rowRef.current;
       if (el) { el.style.transition = ""; el.style.transform = ""; }
-      if (d.mode === "delete") {
+      if (d.mode === "delete" && Math.abs(d.dx) >= SWIPE_REVEAL) {
         suppressClick.current = true;
         window.setTimeout(() => { suppressClick.current = false; }, 400);
         if (Math.abs(d.dx) >= SWIPE_TRIGGER) deleteRef.current?.(mugRef.current);
