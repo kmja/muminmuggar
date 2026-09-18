@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.66.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.66.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -96,7 +96,7 @@ public/
 
 ## 4. Features & current behaviour
 
-- **Tabs:** Collection + Wishlist only. Swipeable (Embla); 16px gap between
+- **Tabs:** Collection + Wishlist only, both with a `(n)` count. Swipeable (Embla); 16px gap between
   panels. Stats is a **header dialog**, not a tab. Shared search + filters sit
   **above** the tab strip (status filter only on Collection).
 - **Header:** cream wavy bar. Right side: `Add` (desktop only), `Gaps` (desktop
@@ -315,6 +315,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.66.1** — Collection tab header now shows its `(n)` count,
+  like Wishlist.
 - **2026-09-17 · v1.66.0** — Added a **size token layer** (radii, 2px space scale,
   control/touch sizes) and swept the whole stylesheet onto it; toast now uses
   those tokens (X → `--icon-lg`).

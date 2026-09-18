@@ -1701,7 +1701,7 @@ export default function App() {
   }, [mugs]);
 
   const TABS = [
-    { k: "collection", label: t("tab_collection") },
+    { k: "collection", label: `${t("tab_collection")}${collectionCount ? ` (${collectionCount})` : ""}` },
     { k: "wishlist", label: `${t("tab_wishlist")}${stats.wishlist ? ` (${stats.wishlist})` : ""}` },
   ];
 
