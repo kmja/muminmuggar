@@ -1293,6 +1293,7 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
       // Don't reveal the red layer until the finger has travelled past a small
       // dead zone — a tiny nudge while scrolling shouldn't look like a delete.
       const travel = Math.abs(dx) - SWIPE_REVEAL;
+      wrap.classList.toggle("swiping", travel > 0);
       const el = rowRef.current;
       if (el) {
         el.style.transition = "none";
@@ -1302,6 +1303,7 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
     const onEnd = () => {
       const d = dragRef.current;
       const el = rowRef.current;
+      wrap.classList.remove("swiping");
       if (el) { el.style.transition = ""; el.style.transform = ""; }
       if (d.mode === "delete" && Math.abs(d.dx) >= SWIPE_REVEAL) {
         suppressClick.current = true;

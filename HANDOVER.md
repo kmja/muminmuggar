@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.67.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.67.2** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -131,7 +131,9 @@ public/
   **native** touch listeners (React's are delegated too high) and
   `stopPropagation`s the delete direction so Embla doesn't over-scroll. There's a
   **dead zone** (`SWIPE_LOCK` 12px, `SWIPE_REVEAL` 24px) so a small nudge never
-  reveals the red layer; delete needs `SWIPE_TRIGGER` (72px).
+  reveals the red layer; delete needs `SWIPE_TRIGGER` (72px). The red layer is
+  **only painted while swiping** (`.mugrow-swipe.swiping`), so a press-scale or
+  favourite pop on the row can't expose it.
 - Deletes are **soft**: the row leaves at once, the server call is deferred 6 s
   (`UNDO_MS`), and a stacked Sonner toast offers **Undo** (restores from
   `pendingDeletes`). A `pagehide` handler commits pending deletes.
@@ -322,6 +324,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.67.2** — Fixed red flashes on press/favourite: the list row's
+  red delete layer is now painted only while a delete swipe is active.
 - **2026-09-17 · v1.67.1** — Cut out the Moominvalley Park Japan 2023/2026 mug
   backgrounds with RMBG-1.4 so they match the transparent product shots (rebuilt
   embeddings).

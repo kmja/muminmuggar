@@ -162,8 +162,12 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 /* List rows: swipe left to delete (right-swipe switches tabs). */
 .mugrow-swipe{position:relative; border-radius:var(--radius-xl); overflow:hidden; touch-action:pan-y}
 .mugrow-swipe>.mugrow{position:relative; z-index:1}
+/* Only painted while a delete swipe is in progress — otherwise a press-scale or
+   favourite pop on the row would shrink it and expose the red underneath. */
 .mugrow-delete{position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-end; gap:var(--space-8);
-  padding:0 var(--space-20); background:var(--danger); color:#fff; font-size:var(--fs-label); letter-spacing:.02em}
+  padding:0 var(--space-20); background:var(--danger); color:#fff; font-size:var(--fs-label); letter-spacing:.02em;
+  opacity:0; transition:opacity var(--dur-fast) var(--ease-out)}
+.mugrow-swipe.swiping .mugrow-delete{opacity:1}
 .mugrow-delete.left{justify-content:flex-start}
 .mugrow-delete.right{justify-content:flex-end}
 /* Marketplace deal row — mirrors the compact mug row, as a whole-row link. */
