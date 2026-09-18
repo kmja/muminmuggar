@@ -1315,9 +1315,9 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
   const open = () => { if (suppressClick.current) return; onEdit(m); };
 
   return (
-    <div className="mugrow-swipe" ref={wrapRef}>
+    <div className="mugrow-swipe" ref={wrapRef} data-flip-key={m.id}>
       <div className={"mugrow-delete " + (deleteDir === "right" ? "left" : "right")} aria-hidden="true"><Trash2 size={18} /><span>{t("card_delete")}</span></div>
-      <div className="mugrow" ref={rowRef} data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={open}
+      <div className="mugrow" ref={rowRef} data-mug-id={m.id} role="button" tabIndex={0} onClick={open}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }}>
         <div className="mugrow-thumb">
           {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
