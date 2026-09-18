@@ -27,11 +27,11 @@ const STORAGE_KEY = "muminmuggar-type-tool-v3";
 const DEFAULT_SCALE = { "t-h1": 1.75, "t-h2": 1.25, "t-h3": 1.125, "t-body": 1, "t-ui": 0.9375, "t-label": 0.875, "t-secondary": 0.8125, "t-caption": 0.75, "t-tiny": 0.6875 };
 
 const ICONS = [
-  { id: "xs", label: "Badge", def: 12 },
-  { id: "sm", label: "Button", def: 16 },
-  { id: "md", label: "Row / header", def: 18 },
-  { id: "lg", label: "Add / menu", def: 22 },
-  { id: "xl", label: "Large (FAB)", def: 28 },
+  { id: "xs", label: "Badge", def: 17, v: "--icon-xs" },
+  { id: "sm", label: "Button", def: 16, v: "--icon-sm" },
+  { id: "md", label: "Row / header", def: 16, v: "--icon-md" },
+  { id: "lg", label: "Add / menu", def: 17, v: "--icon-lg" },
+  { id: "xl", label: "Large (FAB)", def: 28, v: "--icon-xl" },
 ];
 const DEFAULT_ICONS = Object.fromEntries(ICONS.map((i) => [i.id, i.def]));
 
@@ -57,23 +57,23 @@ const MODAL_RESET = { position: "static", left: "auto", top: "auto", transform: 
 const ATOMS = [
   { id: "header-title", label: "Header title", css: ".title h1", def: "t-h1",
     render: ({ style }) => <h1 style={style}>Muminmuggar</h1> },
-  { id: "header-version", label: "Header version", css: ".ver", def: "t-tiny",
+  { id: "header-version", label: "Header version", css: ".ver", def: "t-secondary",
     render: ({ style }) => <span className="ver" style={style}>v1.59.0</span> },
-  { id: "tab", label: "Tab label", css: ".tabbtn", def: "t-ui",
+  { id: "tab", label: "Tab label", css: ".tabbtn", def: "t-body",
     render: ({ style }) => <button className="tabbtn active" style={style}>Samlingen</button> },
-  { id: "input", label: "Text field", css: "input / select", def: "t-ui",
+  { id: "input", label: "Text field", css: "input / select", def: "t-body",
     render: ({ style }) => <input style={style} placeholder="Sök mugg…" readOnly /> },
-  { id: "field-label", label: "Field label", css: "label", def: "t-secondary",
+  { id: "field-label", label: "Field label", css: "label", def: "t-body",
     render: ({ style }) => <label style={style}>Skick</label> },
-  { id: "btn-primary", label: "Button — primary", css: ".primary", def: "t-label",
+  { id: "btn-primary", label: "Button — primary", css: ".primary", def: "t-body",
     render: ({ style }) => <button className="primary" style={style}>Lägg till</button> },
-  { id: "btn-secondary", label: "Button — secondary", css: "button", def: "t-label",
+  { id: "btn-secondary", label: "Button — secondary", css: "button", def: "t-body",
     render: ({ style }) => <button style={style}>Stäng</button> },
-  { id: "btn-link", label: "Button — link", css: ".linkbtn", def: "t-ui",
+  { id: "btn-link", label: "Button — link", css: ".linkbtn", def: "t-body",
     render: ({ style }) => <button className="linkbtn" style={style}>Avbryt</button> },
-  { id: "badge", label: "Badge", css: ".badge", def: "t-caption",
+  { id: "badge", label: "Badge", css: ".badge", def: "t-secondary",
     render: ({ style, icon }) => <span className="badge owned" style={style}><Coins size={icon("xs")} /> Äger</span> },
-  { id: "chip", label: "Chip", css: ".chip", def: "t-caption",
+  { id: "chip", label: "Chip", css: ".chip", def: "t-secondary",
     render: ({ style }) => <span className="chip" style={style}>limiterad</span> },
   { id: "mugrow-name", label: "List row — name", css: ".mugrow-name", def: "t-h3",
     render: ({ style, icon }) => (
@@ -82,33 +82,33 @@ const ATOMS = [
         <div className="mugrow-main"><div className="mugrow-name" style={style}>Moomintroll</div><div className="mini">1990 · ≈ 250 kr</div></div>
       </div>
     ) },
-  { id: "mugrow-meta", label: "List row — meta", css: ".mini", def: "t-secondary",
+  { id: "mugrow-meta", label: "List row — meta", css: ".mini", def: "t-body",
     render: ({ style }) => <div className="mini" style={style}>1990 · ≈ 250 kr</div> },
-  { id: "mugcard-name", label: "Grid card — name", css: ".mugname", def: "t-body",
+  { id: "mugcard-name", label: "Grid card — name", css: ".mugname", def: "t-h3",
     render: ({ style }) => <div className="mugname" style={style}>Moomintroll</div> },
-  { id: "mugcard-sub", label: "Grid card — sub", css: ".mugbody .sub", def: "t-secondary",
+  { id: "mugcard-sub", label: "Grid card — sub", css: ".mugbody .sub", def: "t-body",
     render: ({ style }) => <div className="sub" style={style}>Arabia Moomin · 1990</div> },
   { id: "addmenu", label: "Add menu — item", css: ".addmenu-item", def: "t-h3",
     render: ({ style, icon }) => <button className="addmenu-item" style={{ ...style, animation: "none" }}><Camera size={icon("lg")} /><span>Ta foto</span></button> },
   { id: "dialog-title", label: "Dialog title", css: ".modal h2", def: "t-h2",
     render: ({ style }) => <h2 style={style}>Lägg till mugg</h2> },
-  { id: "help", label: "Help / hint text", css: ".help", def: "t-secondary",
+  { id: "help", label: "Help / hint text", css: ".help", def: "t-body",
     render: ({ style }) => <div className="help" style={style}>Sök i katalogen och lägg till med ett tryck.</div> },
-  { id: "kpi-label", label: "Stat — label", css: ".kpilabel", def: "t-secondary",
+  { id: "kpi-label", label: "Stat — label", css: ".kpilabel", def: "t-body",
     render: ({ style }) => <div className="kpilabel" style={style}>Ägda</div> },
   { id: "kpi-value", label: "Stat — value", css: ".kpivalue", def: "t-h1",
     render: ({ style }) => <div className="kpivalue" style={style}>42</div> },
   { id: "deal-title", label: "Deal row — title", css: ".dealrow-title", def: "t-body",
     render: ({ style }) => <div className="dealrow-title" style={style}>Muminmugg Moomintroll 1990</div> },
-  { id: "deal-price", label: "Deal row — price", css: ".dealrow-price-main", def: "t-h2",
+  { id: "deal-price", label: "Deal row — price", css: ".dealrow-price-main", def: "t-h3",
     render: ({ style }) => <span className="dealrow-price-main" style={style}>Bud 250 kr</span> },
-  { id: "empty-title", label: "Empty state — title", css: ".t-h2", def: "t-h2",
-    render: ({ style }) => <div className="t-h2" style={style}>Börja din samling</div> },
-  { id: "empty-sub", label: "Empty state — sub", css: ".sub", def: "t-secondary",
+  { id: "empty-title", label: "Empty state — title", css: ".t-h1", def: "t-h1",
+    render: ({ style }) => <div className="t-h1" style={style}>Börja din samling</div> },
+  { id: "empty-sub", label: "Empty state — sub", css: ".sub", def: "t-body",
     render: ({ style }) => <div className="sub" style={style}>Fotografera flera muggar samtidigt — en hel hylla går bra.</div> },
-  { id: "pick-name", label: "Picker — name", css: ".pickname", def: "t-ui",
+  { id: "pick-name", label: "Picker — name", css: ".pickname", def: "t-h3",
     render: ({ style }) => <span className="pickname" style={style}>Moomintroll</span> },
-  { id: "pick-meta", label: "Picker — meta", css: ".pickmeta", def: "t-caption",
+  { id: "pick-meta", label: "Picker — meta", css: ".pickmeta", def: "t-body",
     render: ({ style }) => <span className="pickmeta" style={style}>1990 · 0,4 L</span> },
 ];
 
@@ -317,6 +317,12 @@ export default function TypeTool() {
       if (Number.isFinite(n) && n > 0) m[s.cls] = n;
     }
     if (Object.keys(m).length) setScale((sc) => ({ ...sc, ...m }));
+    const mi = {};
+    for (const i of ICONS) {
+      const n = parseFloat(cs.getPropertyValue(i.v));
+      if (Number.isFinite(n) && n > 0) mi[i.id] = n;
+    }
+    if (Object.keys(mi).length) setIcons((ic) => ({ ...ic, ...mi }));
   }, []);
   useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ scale, icons, vals })); } catch { /* ignore */ } }, [scale, icons, vals]);
 

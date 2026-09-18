@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.60.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.61.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -275,6 +275,9 @@ public/
   `--fs-h1` 1.75, `--fs-body` = **1rem**) with matching `.t-*` utilities. Scale
   the whole UI by changing `html{font-size}`; never hard-code font sizes. Use
   `/type` to experiment (see §4).
+- Icon sizes: `--icon-xs/sm/md/lg/xl` (17/16/16/17/28px), applied by context via
+  CSS (`.badge svg`, `button svg`, `.icon svg`, `.addbtn svg`, `.addmenu-item
+  svg`, `.fab svg`) — CSS width/height beats the SVG attributes. Set in `/type`.
 - i18n: add keys to **both** `sv` and `en` in `lib/i18n.js`.
 - Secrets never in git; `.env.local` is ignored.
 
@@ -293,6 +296,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.61.0** — Applied the `/type` spec: most atoms moved to
+  `body`/`secondary` (buttons, inputs, labels, `.mini`, `.help`, `.sub`, chips),
+  `mugname`/`pickname` → `h3`, empty title → `h1`, `deal-price` → `h3`; added
+  icon-size tokens (17/16/16/17/28px) applied by context.
 - **2026-09-17 · v1.60.0** — `/type` tool: added composed components (list, grid,
   search+filters, add/edit dialogs, add menu, empty state, deal row, stats) that
   follow the atom picks, plus an icon-size panel (5 tokens).
