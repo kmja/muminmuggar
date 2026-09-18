@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.62.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.63.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -124,6 +124,12 @@ public/
   shared by the FAB menu and the empty state.
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
   gold when active (matching the grid card). The row's **name uses `h3`**.
+- **Delete:** no delete button on list/grid items — it lives in the **edit
+  dialog** and as **swipe-left on a list row** (right-swipe toggles the tab;
+  Embla drag is disabled on rows via `watchDrag`, and the gesture is handled in
+  `MugRow`). Deletes are **soft**: the row leaves at once, the server call is
+  deferred 6 s (`UNDO_MS`), and a stacked Sonner toast offers **Undo** (restores
+  from `pendingDeletes`). A `pagehide` handler commits pending deletes.
 - **`/type` (dev tool):** a noindex playground. Sliders tune the type steps,
   **5 icon sizes** and **5 font weights**; per-atom class + weight pickers; and
   live **composites** (list
@@ -300,6 +306,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.63.0** — Removed the delete button from list/grid items; added
+  it to the edit dialog and as **swipe-left on list rows**; deletes now show a
+  stacked **Undo** toast (6 s soft-delete). Removed the confirm-delete dialog.
 - **2026-09-17 · v1.62.0** — Cleanup: removed 10 dead CSS classes and the unused
   `.t-body/.t-ui/.t-secondary/.t-caption/.t-tiny` utilities + `--fs-tiny`. Added
   **font-weight tokens** (`--fw-*`, Jost 700 loaded), made headings bold, and

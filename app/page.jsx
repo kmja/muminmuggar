@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useSession, signIn, signOut } from "next-auth/react";
 import useEmblaCarousel from "embla-carousel-react";
 import * as Dialog from "@radix-ui/react-dialog";
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as Popover from "@radix-ui/react-popover";
 import { Toaster, toast } from "sonner";
 import { LANGS, makeT } from "../lib/i18n";
@@ -30,6 +29,7 @@ const useLang = () => useContext(LangContext);
 const condLabel = (t, c) => { if (!c) return c; const k = "cond_" + c; const v = t(k); return v === k ? c : v; };
 
 /* ----------------------------- constants ----------------------------- */
+const UNDO_MS = 6000; // how long a deleted mug can be restored from its toast
 const STATUS_VALUES = ["owned", "wishlist", "sold"];
 const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
 const CURRENCIES = ["SEK", "EUR", "USD", "GBP", "NOK", "DKK"];
@@ -183,26 +183,6 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide, raised 
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  );
-}
-// Confirm-delete dialog (Radix AlertDialog).
-function DeleteDialog({ mug, onCancel, onConfirm }) {
-  const t = useT();
-  useBackToClose(!!mug, onCancel);
-  return (
-    <AlertDialog.Root open={!!mug} onOpenChange={(o) => { if (!o) onCancel(); }}>
-      <AlertDialog.Portal>
-        <AlertDialog.Overlay className="overlay" />
-        <AlertDialog.Content className="modal" style={{ width: "min(420px, calc(100vw - 24px))", padding: 20 }}>
-          <AlertDialog.Title asChild><h2>{t("card_delete")}</h2></AlertDialog.Title>
-          <AlertDialog.Description asChild><div className="help" style={{ marginTop: 8 }}>{t("confirm_delete", { name: mug?.name || "" })}</div></AlertDialog.Description>
-          <div className="row" style={{ justifyContent: "flex-end", marginTop: 18 }}>
-            <AlertDialog.Cancel asChild><button>{t("cancel")}</button></AlertDialog.Cancel>
-            <AlertDialog.Action asChild><button className="danger" onClick={onConfirm}>{t("card_delete")}</button></AlertDialog.Action>
-          </div>
-        </AlertDialog.Content>
-      </AlertDialog.Portal>
-    </AlertDialog.Root>
   );
 }
 function Confidence({ v }) {
@@ -416,7 +396,7 @@ function validateMug(m, t) {
   return e;
 }
 // Edit an existing mug: only its personal metadata (identity is fixed).
-function MugForm({ open, onClose, initial, onSave, saving }) {
+function MugForm({ open, onClose, initial, onSave, onDelete, saving }) {
   const t = useT();
   const lang = useLang();
   const [d, setD] = useState(initial);
@@ -479,7 +459,8 @@ function MugForm({ open, onClose, initial, onSave, saving }) {
 
   const footer = (
     <div className="formactions">
-      <button className="linkbtn" onClick={onClose}>{t("cancel")}</button>
+      {onDelete ? <button className="danger big" style={{ marginRight: "auto" }} onClick={() => onDelete(initial)}><Trash2 size={16} /> {t("card_delete")}</button> : null}
+      <button className="linkbtn" style={{ marginRight: 0 }} onClick={onClose}>{t("cancel")}</button>
       <button className="primary big" disabled={saving || !dirty} onClick={submit}>{saving ? <span className="spin" /> : t("save")}</button>
     </div>
   );
@@ -1220,7 +1201,7 @@ function DealsModal({ open, onClose, mug }) {
 }
 
 /* ------------------------------- MugCard ------------------------------ */
-function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
+function MugCard({ m, onEdit, onFav, onDeals }) {
   const t = useT();
   const lang = useLang();
   const displayName = catName(m.name, lang);
@@ -1249,18 +1230,20 @@ function MugCard({ m, onEdit, onDelete, onFav, onDeals }) {
         {m.tags?.length ? <div className="badges">{m.tags.slice(0, 6).map((t) => <span key={t} className="chip"><Tag size={11} />{t}</span>)}</div> : null}
         {m.conditionNotes ? <div className="mini lineclamp">{m.conditionNotes}</div> : null}
         {m.notes ? <div className="mini lineclamp">{m.notes}</div> : null}
-        <div className="mugfoot" onClick={(e) => e.stopPropagation()}>
-          {m.status === "wishlist" ? <button onClick={() => onDeals(m)}><PackageSearch size={15} /> {t("card_deals")}</button> : null}
-          <button className="danger" onClick={() => onDelete(m)}><Trash2 size={15} /> {t("card_delete")}</button>
-        </div>
+        {m.status === "wishlist" ? (
+          <div className="mugfoot" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => onDeals(m)}><PackageSearch size={15} /> {t("card_deals")}</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
 }
 
 /* ------------------------------- MugRow ------------------------------- */
-// Compact one-row layout: image · name/meta · actions.
-function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
+// Compact one-row layout: image · name/meta · actions. Swipe left to delete.
+const SWIPE_TRIGGER = 72;
+function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, onSwipeRight }) {
   const t = useT();
   const lang = useLang();
   const displayName = catName(m.name, lang);
@@ -1269,20 +1252,54 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
     : "";
   const meta = [m.year, val ? "≈ " + val : null].filter(Boolean).join(" · ");
   const img = displayImg(m);
+  const rowRef = useRef(null);
+  const drag = useRef(null);
+  const suppressClick = useRef(false);
+
+  const start = (e) => {
+    const tc = e.touches[0];
+    drag.current = { x: tc.clientX, y: tc.clientY, dx: 0, axis: null };
+  };
+  const move = (e) => {
+    const d = drag.current; if (!d) return;
+    const tc = e.touches[0];
+    const dx = tc.clientX - d.x, dy = tc.clientY - d.y;
+    if (!d.axis && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) d.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    if (d.axis !== "x") return;
+    d.dx = dx;
+    const el = rowRef.current;
+    if (el) { el.style.transition = "none"; el.style.transform = `translateX(${Math.min(0, Math.max(dx, -120))}px)`; }
+  };
+  const end = () => {
+    const d = drag.current; drag.current = null;
+    const el = rowRef.current;
+    if (el) { el.style.transition = ""; el.style.transform = ""; }
+    if (!d || d.axis !== "x") return;
+    // Don't let the drag turn into a tap (edit) — nor the next one.
+    suppressClick.current = true;
+    window.setTimeout(() => { suppressClick.current = false; }, 400);
+    if (d.dx <= -SWIPE_TRIGGER) onSwipeDelete?.(m);
+    else if (d.dx >= SWIPE_TRIGGER) onSwipeRight?.();
+  };
+  const open = () => { if (suppressClick.current) return; onEdit(m); };
+
   return (
-    <div className="mugrow" data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={() => onEdit(m)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(m); } }}>
-      <div className="mugrow-thumb">
-        {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
-      </div>
-      <div className="mugrow-main">
-        <div className="mugrow-name" title={displayName}>{displayName || t("card_untitled")}</div>
-        {meta ? <div className="mini">{meta}</div> : null}
-      </div>
-      <div className="mugrow-actions" onClick={(e) => e.stopPropagation()}>
-        {m.status === "wishlist"
-          ? <button className="ghost icon" title={t("card_deals")} aria-label={t("card_deals")} onClick={() => onDeals(m)}><PackageSearch size={17} /></button>
-          : <button className={"ghost icon" + (m.favorite ? " fav-on" : "")} title={t("card_fav")} aria-label={t("card_fav")} onClick={() => onFav(m)}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>}
-        <button className="ghost icon danger" title={t("card_delete")} aria-label={t("card_delete")} onClick={() => onDelete(m)}><Trash2 size={17} /></button>
+    <div className="mugrow-swipe" onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end}>
+      <div className="mugrow-delete" aria-hidden="true"><Trash2 size={18} /><span>{t("card_delete")}</span></div>
+      <div className="mugrow" ref={rowRef} data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={open}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }}>
+        <div className="mugrow-thumb">
+          {img ? <img src={img} alt={displayName} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <MugMark size={24} />}
+        </div>
+        <div className="mugrow-main">
+          <div className="mugrow-name" title={displayName}>{displayName || t("card_untitled")}</div>
+          {meta ? <div className="mini">{meta}</div> : null}
+        </div>
+        <div className="mugrow-actions" onClick={(e) => e.stopPropagation()}>
+          {m.status === "wishlist"
+            ? <button className="ghost icon" title={t("card_deals")} aria-label={t("card_deals")} onClick={() => onDeals(m)}><PackageSearch size={17} /></button>
+            : <button className={"ghost icon" + (m.favorite ? " fav-on" : "")} title={t("card_fav")} aria-label={t("card_fav")} onClick={() => onFav(m)}><Star size={17} fill={m.favorite ? "currentColor" : "none"} /></button>}
+        </div>
       </div>
     </div>
   );
@@ -1291,14 +1308,13 @@ function MugRow({ m, onEdit, onDelete, onFav, onDeals }) {
 /* ------------------------------ MugList ------------------------------- */
 // Renders the mug cards/rows and animates them (FLIP) whenever the set or order
 // changes — so filtering, sorting, adding and favouriting glide into place.
-function MugList({ items, viewMode, onEdit, onDelete, onFav, onDeals }) {
+function MugList({ items, viewMode, onEdit, onFav, onDeals, onSwipeDelete, onSwipeRight }) {
   const ref = useRef(null);
   const sig = items.map((m) => m.id).join("|");
   useFlip(ref, sig);
-  const props = { onEdit, onDelete, onFav, onDeals };
   return viewMode === "grid"
-    ? <div className="muggrid" ref={ref}>{items.map((m) => <MugCard key={m.id} m={m} {...props} />)}</div>
-    : <div className="muglist" ref={ref}>{items.map((m) => <MugRow key={m.id} m={m} {...props} />)}</div>;
+    ? <div className="muggrid" ref={ref}>{items.map((m) => <MugCard key={m.id} m={m} onEdit={onEdit} onFav={onFav} onDeals={onDeals} />)}</div>
+    : <div className="muglist" ref={ref}>{items.map((m) => <MugRow key={m.id} m={m} onEdit={onEdit} onFav={onFav} onDeals={onDeals} onSwipeDelete={onSwipeDelete} onSwipeRight={onSwipeRight} />)}</div>;
 }
 
 /* -------------------------------- App --------------------------------- */
@@ -1340,7 +1356,7 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [dealsMug, setDealsMug] = useState(null);
-  const [confirmMug, setConfirmMug] = useState(null);
+
   const [notifState, setNotifState] = useState("idle"); // idle | on | error | unsupported
   const [notifMsg, setNotifMsg] = useState("");
   const [catalogBusy, setCatalogBusy] = useState(false);
@@ -1467,19 +1483,50 @@ export default function App() {
       if (!more) setScanOpen(false);
     } finally { setSaving(false); }
   };
-  const del = (m) => setConfirmMug(m);
-  const doDelete = async () => {
-    const m = confirmMug; setConfirmMug(null);
-    if (!m) return;
-    // Let the card fade away while the rest of the list glides up to fill the gap.
+  // Delete with a short undo window: the row leaves immediately and the server
+  // call is deferred, so Undo can cancel it. Every delete gets its own toast, and
+  // Sonner stacks them, so several quick deletes are all recoverable.
+  const pendingDeletes = useRef(new Map());
+  const restoreMug = (m) => setMugs((prev) => (prev.some((x) => x.id === m.id) ? prev : [m, ...prev]));
+  const softDelete = (m) => {
     const node = typeof document !== "undefined" ? document.querySelector(`[data-mug-id="${String(m.id).replace(/["\\]/g, "\\$&")}"]`) : null;
     const rect = node?.getBoundingClientRect();
     if (node && rect) animateGhost(node, rect);
-    const snapshot = mugs;
     setMugs((prev) => prev.filter((x) => x.id !== m.id));
-    try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); }
-    catch (e) { setMugs(snapshot); toast.error(t("delete_failed", { msg: e.message || e })); }
+    const timer = window.setTimeout(async () => {
+      pendingDeletes.current.delete(m.id);
+      try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); }
+      catch (e) { restoreMug(m); toast.error(t("delete_failed", { msg: e.message || e })); }
+    }, UNDO_MS);
+    pendingDeletes.current.set(m.id, { timer });
+    const tid = toast(t("deleted_toast", { name: catName(m.name, lang) }), {
+      duration: UNDO_MS,
+      action: {
+        label: t("undo"),
+        onClick: () => {
+          const entry = pendingDeletes.current.get(m.id);
+          if (entry) { window.clearTimeout(entry.timer); pendingDeletes.current.delete(m.id); }
+          toast.dismiss(tid);
+          restoreMug(m);
+        },
+      },
+    });
   };
+  // A right-swipe on a list row switches tabs (the row's left-swipe deletes).
+  const swipeToTab = () => setTab((cur) => (cur === "collection" ? "wishlist" : "collection"));
+  // If the tab is closed during the undo window, commit pending deletes so a mug
+  // can't silently come back later.
+  useEffect(() => {
+    const flush = () => {
+      pendingDeletes.current.forEach((entry, id) => {
+        window.clearTimeout(entry.timer);
+        try { fetch(`/api/mugs/${id}`, { method: "DELETE", headers: { "x-device-id": getDeviceId() }, keepalive: true }); } catch { /* ignore */ }
+      });
+      pendingDeletes.current.clear();
+    };
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, []);
   const fav = async (m) => {
     const optimistic = !m.favorite;
     setMugs((prev) => prev.map((x) => (x.id === m.id ? { ...x, favorite: optimistic } : x)));
@@ -1585,7 +1632,12 @@ export default function App() {
   // Swipeable tabs via Embla: dragging the panel moves between collection and
   // wishlist, and the active tab follows the snap point.
   const TAB_ORDER = ["collection", "wishlist"];
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: false, duration: 22, skipSnaps: false });
+  // List rows own their horizontal gesture (left = delete, right = switch tab),
+  // so Embla must not also drag when the touch starts on one.
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start", containScroll: false, duration: 22, skipSnaps: false,
+    watchDrag: (_api, evt) => !(evt?.target && evt.target.closest && evt.target.closest(".mugrow-swipe")),
+  });
   useEffect(() => {
     if (!emblaApi) return;
     const onSelect = () => setTab(TAB_ORDER[emblaApi.selectedScrollSnap()] || "collection");
@@ -1731,7 +1783,7 @@ export default function App() {
                 ) : panels[k].length === 0 ? (
                   <div className="card pad"><div className="muted">{t("no_match")}</div></div>
                 ) : (
-                  <MugList key={viewMode} items={panels[k]} viewMode={viewMode} onEdit={openEdit} onDelete={del} onFav={fav} onDeals={setDealsMug} />
+                  <MugList key={viewMode} items={panels[k]} viewMode={viewMode} onEdit={openEdit} onFav={fav} onDeals={setDealsMug} onSwipeDelete={softDelete} onSwipeRight={swipeToTab} />
                 )}
                 {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
               </div>
@@ -1749,7 +1801,8 @@ export default function App() {
         <div className="footinner"><span className="footmark"><MugMark size={20} /></span><span>{t("app_title")}</span></div>
       </footer>
 
-      <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving} />
+      <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving}
+        onDelete={(m) => { setFormOpen(false); softDelete(m); }} />
       <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse}
         onCamera={() => camRef.current?.click()} onFile={() => fileRef.current?.click()} />
       <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
@@ -1759,8 +1812,7 @@ export default function App() {
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reload} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
       <DealsModal open={!!dealsMug} onClose={() => setDealsMug(null)} mug={dealsMug} />
-      <DeleteDialog mug={confirmMug} onCancel={() => setConfirmMug(null)} onConfirm={doDelete} />
-      <Toaster position="top-center" richColors closeButton />
+      <Toaster position="top-center" richColors closeButton expand visibleToasts={5} />
 
       <Modal open={statsOpen} onClose={() => setStatsOpen(false)} title={t("tab_stats")} subtitle={t("stats_subtitle")} wide>
         <div className="grid" style={{ gap: 12 }}>
