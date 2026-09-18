@@ -1518,18 +1518,30 @@ export default function App() {
   // call is deferred, so Undo can cancel it. Every delete gets its own toast, and
   // Sonner stacks them, so several quick deletes are all recoverable.
   const pendingDeletes = useRef(new Map());
-  const restoreMug = (m) => setMugs((prev) => (prev.some((x) => x.id === m.id) ? prev : [m, ...prev]));
+  // Put a restored mug back where it was: after the neighbour it sat below before
+  // deletion (falls back to the top when it was the first row).
+  const restoreMug = (m, afterId) => setMugs((prev) => {
+    if (prev.some((x) => x.id === m.id)) return prev;
+    if (afterId) {
+      const i = prev.findIndex((x) => x.id === afterId);
+      if (i >= 0) { const next = prev.slice(); next.splice(i + 1, 0, m); return next; }
+    }
+    return [m, ...prev];
+  });
   const softDelete = (m) => {
     const node = typeof document !== "undefined" ? document.querySelector(`[data-mug-id="${String(m.id).replace(/["\\]/g, "\\$&")}"]`) : null;
     const rect = node?.getBoundingClientRect();
     if (node && rect) animateGhost(node, rect);
+    // Remember the row above so Undo can drop it back into place.
+    const wrap = node?.parentElement;
+    const afterId = wrap?.previousElementSibling?.querySelector?.("[data-mug-id]")?.getAttribute("data-mug-id") || null;
     setMugs((prev) => prev.filter((x) => x.id !== m.id));
     const timer = window.setTimeout(async () => {
       pendingDeletes.current.delete(m.id);
       try { await api(`/api/mugs/${m.id}`, { method: "DELETE" }); }
-      catch (e) { restoreMug(m); toast.error(t("delete_failed", { msg: e.message || e })); }
+      catch (e) { restoreMug(m, afterId); toast.error(t("delete_failed", { msg: e.message || e })); }
     }, UNDO_MS);
-    pendingDeletes.current.set(m.id, { timer });
+    pendingDeletes.current.set(m.id, { timer, afterId });
     const tid = toast(t("deleted_toast", { name: catName(m.name, lang) }), {
       duration: UNDO_MS,
       classNames: { toast: "toast-long" },
@@ -1539,7 +1551,7 @@ export default function App() {
           const entry = pendingDeletes.current.get(m.id);
           if (entry) { window.clearTimeout(entry.timer); pendingDeletes.current.delete(m.id); }
           toast.dismiss(tid);
-          restoreMug(m);
+          restoreMug(m, entry?.afterId);
         },
       },
     });

@@ -470,10 +470,18 @@ button:not(:disabled):active,.btn:not(:disabled):active{
 /* ============================== Toasts ================================
    Sonner: larger type and a progress bar showing the remaining time. The bar
    is the toast's ::before (free at rest; Sonner only uses it while swiping). */
-[data-sonner-toast][data-styled="true"]{font-size:var(--fs-body) !important}
-[data-sonner-toast][data-styled="true"] [data-title]{font-size:var(--fs-body) !important}
-[data-sonner-toast][data-styled="true"] [data-description]{font-size:var(--fs-secondary) !important}
-[data-sonner-toast][data-styled="true"] [data-button]{font-size:var(--fs-label) !important; height:auto !important; padding:7px 13px !important}
+[data-sonner-toast][data-styled="true"]{font-size:var(--fs-h3) !important}
+[data-sonner-toast][data-styled="true"] [data-title]{font-size:var(--fs-h3) !important}
+[data-sonner-toast][data-styled="true"] [data-description]{font-size:var(--fs-body) !important}
+/* Big, thumb-friendly action (Undo) — 44px min touch target. */
+[data-sonner-toast][data-styled="true"] [data-button]{
+  font-size:var(--fs-body) !important; font-weight:500 !important;
+  min-height:44px !important; height:auto !important; padding:0 18px !important; border-radius:999px !important;
+}
+/* Big close button / X, pulled a little more inside the corner. */
+[data-sonner-toaster][dir="ltr"]{--toast-close-button-transform:translate(-30%,-30%)}
+[data-sonner-toast][data-styled="true"] [data-close-button]{height:36px !important; width:36px !important}
+[data-sonner-toast][data-styled="true"] [data-close-button] svg{width:20px !important; height:20px !important}
 [data-sonner-toast]::before{
   content:""; position:absolute; left:0; right:0; bottom:0; height:3px;
   background:currentColor; opacity:.45; pointer-events:none;

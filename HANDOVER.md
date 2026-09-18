@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.65.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.65.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -309,6 +309,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.65.1** — Toasts bigger still (h3 text, 36px close X, 44px
+  pill Undo); Undo now restores a mug to its previous position (re-inserted after
+  the row that was above it) instead of the top of the list.
 - **2026-09-17 · v1.65.0** — Toasts: larger text (`--fs-body`) and a countdown
   progress bar (toast `::before`, 4 s default / 6 s for the undo toast via the
   `toast-long` class); pauses on toaster hover like Sonner's timer.
