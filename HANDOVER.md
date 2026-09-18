@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.63.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.64.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -125,11 +125,14 @@ public/
 - **List view:** no favourite badge on the thumbnail; the row's star button turns
   gold when active (matching the grid card). The row's **name uses `h3`**.
 - **Delete:** no delete button on list/grid items — it lives in the **edit
-  dialog** and as **swipe-left on a list row** (right-swipe toggles the tab;
-  Embla drag is disabled on rows via `watchDrag`, and the gesture is handled in
-  `MugRow`). Deletes are **soft**: the row leaves at once, the server call is
-  deferred 6 s (`UNDO_MS`), and a stacked Sonner toast offers **Undo** (restores
-  from `pendingDeletes`). A `pagehide` handler commits pending deletes.
+  dialog** and as a **row swipe** in the tab's over-scroll direction: **right on
+  Collection, left on Wishlist** (`deleteDir`). The opposite direction stays with
+  Embla for tab switching (which still follows the finger live). `MugRow` uses
+  **native** touch listeners (React's are delegated too high) and
+  `stopPropagation`s the delete direction so Embla doesn't over-scroll.
+- Deletes are **soft**: the row leaves at once, the server call is deferred 6 s
+  (`UNDO_MS`), and a stacked Sonner toast offers **Undo** (restores from
+  `pendingDeletes`). A `pagehide` handler commits pending deletes.
 - **`/type` (dev tool):** a noindex playground. Sliders tune the type steps,
   **5 icon sizes** and **5 font weights**; per-atom class + weight pickers; and
   live **composites** (list
@@ -306,6 +309,8 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.64.0** — Tab swiping back to native Embla (live drag); row
+  delete swipe is now direction-per-tab (right on Collection, left on Wishlist).
 - **2026-09-17 · v1.63.0** — Removed the delete button from list/grid items; added
   it to the edit dialog and as **swipe-left on list rows**; deletes now show a
   stacked **Undo** toast (6 s soft-delete). Removed the confirm-delete dialog.

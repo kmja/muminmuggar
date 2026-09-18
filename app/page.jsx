@@ -1243,7 +1243,10 @@ function MugCard({ m, onEdit, onFav, onDeals }) {
 /* ------------------------------- MugRow ------------------------------- */
 // Compact one-row layout: image · name/meta · actions. Swipe left to delete.
 const SWIPE_TRIGGER = 72;
-function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, onSwipeRight }) {
+// `deleteDir` is the direction that deletes on this tab: "right" on Collection
+// (where dragging right is Embla's no-op over-scroll) and "left" on Wishlist.
+// The opposite direction is left entirely to Embla for switching tabs.
+function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
   const t = useT();
   const lang = useLang();
   const displayName = catName(m.name, lang);
@@ -1252,40 +1255,68 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, onSwipeRight }) {
     : "";
   const meta = [m.year, val ? "≈ " + val : null].filter(Boolean).join(" · ");
   const img = displayImg(m);
+  const wrapRef = useRef(null);
   const rowRef = useRef(null);
-  const drag = useRef(null);
+  const dragRef = useRef({ x: 0, y: 0, dx: 0, mode: null });
   const suppressClick = useRef(false);
+  const mugRef = useRef(m); mugRef.current = m;
+  const deleteRef = useRef(onSwipeDelete); deleteRef.current = onSwipeDelete;
+  const dirRef = useRef(deleteDir); dirRef.current = deleteDir;
 
-  const start = (e) => {
-    const tc = e.touches[0];
-    drag.current = { x: tc.clientX, y: tc.clientY, dx: 0, axis: null };
-  };
-  const move = (e) => {
-    const d = drag.current; if (!d) return;
-    const tc = e.touches[0];
-    const dx = tc.clientX - d.x, dy = tc.clientY - d.y;
-    if (!d.axis && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) d.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-    if (d.axis !== "x") return;
-    d.dx = dx;
-    const el = rowRef.current;
-    if (el) { el.style.transition = "none"; el.style.transform = `translateX(${Math.min(0, Math.max(dx, -120))}px)`; }
-  };
-  const end = () => {
-    const d = drag.current; drag.current = null;
-    const el = rowRef.current;
-    if (el) { el.style.transition = ""; el.style.transform = ""; }
-    if (!d || d.axis !== "x") return;
-    // Don't let the drag turn into a tap (edit) — nor the next one.
-    suppressClick.current = true;
-    window.setTimeout(() => { suppressClick.current = false; }, 400);
-    if (d.dx <= -SWIPE_TRIGGER) onSwipeDelete?.(m);
-    else if (d.dx >= SWIPE_TRIGGER) onSwipeRight?.();
-  };
+  // Native listeners so we run before Embla's (React's are delegated too high);
+  // a `stopPropagation` on the delete direction keeps Embla from over-scrolling.
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const onStart = (e) => { const tc = e.touches[0]; dragRef.current = { x: tc.clientX, y: tc.clientY, dx: 0, mode: null }; };
+    const onMove = (e) => {
+      const d = dragRef.current;
+      const tc = e.touches[0];
+      const dx = tc.clientX - d.x, dy = tc.clientY - d.y;
+      if (!d.mode) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        if (Math.abs(dx) <= Math.abs(dy)) { d.mode = "y"; return; }
+        const wantDelete = dirRef.current === "right" ? dx > 0 : dx < 0;
+        d.mode = wantDelete ? "delete" : "tab";
+      }
+      if (d.mode !== "delete") return;
+      e.stopPropagation();
+      d.dx = dx;
+      const el = rowRef.current;
+      if (el) {
+        const clamped = dirRef.current === "right" ? Math.min(dx, 120) : Math.max(dx, -120);
+        el.style.transition = "none";
+        el.style.transform = `translateX(${clamped}px)`;
+      }
+    };
+    const onEnd = () => {
+      const d = dragRef.current;
+      const el = rowRef.current;
+      if (el) { el.style.transition = ""; el.style.transform = ""; }
+      if (d.mode === "delete") {
+        suppressClick.current = true;
+        window.setTimeout(() => { suppressClick.current = false; }, 400);
+        if (Math.abs(d.dx) >= SWIPE_TRIGGER) deleteRef.current?.(mugRef.current);
+      }
+      d.mode = null; d.dx = 0;
+    };
+    wrap.addEventListener("touchstart", onStart, { passive: true });
+    wrap.addEventListener("touchmove", onMove, { passive: false });
+    wrap.addEventListener("touchend", onEnd);
+    wrap.addEventListener("touchcancel", onEnd);
+    return () => {
+      wrap.removeEventListener("touchstart", onStart);
+      wrap.removeEventListener("touchmove", onMove);
+      wrap.removeEventListener("touchend", onEnd);
+      wrap.removeEventListener("touchcancel", onEnd);
+    };
+  }, []);
+
   const open = () => { if (suppressClick.current) return; onEdit(m); };
 
   return (
-    <div className="mugrow-swipe" onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end}>
-      <div className="mugrow-delete" aria-hidden="true"><Trash2 size={18} /><span>{t("card_delete")}</span></div>
+    <div className="mugrow-swipe" ref={wrapRef}>
+      <div className={"mugrow-delete " + (deleteDir === "right" ? "left" : "right")} aria-hidden="true"><Trash2 size={18} /><span>{t("card_delete")}</span></div>
       <div className="mugrow" ref={rowRef} data-flip-key={m.id} data-mug-id={m.id} role="button" tabIndex={0} onClick={open}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }}>
         <div className="mugrow-thumb">
@@ -1308,13 +1339,13 @@ function MugRow({ m, onEdit, onFav, onDeals, onSwipeDelete, onSwipeRight }) {
 /* ------------------------------ MugList ------------------------------- */
 // Renders the mug cards/rows and animates them (FLIP) whenever the set or order
 // changes — so filtering, sorting, adding and favouriting glide into place.
-function MugList({ items, viewMode, onEdit, onFav, onDeals, onSwipeDelete, onSwipeRight }) {
+function MugList({ items, viewMode, onEdit, onFav, onDeals, onSwipeDelete, deleteDir }) {
   const ref = useRef(null);
   const sig = items.map((m) => m.id).join("|");
   useFlip(ref, sig);
   return viewMode === "grid"
     ? <div className="muggrid" ref={ref}>{items.map((m) => <MugCard key={m.id} m={m} onEdit={onEdit} onFav={onFav} onDeals={onDeals} />)}</div>
-    : <div className="muglist" ref={ref}>{items.map((m) => <MugRow key={m.id} m={m} onEdit={onEdit} onFav={onFav} onDeals={onDeals} onSwipeDelete={onSwipeDelete} onSwipeRight={onSwipeRight} />)}</div>;
+    : <div className="muglist" ref={ref}>{items.map((m) => <MugRow key={m.id} m={m} onEdit={onEdit} onFav={onFav} onDeals={onDeals} onSwipeDelete={onSwipeDelete} deleteDir={deleteDir} />)}</div>;
 }
 
 /* -------------------------------- App --------------------------------- */
@@ -1512,8 +1543,6 @@ export default function App() {
       },
     });
   };
-  // A right-swipe on a list row switches tabs (the row's left-swipe deletes).
-  const swipeToTab = () => setTab((cur) => (cur === "collection" ? "wishlist" : "collection"));
   // If the tab is closed during the undo window, commit pending deletes so a mug
   // can't silently come back later.
   useEffect(() => {
@@ -1632,12 +1661,7 @@ export default function App() {
   // Swipeable tabs via Embla: dragging the panel moves between collection and
   // wishlist, and the active tab follows the snap point.
   const TAB_ORDER = ["collection", "wishlist"];
-  // List rows own their horizontal gesture (left = delete, right = switch tab),
-  // so Embla must not also drag when the touch starts on one.
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start", containScroll: false, duration: 22, skipSnaps: false,
-    watchDrag: (_api, evt) => !(evt?.target && evt.target.closest && evt.target.closest(".mugrow-swipe")),
-  });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: false, duration: 22, skipSnaps: false });
   useEffect(() => {
     if (!emblaApi) return;
     const onSelect = () => setTab(TAB_ORDER[emblaApi.selectedScrollSnap()] || "collection");
@@ -1783,7 +1807,7 @@ export default function App() {
                 ) : panels[k].length === 0 ? (
                   <div className="card pad"><div className="muted">{t("no_match")}</div></div>
                 ) : (
-                  <MugList key={viewMode} items={panels[k]} viewMode={viewMode} onEdit={openEdit} onFav={fav} onDeals={setDealsMug} onSwipeDelete={softDelete} onSwipeRight={swipeToTab} />
+                  <MugList key={viewMode} items={panels[k]} viewMode={viewMode} onEdit={openEdit} onFav={fav} onDeals={setDealsMug} onSwipeDelete={softDelete} deleteDir={k === "collection" ? "right" : "left"} />
                 )}
                 {k === "wishlist" && panels.wishlist.length ? <div className="row" style={{ justifyContent: "center", marginTop: 14 }}><button onClick={() => setGapOpen(true)}><BookOpen size={16} /> {t("wishlist_browse")}</button></div> : null}
               </div>
