@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.67.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.67.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -186,9 +186,10 @@ public/
   via `nameSv`. Images live in `public/mugs/*.webp`.
 - Changing this file requires `npm run build:embeddings`.
 - The two **Moominvalley Park Japan re-releases** (2023, 2026) are distinct
-  designs and now have their own images (`moominvalley-park-japan-2023.webp` /
-  `…-2026.webp`) — Mukify photos (with a light background), unlike the transparent
-  Arabia product shots.
+  designs with their own images (`moominvalley-park-japan-2023.webp` /
+  `…-2026.webp`), **cut out** from Mukify photos with RMBG-1.4
+  (`AutoModelForImageSegmentation` via `@huggingface/transformers`) and trimmed,
+  so they match the transparent product-shot style.
 
 ---
 
@@ -321,6 +322,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.67.1** — Cut out the Moominvalley Park Japan 2023/2026 mug
+  backgrounds with RMBG-1.4 so they match the transparent product shots (rebuilt
+  embeddings).
 - **2026-09-17 · v1.67.0** — Edit dialog shows the estimated value; swipe-delete
   gained a dead zone (no red layer for small nudges); gave the Moominvalley Park
   Japan 2023/2026 mugs their own images (rebuilt embeddings).
