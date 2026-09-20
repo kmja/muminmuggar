@@ -160,7 +160,7 @@ function catalogDraft(e) {
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
-function Modal({ open, title, subtitle, children, onClose, footer, wide, raised, camera }) {
+function Modal({ open, title, subtitle, children, onClose, footer, wide, raised, camera, loading }) {
   const t = useT();
   // Swiping back from the screen edge closes the dialog (see useBackToClose).
   useBackToClose(open, () => onClose?.());
@@ -168,7 +168,7 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide, raised,
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className={"overlay" + (raised ? " raised" : "")} />
-        <Dialog.Content className={"modal" + (wide ? " wide" : "") + (raised ? " raised" : "") + (camera ? " camera" : "")}>
+        <Dialog.Content className={"modal" + (wide ? " wide" : "") + (raised ? " raised" : "") + (camera ? " camera" : "") + (loading ? " loading" : "")}>
           <div className="head">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div>
@@ -571,7 +571,7 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
 /* ------------------------------ CameraView ---------------------------- */
 // Live camera preview with a capture button. Capturing grabs a frame as a JPEG
 // data URL and hands it straight to the matcher.
-function CameraView({ onCapture }) {
+function CameraView({ onCapture, onReady }) {
   const t = useT();
   const videoRef = useRef(null);
   const [error, setError] = useState("");
@@ -579,13 +579,14 @@ function CameraView({ onCapture }) {
   useEffect(() => {
     let cancelled = false, stream;
     (async () => {
-      if (!navigator.mediaDevices?.getUserMedia) { setError(t("camera_unsupported")); return; }
+      if (!navigator.mediaDevices?.getUserMedia) { setError(t("camera_unsupported")); onReady?.(); return; }
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
         if (cancelled) { stream.getTracks().forEach((x) => x.stop()); return; }
         const v = videoRef.current;
         if (v) { v.srcObject = stream; await v.play().catch(() => {}); setReady(true); }
       } catch { if (!cancelled) setError(t("camera_denied")); }
+      if (!cancelled) onReady?.();
     })();
     return () => { cancelled = true; stream?.getTracks().forEach((x) => x.stop()); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -632,12 +633,14 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const [dupEntry, setDupEntry] = useState(null); // confident match that's already owned → ask first
+  const [camReady, setCamReady] = useState(false); // camera stream live (or failed) — gates the dialog reveal
   const addingRef = useRef(false); // guards against double-tapping the quick-add heart
   const photoRef = useRef("");     // last initialPhoto we've started processing
 
-  // Reset on open.
-  useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
+  // Reset on open. Runs before paint so the dialog never flashes the previous
+  // stage before settling on the one it should start on.
+  useIsoLayoutEffect(() => {
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setCamReady(false); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
@@ -806,13 +809,16 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     </div>
   );
   const footer = items.length ? reviewFooter : stage === "camera" ? null : stage === "match" ? matchFooter : closeFooter;
+  // Don't reveal the dialog until the camera is live (or has failed), so it
+  // doesn't animate in around a black frame.
+  const loading = stage === "camera" && !camReady;
 
   return (
     <>
-    <Modal open={open} onClose={onClose} camera={stage === "camera"} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : stage === "camera" ? t("camera_subtitle") : undefined} footer={footer}>
+    <Modal open={open} onClose={onClose} camera={stage === "camera"} loading={loading} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : stage === "camera" ? t("camera_subtitle") : undefined} footer={footer}>
       <div className="addstage" key={stage}>
       {!items.length && !busy && screen === "camera" ? (
-        <div className="camerascreen"><CameraView onCapture={processImage} /></div>
+        <CameraView onCapture={processImage} onReady={() => setCamReady(true)} />
       ) : null}
       {!items.length && !busy && screen === "browse" ? (
         <div className="grid" style={{ gap: 12 }}>

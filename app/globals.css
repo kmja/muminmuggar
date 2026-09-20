@@ -214,12 +214,9 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow: 0 20px 60px rgba(27,20,35,.18);
   max-height:90vh; display:flex; flex-direction:column; overflow:hidden}
 .modal.wide{width:min(920px, calc(100vw - 24px))}
-/* The camera stage wants the biggest possible viewfinder, keeping standard
-   margins to the screen edges. */
-.modal.camera{width:min(600px, calc(100vw - 24px)); height:calc(100dvh - 24px); max-height:calc(100dvh - 24px)}
-.modal.camera .body{padding:0; overflow:hidden; display:flex; flex-direction:column}
-.camerascreen{flex:1; min-height:0; display:flex}
-.modal.camera .vfwrap{flex:1; min-height:0; aspect-ratio:auto; max-height:none; border-radius:0}
+/* The camera dialog is a normal dialog — header, description, then the rounded
+   viewfinder filling the content width. */
+.modal.camera{width:min(560px, calc(100vw - 24px))}
 .modal .head{padding:var(--space-18) var(--space-18) 0; flex:none; background: var(--card); z-index:2}
 .modal h2{margin:0;font-size:var(--fs-h2); font-weight:var(--fw-bold)}
 .modal .body{padding:var(--space-16) var(--space-18) var(--space-18); flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
@@ -285,7 +282,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .sr-only{position:absolute;left:calc(-1 * var(--space-48));top:auto;width:1px;height:1px;overflow:hidden}
 .drop{border:1.5px dashed var(--border); border-radius:var(--radius-lg); padding:var(--space-24); text-align:center; color:var(--muted); background: var(--bg2)}
 /* In-dialog camera viewfinder. */
-.vfwrap{position:relative; border-radius:var(--radius-xl); overflow:hidden; background:#12101a; aspect-ratio:3/4; max-height:52vh; width:100%}
+.vfwrap{position:relative; border-radius:var(--radius-xl); overflow:hidden; background:#12101a; aspect-ratio:3/4; max-height:62vh; width:100%}
 .viewfinder{width:100%; height:100%; object-fit:cover; display:block; background:#12101a}
 .vfplaceholder{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); background:var(--lilac); padding:var(--space-20); text-align:center}
 .vfplaceholder svg{color:var(--accent); opacity:.6}
@@ -497,6 +494,9 @@ button:not(:disabled):active,.btn:not(:disabled):active{
 .overlay[data-state="closed"]{animation:fadeout var(--dur) var(--ease-out) forwards}
 .modal[data-state="open"]{animation:modalin var(--dur-slow) var(--ease-out)}
 .modal[data-state="closed"]{animation:modalout var(--dur) var(--ease-out) forwards}
+/* Hold the dialog back until its content is ready (e.g. the camera stream), so
+   it doesn't animate in half-loaded — then play the entrance when it's ready. */
+.modal.loading{animation:none; opacity:0; pointer-events:none}
 @keyframes fadein{from{opacity:0}}
 @keyframes fadeout{to{opacity:0}}
 @keyframes modalin{from{opacity:0; transform:translate(-50%,-50%) scale(.96)}}

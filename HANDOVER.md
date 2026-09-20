@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.69.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.70.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -108,9 +108,13 @@ public/
   the add dialog on a live **in-app viewfinder** (`CameraView`, `getUserMedia`)
   with a capture button; capturing analyses the frame immediately — the **busy
   stage** shows the "examining a mug" loader (`.examine`, slides in → turns back
-  and forth → slides out). The camera stage is **full-height** (`.modal.camera`,
-  24px margins) with **no footer and no extra buttons** — just the viewfinder and
-  the X. A match is **auto-added only when confident** (`autoMargin` gap **and**
+  and forth → slides out). The camera stage is a **normal dialog** (`.modal.camera`,
+  header + description + standard spacing) whose body holds the rounded, full-width
+  viewfinder — **no footer and no extra buttons** (just the X). The dialog is held
+  back (`.modal.loading`) until the camera is live (or failed), so it never
+  animates in around a black frame; the open reset runs in a layout effect so the
+  previous stage never flashes. A match is **auto-added only when confident**
+  (`autoMargin` gap **and**
   `best.prob ≥ AUTO_PROB` 0.6); if that confident mug is **already owned**, a
   raised **DupConfirm** asks first ("Redan i samlingen" → Add anyway). Otherwise
   the **top-4 picker** shows, flagging any candidates already in the collection
@@ -335,6 +339,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.70.0** — Camera dialog restructured into two layers (a rounded,
+  full-width viewfinder inside a normal header + description dialog) and held back
+  until the camera stream is ready, so it no longer loads glitchily.
 - **2026-09-17 · v1.69.0** — Camera flow polish: the picker flags candidates
   already in the collection, a confident match that's already owned asks first,
   the camera stage is full-height with no extra buttons, and the picker's button
