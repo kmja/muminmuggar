@@ -214,6 +214,12 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
   width:min(720px, calc(100vw - 24px)); background: var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow: 0 20px 60px rgba(27,20,35,.18);
   max-height:90vh; display:flex; flex-direction:column; overflow:hidden}
 .modal.wide{width:min(920px, calc(100vw - 24px))}
+/* The camera stage wants the biggest possible viewfinder, keeping standard
+   margins to the screen edges. */
+.modal.camera{width:min(600px, calc(100vw - 24px)); height:calc(100dvh - 24px); max-height:calc(100dvh - 24px)}
+.modal.camera .body{padding:0; overflow:hidden; display:flex; flex-direction:column}
+.camerascreen{flex:1; min-height:0; display:flex}
+.modal.camera .vfwrap{flex:1; min-height:0; aspect-ratio:auto; max-height:none; border-radius:0}
 .modal .head{padding:var(--space-18) var(--space-18) 0; flex:none; background: var(--card); z-index:2}
 .modal h2{margin:0;font-size:var(--fs-h2); font-weight:var(--fw-bold)}
 .modal .body{padding:var(--space-16) var(--space-18) var(--space-18); flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
@@ -313,6 +319,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .matchcard img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
 .matchcard .mname{font-size:var(--fs-label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .matchcard .mmeta{font-size:var(--fs-caption);color:var(--muted)}
+.matchcard .mbadges{display:flex;flex-wrap:wrap;gap:var(--space-6);justify-content:center}
 /* Quick-add "+" on each row of the add-mugs list. */
 .addbtn{flex:none; width:var(--control-lg); height:var(--control-lg); padding:0; justify-content:center; border-radius:var(--radius-pill); border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}

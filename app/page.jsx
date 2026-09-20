@@ -160,7 +160,7 @@ function catalogDraft(e) {
 
 /* --------------------------- UI primitives ---------------------------- */
 function Badge({ children, kind }) { return <span className={"badge " + (kind || "")}>{children}</span>; }
-function Modal({ open, title, subtitle, children, onClose, footer, wide, raised }) {
+function Modal({ open, title, subtitle, children, onClose, footer, wide, raised, camera }) {
   const t = useT();
   // Swiping back from the screen edge closes the dialog (see useBackToClose).
   useBackToClose(open, () => onClose?.());
@@ -168,7 +168,7 @@ function Modal({ open, title, subtitle, children, onClose, footer, wide, raised 
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose?.(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className={"overlay" + (raised ? " raised" : "")} />
-        <Dialog.Content className={"modal" + (wide ? " wide" : "") + (raised ? " raised" : "")}>
+        <Dialog.Content className={"modal" + (wide ? " wide" : "") + (raised ? " raised" : "") + (camera ? " camera" : "")}>
           <div className="head">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div>
@@ -631,13 +631,13 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const [matchData, setMatchData] = useState(null); // { embedding, model, candidates } for feedback
   const [modelPct, setModelPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
+  const [dupEntry, setDupEntry] = useState(null); // confident match that's already owned → ask first
   const addingRef = useRef(false); // guards against double-tapping the quick-add heart
   const photoRef = useRef("");     // last initialPhoto we've started processing
-  const fileRef = useRef(null);    // "choose image" fallback on the camera screen
 
   // Reset on open.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
@@ -694,7 +694,13 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
           // top-4 so a wrong auto-add can't slip through.
           if (autoMargin != null && best.logit - second.logit >= autoMargin && (best.prob ?? 0) >= AUTO_PROB) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
-            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); return; }
+            if (e) {
+              logMatch(best, true, data, small);
+              // Very confident, but it's already in the collection — don't silently
+              // add a duplicate; ask first.
+              if (isOwned(e.nameEn)) { setDupEntry(e); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); return; }
+              onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); return;
+            }
           }
           setScreen("match");
           return;
@@ -712,12 +718,6 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     // (camera or catalogue) so the dialog stays open for the next mug.
     onAddOne(catalogDraft(e));
     setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen);
-  };
-  // "Choose image" fallback on the camera screen.
-  const runFile = async (file) => {
-    if (!file) return;
-    const raw = await fileToDataUrl(file);
-    await processImage(await downscaleImage(raw, 1400, 0.85));
   };
   // A photo handed over by the add menu: process it once per new photo.
   useEffect(() => {
@@ -790,25 +790,29 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
       }}>{t("scan_add", { n: chosen, noun: chosen === 1 ? t("mug_one") : t("mug_other") })}</button>
     </>
   );
-  // Every stage except the shelf-scan review has a single secondary action: close.
+  // Each stage of the dialog fades/slides in when it replaces the previous one.
+  const stage = items.length ? "review" : busy ? "busy" : screen;
+  // Every stage except the shelf-scan review has a single secondary action. The
+  // camera stage has none (just the X), and the picker's button is a cancel that
+  // returns to the camera rather than closing the dialog.
   const closeFooter = (
     <div className="formactions">
       <button className="big" onClick={onClose}>{t("close")}</button>
     </div>
   );
-  const footer = items.length ? reviewFooter : closeFooter;
-  // Each stage of the dialog fades/slides in when it replaces the previous one.
-  const stage = items.length ? "review" : busy ? "busy" : screen;
+  const matchFooter = (
+    <div className="formactions">
+      <button className="big" onClick={() => { setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); }}>{t("cancel")}</button>
+    </div>
+  );
+  const footer = items.length ? reviewFooter : stage === "camera" ? null : stage === "match" ? matchFooter : closeFooter;
 
   return (
-    <Modal open={open} onClose={onClose} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : stage === "camera" ? t("camera_subtitle") : undefined} footer={footer}>
+    <>
+    <Modal open={open} onClose={onClose} camera={stage === "camera"} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : stage === "camera" ? t("camera_subtitle") : undefined} footer={footer}>
       <div className="addstage" key={stage}>
       {!items.length && !busy && screen === "camera" ? (
-        <div className="grid" style={{ gap: 12 }}>
-          <CameraView onCapture={processImage} />
-          <button type="button" className="big" style={{ justifyContent: "center" }} onClick={() => fileRef.current?.click()}><ImagePlus size={18} /> {t("scan_choose_image")}</button>
-          <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { runFile(e.target.files?.[0]); e.target.value = ""; }} />
-        </div>
+        <div className="camerascreen"><CameraView onCapture={processImage} /></div>
       ) : null}
       {!items.length && !busy && screen === "browse" ? (
         <div className="grid" style={{ gap: 12 }}>
@@ -857,14 +861,18 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
           <div className="matchgrid">
             {matches.map((m, i) => {
               const e = MASTER_CATALOG.find((x) => x.num === m.num);
+              const owned = isOwned(m.nameEn);
               return (
-                <div className={"matchcard" + (i === 0 ? " best" : "")} key={m.num} role="button" tabIndex={0}
+                <div className={"matchcard" + (i === 0 ? " best" : "") + (owned ? " owned" : "")} key={m.num} role="button" tabIndex={0}
                   onClick={() => chooseMatch(m)}
                   onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); chooseMatch(m); } }}>
                   {m.image ? <img src={m.image} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = "none"; }} /> : <MugMark size={40} />}
                   <div className="mname" title={catName(m.nameEn, lang)}>{catName(m.nameEn, lang)}</div>
                   <div className="mmeta">{[m.year, e?.capacity].filter(Boolean).join(" · ")}</div>
-                  {i === 0 ? <Badge kind="owned">{t("match_best")}</Badge> : null}
+                  <div className="mbadges">
+                    {i === 0 ? <Badge kind="owned">{t("match_best")}</Badge> : null}
+                    {owned ? <Badge kind="wishlist"><CheckCircle2 size={13} /> {t("gap_in_collection")}</Badge> : null}
+                  </div>
                 </div>
               );
             })}
@@ -918,6 +926,37 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
           <div className="help">{t("scan_found", { n: items.length })}</div>
         </div>
       ) : null}
+      </div>
+    </Modal>
+    <DupConfirm entry={dupEntry} onCancel={() => setDupEntry(null)}
+      onConfirm={() => { const e = dupEntry; setDupEntry(null); if (e) onAddOne(catalogDraft(e)); }} />
+    </>
+  );
+}
+
+/* ----------------------------- DupConfirm ----------------------------- */
+// Shown when the camera is very confident but the mug is already in the
+// collection — ask before adding another copy.
+function DupConfirm({ entry, onCancel, onConfirm }) {
+  const t = useT();
+  const lang = useLang();
+  return (
+    <Modal open={!!entry} raised onClose={onCancel} title={t("dup_title")}
+      footer={
+        <div className="formactions">
+          <button className="linkbtn" onClick={onCancel}>{t("cancel")}</button>
+          <button className="primary big" onClick={onConfirm}>{t("dup_add")}</button>
+        </div>
+      }>
+      <div className="grid" style={{ gap: 14 }}>
+        <div className="editident">
+          <div className="editident-photo">{entry?.image ? <img src={entry.image} alt="" /> : <MugMark size={56} />}</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="t-h2 editident-name">{catName(entry?.nameEn || "", lang)}</div>
+            <div className="sub">{[entry?.year, entry?.capacity].filter(Boolean).join(" · ")}</div>
+          </div>
+        </div>
+        <div className="note warn"><AlertTriangle size={16} /> {t("dup_body")}</div>
       </div>
     </Modal>
   );

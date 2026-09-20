@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.68.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.69.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -108,11 +108,16 @@ public/
   the add dialog on a live **in-app viewfinder** (`CameraView`, `getUserMedia`)
   with a capture button; capturing analyses the frame immediately — the **busy
   stage** shows the "examining a mug" loader (`.examine`, slides in → turns back
-  and forth → slides out). A match is **auto-added only when confident**
-  (`autoMargin` gap **and** `best.prob ≥ AUTO_PROB` 0.6); otherwise the **top-4
-  picker** shows. **Choose image** hands a picked file to the same pipeline. The
-  dialog's `mode` (camera/catalogue) decides where it resets after an add, so the
-  camera flow returns to the viewfinder (cancel too), not the catalogue. **`♥`
+  and forth → slides out). The camera stage is **full-height** (`.modal.camera`,
+  24px margins) with **no footer and no extra buttons** — just the viewfinder and
+  the X. A match is **auto-added only when confident** (`autoMargin` gap **and**
+  `best.prob ≥ AUTO_PROB` 0.6); if that confident mug is **already owned**, a
+  raised **DupConfirm** asks first ("Redan i samlingen" → Add anyway). Otherwise
+  the **top-4 picker** shows, flagging any candidates already in the collection
+  with an **"I samlingen"** badge; its footer button is **Cancel** (returns to the
+  camera, not close). **Choose image** hands a picked file to the same pipeline.
+  The dialog's `mode` (camera/catalogue) decides where it resets after an add, so
+  the camera flow returns to the viewfinder (cancel too), not the catalogue. **`♥`
   (wishlist) skips the confirm** — the heart pops and a toast confirms. **`+`
   (owned)** opens the raised **AddConfirmModal** — grouped into **Förvärv**
   (acquisition date, defaulted to today; paid + currency) and **Egenskaper**
@@ -330,6 +335,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.69.0** — Camera flow polish: the picker flags candidates
+  already in the collection, a confident match that's already owned asks first,
+  the camera stage is full-height with no extra buttons, and the picker's button
+  is a Cancel that returns to the camera.
 - **2026-09-17 · v1.68.0** — Camera flow: in-app viewfinder dialog + capture,
   immediate analysis with an "examining a mug" loader, the top-4 picker now shows
   when confidence is low (`AUTO_PROB`), and the camera flow resets to the
