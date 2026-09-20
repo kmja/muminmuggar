@@ -8,14 +8,13 @@ import * as Popover from "@radix-ui/react-popover";
 import { Toaster, toast } from "sonner";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
-import { matchMug, warmUp, isReady, getProgress, MIN_MARGIN, AUTO_MARGIN } from "../lib/image-match";
-import { removeBackground, warmUpBg, isBgReady, getBgProgress } from "../lib/bg-remove";
+import { matchMug, warmUp, isReady, getProgress, AUTO_MARGIN } from "../lib/image-match";
 import { getDeviceId } from "../lib/device";
 import { createSearch } from "../lib/search";
 import { useRipple, useFlip, animateGhost, useCountUp, useIsoLayoutEffect, useBackToClose } from "../lib/motion";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
-  Sun, Moon, Search, SearchX, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
+  Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
   ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User, Download, ClipboardCopy,
 } from "lucide-react";
@@ -630,7 +629,6 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const [matches, setMatches] = useState(null); // on-device match candidates
   const [matchData, setMatchData] = useState(null); // { embedding, model, candidates } for feedback
   const [modelPct, setModelPct] = useState(0);
-  const [bgPct, setBgPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const [dupEntry, setDupEntry] = useState(null); // confident match that's already owned → ask first
   const [camReady, setCamReady] = useState(false); // camera stream live (or failed) — gates the dialog reveal
@@ -643,12 +641,12 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   useIsoLayoutEffect(() => {
     if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setCamReady(false); setDiag(null); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Prefetch the on-device models as soon as the dialog opens, so they're ready
-  // by the time a photo is taken (first use downloads them, then they're cached).
-  useEffect(() => { if (open) { warmUp(); warmUpBg(); } }, [open]);
+  // Prefetch the on-device model as soon as the dialog opens, so it's ready by
+  // the time a photo is taken (first use downloads ~30 MB, then it's cached).
+  useEffect(() => { if (open) warmUp(); }, [open]);
   useEffect(() => {
     if (!open) return;
-    const id = setInterval(() => { setModelPct(getProgress()); setBgPct(getBgProgress()); }, 500);
+    const id = setInterval(() => setModelPct(getProgress()), 500);
     return () => clearInterval(id);
   }, [open]);
 
@@ -688,19 +686,12 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
       try {
-        // Cut the subject out first: the probe was trained on cutouts, so a real
-        // photo's background otherwise dominates the match. Fall back to the raw
-        // photo if the model can't load.
-        const cut = await removeBackground(small).catch(() => small);
-        const { candidates, embedding, model, diag: dg } = await matchMug(cut, { topK: 4 });
+        const { candidates, embedding, model, diag: dg } = await matchMug(small, { topK: 4 });
         if (candidates.length) {
           const [best, second] = candidates;
           const margin = best.logit - second.logit;
           const data = { embedding, model, candidates: candidates.map((c) => c.num) };
           setDiag({ ...dg, names: candidates.map((c) => c.nameEn) });
-          // If even the best candidate isn't clearly ahead, the photo probably
-          // isn't a mug — don't offer four random options.
-          if (margin < MIN_MARGIN) { setScreen("nomatch"); return; }
           setMatches(candidates); setMatchData(data);
           // Only skip the picker when the match is genuinely confident.
           if (margin >= AUTO_MARGIN) {
@@ -816,7 +807,7 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
       <button className="big" onClick={() => { setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); }}>{t("cancel")}</button>
     </div>
   );
-  const footer = items.length ? reviewFooter : (stage === "camera" || stage === "nomatch") ? null : stage === "match" ? matchFooter : closeFooter;
+  const footer = items.length ? reviewFooter : stage === "camera" ? null : stage === "match" ? matchFooter : closeFooter;
   // Don't reveal the dialog until the camera is live (or has failed), so it
   // doesn't animate in around a black frame.
   const loading = stage === "camera" && !camReady;
@@ -894,27 +885,13 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
         </div>
       ) : null}
 
-      {!items.length && !busy && screen === "nomatch" ? (
-        <div className="grid" style={{ gap: 14, justifyItems: "center", textAlign: "center" }}>
-          <div className="nomatch-icon"><SearchX size={40} /></div>
-          <div className="t-h3">{t("match_none_title")}</div>
-          <div className="help" style={{ maxWidth: 340 }}>{t("match_none_body")}</div>
-          <div className="row" style={{ gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-            <button className="primary big" onClick={() => { setPhotoUrl(""); setScreen("camera"); }}><Camera size={18} /> {t("scan_take_photo")}</button>
-            <button className="big" onClick={() => { setPhotoUrl(""); setScreen("browse"); }}><Search size={18} /> {t("add_search_catalog")}</button>
-          </div>
-        </div>
-      ) : null}
-
-      {diag && (screen === "match" || screen === "nomatch") ? <MatchMetrics diag={diag} /> : null}
+      {diag && screen === "match" ? <MatchMetrics diag={diag} /> : null}
 
       {busy ? (
         <div className="grid" style={{ gap: 10, justifyItems: "center", textAlign: "center" }}>
           <div className="examine"><span className="examine-mug"><MugMark size={72} /></span></div>
           <div className="t-h3">{t("scan_looking")}</div>
-          {!isBgReady()
-            ? <div className="help">{bgPct > 0 ? t("bg_loading_pct", { pct: Math.round(bgPct) }) : t("bg_first_time")}</div>
-            : !isReady() ? <div className="help">{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}
+          {!isReady() ? <div className="help">{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}
         </div>
       ) : null}
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
@@ -971,7 +948,7 @@ function MatchMetrics({ diag }) {
   const t = useT();
   const ln = Math.log(diag.count);
   const rows = [
-    ["margin", diag.margin.toFixed(4), `MIN ${MIN_MARGIN}`],
+    ["margin", diag.margin.toFixed(4), `AUTO ${AUTO_MARGIN}`],
     ["l1 / l2", `${diag.l1.toFixed(3)} / ${diag.l2.toFixed(3)}`],
     ["msp (prob1)", diag.msp.toFixed(4)],
     ["z (l1−µ)/σ", diag.z.toFixed(2), `σ ${diag.std.toFixed(3)}`],

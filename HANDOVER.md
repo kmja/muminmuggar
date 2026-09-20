@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.73.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.74.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -113,19 +113,17 @@ public/
   viewfinder — **no footer and no extra buttons** (just the X). The dialog is held
   back (`.modal.loading`) until the camera is live (or failed), so it never
   animates in around a black frame; the open reset runs in a layout effect so the
-  previous stage never flashes. The **top1–top2 logit margin** is the confidence
-  signal (the probe's `prob` is near-uniform, ≈0.01, even for a correct match):
-  below **`MIN_MARGIN`** (0.08) the photo isn't treated as a mug — a **"no confident
-  match"** screen offers *take a new photo* / *search the catalogue*; at/above
-  **`AUTO_MARGIN`** (0.3) it **auto-adds**; in between the **top-4 picker** shows.
-  If an auto-added mug is **already owned**, a raised **DupConfirm** asks first
-  ("Redan i samlingen" → Add anyway). The picker flags candidates already in the
-  collection with an **"I samlingen"** badge; its footer button is **Cancel**
-  (returns to the camera, not close). **Choose image** hands a picked file to the
-  same pipeline. The match/no-match screens always show a **metrics readout**
-  (`MatchMetrics`) — margin, l1/l2, msp, z-score, energy, entropy, featNorm, probs
-  at T=0.02/0.05/0.1 and the top-5 logits, with a copy button — for tuning the
-  floors against real photos.
+  previous stage never flashes. The **top-4 picker is always shown** — there is no
+  minimum-confidence floor (a floor rejected good photos; the probe's `prob` is
+  near-uniform, ≈0.01, even for a correct match, so only the top1–top2 logit
+  *margin* is meaningful). At/above **`AUTO_MARGIN`** (0.3) it **auto-adds** instead;
+  if that mug is **already owned**, a raised **DupConfirm** asks first ("Redan i
+  samlingen" → Add anyway). The picker flags candidates already in the collection
+  with an **"I samlingen"** badge; its footer button is **Cancel** (returns to the
+  camera, not close). **Choose image** hands a picked file to the same pipeline.
+  The match screen shows a **metrics readout** (`MatchMetrics`) — margin, l1/l2,
+  msp, z-score, energy, entropy, featNorm, probs at T=0.02/0.05/0.1 and the top-5
+  logits, with a copy button.
   The dialog's `mode` (camera/catalogue) decides where it resets after an add, so
   the camera flow returns to the viewfinder (cancel too), not the catalogue. **`♥`
   (wishlist) skips the confirm** — the heart pops and a toast confirms. **`+`
@@ -181,11 +179,7 @@ public/
   (Vercel daily; supports `?owner=` and `?notify=0` for testing). Wishlist tab
   has a nudge to enable notifications; "Send test notification" in the dialog.
 - **On-device recognition:** DINOv2-small + ridge probe in the browser
-  (`lib/image-match.js`), top-4 picker, Gemini fallback. Before matching, a photo
-  is **background-removed** (`lib/bg-remove.js`, RMBG-1.4 via transformers.js,
-  ~44 MB q8, ~7 s on CPU) and re-framed — cropped to the subject and centred on a
-  neutral backdrop — so it looks like the probe's cutout-based training views.
-  Both models warm up when the add dialog opens. Rebuild with
+  (`lib/image-match.js`), top-4 picker, Gemini fallback. Rebuild with
   `npm run build:embeddings` after editing `lib/master-catalog.json` or
   `scripts/lib/augment.mjs`.
 - **Motion (`lib/motion.js` + the "Motion" section in `globals.css`):** every
@@ -349,9 +343,10 @@ any meaningful work:
 
 ### Recent work log
 
-- **2026-09-17 · v1.73.0** — Photo matching now removes the background first
-  (`lib/bg-remove.js`, RMBG-1.4 on-device) and re-frames the subject before the
-  DINOv2 probe, to fix real photos failing (the probe was trained on cutouts).
+- **2026-09-17 · v1.74.0** — Reverted the confidence floor and the on-device
+  background removal: both rejected good mug photos. The top-4 picker is always
+  shown again (matching worked well that way); `AUTO_MARGIN` auto-add and the
+  metrics readout stay.
 - **2026-09-17 · v1.72.1** — The match-metrics readout is now always shown (no
   `?debug=1` gate).
 - **2026-09-17 · v1.72.0** — Added a `?debug=1` match-metrics readout (margin,
