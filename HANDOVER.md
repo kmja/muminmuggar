@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.72.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.73.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -181,7 +181,11 @@ public/
   (Vercel daily; supports `?owner=` and `?notify=0` for testing). Wishlist tab
   has a nudge to enable notifications; "Send test notification" in the dialog.
 - **On-device recognition:** DINOv2-small + ridge probe in the browser
-  (`lib/image-match.js`), top-4 picker, Gemini fallback. Rebuild with
+  (`lib/image-match.js`), top-4 picker, Gemini fallback. Before matching, a photo
+  is **background-removed** (`lib/bg-remove.js`, RMBG-1.4 via transformers.js,
+  ~44 MB q8, ~7 s on CPU) and re-framed — cropped to the subject and centred on a
+  neutral backdrop — so it looks like the probe's cutout-based training views.
+  Both models warm up when the add dialog opens. Rebuild with
   `npm run build:embeddings` after editing `lib/master-catalog.json` or
   `scripts/lib/augment.mjs`.
 - **Motion (`lib/motion.js` + the "Motion" section in `globals.css`):** every
@@ -345,6 +349,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.73.0** — Photo matching now removes the background first
+  (`lib/bg-remove.js`, RMBG-1.4 on-device) and re-frames the subject before the
+  DINOv2 probe, to fix real photos failing (the probe was trained on cutouts).
 - **2026-09-17 · v1.72.1** — The match-metrics readout is now always shown (no
   `?debug=1` gate).
 - **2026-09-17 · v1.72.0** — Added a `?debug=1` match-metrics readout (margin,

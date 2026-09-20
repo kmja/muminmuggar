@@ -9,6 +9,7 @@ import { Toaster, toast } from "sonner";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
 import { matchMug, warmUp, isReady, getProgress, MIN_MARGIN, AUTO_MARGIN } from "../lib/image-match";
+import { removeBackground, warmUpBg, isBgReady, getBgProgress } from "../lib/bg-remove";
 import { getDeviceId } from "../lib/device";
 import { createSearch } from "../lib/search";
 import { useRipple, useFlip, animateGhost, useCountUp, useIsoLayoutEffect, useBackToClose } from "../lib/motion";
@@ -629,6 +630,7 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const [matches, setMatches] = useState(null); // on-device match candidates
   const [matchData, setMatchData] = useState(null); // { embedding, model, candidates } for feedback
   const [modelPct, setModelPct] = useState(0);
+  const [bgPct, setBgPct] = useState(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const [dupEntry, setDupEntry] = useState(null); // confident match that's already owned → ask first
   const [camReady, setCamReady] = useState(false); // camera stream live (or failed) — gates the dialog reveal
@@ -641,12 +643,12 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   useIsoLayoutEffect(() => {
     if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setCamReady(false); setDiag(null); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Prefetch the on-device model as soon as the dialog opens, so it's ready by
-  // the time a photo is taken (first use downloads ~30 MB, then it's cached).
-  useEffect(() => { if (open) warmUp(); }, [open]);
+  // Prefetch the on-device models as soon as the dialog opens, so they're ready
+  // by the time a photo is taken (first use downloads them, then they're cached).
+  useEffect(() => { if (open) { warmUp(); warmUpBg(); } }, [open]);
   useEffect(() => {
     if (!open) return;
-    const id = setInterval(() => setModelPct(getProgress()), 500);
+    const id = setInterval(() => { setModelPct(getProgress()); setBgPct(getBgProgress()); }, 500);
     return () => clearInterval(id);
   }, [open]);
 
@@ -686,7 +688,11 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
       try {
-        const { candidates, embedding, model, diag: dg } = await matchMug(small, { topK: 4 });
+        // Cut the subject out first: the probe was trained on cutouts, so a real
+        // photo's background otherwise dominates the match. Fall back to the raw
+        // photo if the model can't load.
+        const cut = await removeBackground(small).catch(() => small);
+        const { candidates, embedding, model, diag: dg } = await matchMug(cut, { topK: 4 });
         if (candidates.length) {
           const [best, second] = candidates;
           const margin = best.logit - second.logit;
@@ -906,7 +912,9 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
         <div className="grid" style={{ gap: 10, justifyItems: "center", textAlign: "center" }}>
           <div className="examine"><span className="examine-mug"><MugMark size={72} /></span></div>
           <div className="t-h3">{t("scan_looking")}</div>
-          {!isReady() ? <div className="help">{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}
+          {!isBgReady()
+            ? <div className="help">{bgPct > 0 ? t("bg_loading_pct", { pct: Math.round(bgPct) }) : t("bg_first_time")}</div>
+            : !isReady() ? <div className="help">{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}
         </div>
       ) : null}
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
