@@ -318,6 +318,15 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .matchcard .mmeta{font-size:var(--fs-caption);color:var(--muted)}
 .matchcard .mbadges{display:flex;flex-wrap:wrap;gap:var(--space-6);justify-content:center}
 .nomatch-icon{color:var(--muted); opacity:.7}
+/* Dev match-diagnostics readout (?debug=1). */
+.metrics{margin-top:var(--space-12); border:1px solid var(--border); border-radius:var(--radius-md); background:var(--bg2);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:var(--fs-caption)}
+.metrics-head{display:flex; align-items:center; justify-content:space-between; gap:var(--space-8); padding:var(--space-6) var(--space-10); border-bottom:1px solid var(--border); color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+.metrics-head button{border:1px solid var(--border); border-radius:var(--radius-pill); padding:2px var(--space-10); font:inherit; background:transparent; color:var(--text)}
+.metrics-row{display:flex; align-items:baseline; gap:var(--space-8); padding:2px var(--space-10)}
+.metrics-row .mk{flex:none; width:104px; color:var(--muted)}
+.metrics-row .mv{font-weight:var(--fw-medium)}
+.metrics-row .me{margin-left:auto; color:var(--muted)}
 /* Quick-add "+" on each row of the add-mugs list. */
 .addbtn{flex:none; width:var(--control-lg); height:var(--control-lg); padding:0; justify-content:center; border-radius:var(--radius-pill); border:1.5px solid var(--accent); color:var(--accent); background:transparent}
 .addbtn:hover{background:var(--accent); color:#fff; border-color:var(--accent)}

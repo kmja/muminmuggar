@@ -615,7 +615,7 @@ function CameraView({ onCapture, onReady }) {
 // The add dialog: browse the catalogue (newest shortlisted) and quick-add with
 // +/♥, shoot/choose a photo and match it, or review a shelf scan. `mode` decides
 // what the dialog resets to after an add: the camera or the catalogue.
-function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
+function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs, debug }) {
   const t = useT();
   const lang = useLang();
   const startScreen = mode === "camera" ? "camera" : "browse";
@@ -632,13 +632,14 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const [photoUrl, setPhotoUrl] = useState("");
   const [dupEntry, setDupEntry] = useState(null); // confident match that's already owned → ask first
   const [camReady, setCamReady] = useState(false); // camera stream live (or failed) — gates the dialog reveal
+  const [diag, setDiag] = useState(null); // match diagnostics (shown when ?debug=1)
   const addingRef = useRef(false); // guards against double-tapping the quick-add heart
   const photoRef = useRef("");     // last initialPhoto we've started processing
 
   // Reset on open. Runs before paint so the dialog never flashes the previous
   // stage before settling on the one it should start on.
   useIsoLayoutEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setCamReady(false); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setDupEntry(null); setCamReady(false); setDiag(null); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
@@ -685,11 +686,12 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
       try {
-        const { candidates, embedding, model } = await matchMug(small, { topK: 4 });
+        const { candidates, embedding, model, diag: dg } = await matchMug(small, { topK: 4 });
         if (candidates.length) {
           const [best, second] = candidates;
           const margin = best.logit - second.logit;
           const data = { embedding, model, candidates: candidates.map((c) => c.num) };
+          setDiag({ ...dg, names: candidates.map((c) => c.nameEn) });
           // If even the best candidate isn't clearly ahead, the photo probably
           // isn't a mug — don't offer four random options.
           if (margin < MIN_MARGIN) { setScreen("nomatch"); return; }
@@ -898,6 +900,8 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
         </div>
       ) : null}
 
+      {debug && diag && (screen === "match" || screen === "nomatch") ? <MatchMetrics diag={diag} /> : null}
+
       {busy ? (
         <div className="grid" style={{ gap: 10, justifyItems: "center", textAlign: "center" }}>
           <div className="examine"><span className="examine-mug"><MugMark size={72} /></span></div>
@@ -949,6 +953,43 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     <DupConfirm entry={dupEntry} onCancel={() => setDupEntry(null)}
       onConfirm={() => { const e = dupEntry; setDupEntry(null); if (e) onAddOne(catalogDraft(e)); }} />
     </>
+  );
+}
+
+/* ---------------------------- MatchMetrics ---------------------------- */
+// Dev readout (enable with ?debug=1) showing the candidate confidence signals,
+// so a real photo can be compared against the floor. Copy sends the numbers on.
+function MatchMetrics({ diag }) {
+  const t = useT();
+  const ln = Math.log(diag.count);
+  const rows = [
+    ["margin", diag.margin.toFixed(4), `MIN ${MIN_MARGIN}`],
+    ["l1 / l2", `${diag.l1.toFixed(3)} / ${diag.l2.toFixed(3)}`],
+    ["msp (prob1)", diag.msp.toFixed(4)],
+    ["z (l1−µ)/σ", diag.z.toFixed(2), `σ ${diag.std.toFixed(3)}`],
+    ["energy", diag.energy.toFixed(3)],
+    ["entropy", `${diag.entropy.toFixed(3)} / ${ln.toFixed(3)}`],
+    ["featNorm", diag.featNorm.toFixed(2)],
+    ["p@T .02/.05/.1", [0.02, 0.05, 0.1].map((T) => diag.tprobs[String(T)].toFixed(3)).join(" / ")],
+    ["top5 logits", diag.top.map((v) => v.toFixed(3)).join(" ")],
+  ];
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(JSON.stringify(diag)); toast(t("metrics_copied")); } catch { /* ignore */ }
+  };
+  return (
+    <div className="metrics">
+      <div className="metrics-head">
+        <span>{t("metrics")}</span>
+        <button type="button" onClick={copy}>{t("copy")}</button>
+      </div>
+      {rows.map(([k, v, extra]) => (
+        <div className="metrics-row" key={k}>
+          <span className="mk">{k}</span>
+          <span className="mv">{v}</span>
+          {extra ? <span className="me">{extra}</span> : null}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1494,6 +1535,16 @@ export default function App() {
   const [theme, setTheme] = useState("system"); // system | light | dark
   const t = useMemo(() => makeT(lang), [lang]);
   useRipple(); // delegated press ripple for every control
+  // Match-diagnostics readout, toggled with ?debug=1 / ?debug=0 and remembered.
+  const [debug] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const p = new URLSearchParams(window.location.search).get("debug");
+      if (p === "1") { localStorage.setItem("mugDebug", "1"); return true; }
+      if (p === "0") { localStorage.removeItem("mugDebug"); return false; }
+      return localStorage.getItem("mugDebug") === "1";
+    } catch { return false; }
+  });
 
   // Auth is optional: signed-in users own by Google account, everyone else by a
   // per-device id. NEXT_PUBLIC_DEV_OWNER is a local-only bypass for testing.
@@ -1985,7 +2036,7 @@ export default function App() {
       <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse}
         onCamera={startAddCamera} onFile={() => fileRef.current?.click()} />
       <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
-      <AddMugModal open={scanOpen} mode={addMode} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
+      <AddMugModal open={scanOpen} mode={addMode} initialPhoto={addPhoto} debug={debug} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reload} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />

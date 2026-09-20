@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.71.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.72.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -122,7 +122,10 @@ public/
   ("Redan i samlingen" → Add anyway). The picker flags candidates already in the
   collection with an **"I samlingen"** badge; its footer button is **Cancel**
   (returns to the camera, not close). **Choose image** hands a picked file to the
-  same pipeline.
+  same pipeline. Add **`?debug=1`** to the URL to show a **metrics readout**
+  (`MatchMetrics`) on the match/no-match screens — margin, l1/l2, msp, z-score,
+  energy, entropy, featNorm, probs at T=0.02/0.05/0.1 and the top-5 logits, with a
+  copy button — for tuning the floors against real photos (`?debug=0` clears it).
   The dialog's `mode` (camera/catalogue) decides where it resets after an add, so
   the camera flow returns to the viewfinder (cancel too), not the catalogue. **`♥`
   (wishlist) skips the confirm** — the heart pops and a toast confirms. **`+`
@@ -342,6 +345,9 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.72.0** — Added a `?debug=1` match-metrics readout (margin,
+  z-score, energy, entropy, feature norm, temperature-swept probs, top-5 logits)
+  so the confidence floor can be tuned against real photos.
 - **2026-09-17 · v1.71.0** — A photo-match confidence floor: the picker only shows
   when the top1–top2 logit margin clears `MIN_MARGIN` (else a "no confident match"
   screen); auto-add keys off `AUTO_MARGIN`. `prob` is near-uniform and no longer
