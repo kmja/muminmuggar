@@ -8,13 +8,13 @@ import * as Popover from "@radix-ui/react-popover";
 import { Toaster, toast } from "sonner";
 import { LANGS, makeT } from "../lib/i18n";
 import { APP_VERSION } from "../lib/version";
-import { matchMug, warmUp, isReady, getProgress } from "../lib/image-match";
+import { matchMug, warmUp, isReady, getProgress, MIN_MARGIN, AUTO_MARGIN } from "../lib/image-match";
 import { getDeviceId } from "../lib/device";
 import { createSearch } from "../lib/search";
 import { useRipple, useFlip, animateGhost, useCountUp, useIsoLayoutEffect, useBackToClose } from "../lib/motion";
 import MASTER_CATALOG from "../lib/master-catalog.json";
 import {
-  Sun, Moon, Search, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
+  Sun, Moon, Search, SearchX, SlidersHorizontal, Sparkles, Camera, Bell, Plus, Heart,
   BarChart3, Pencil, Trash2, Star, MapPin, Coins, CheckCircle2, X,
   ImagePlus, AlertTriangle, BookOpen, Tag, PackageSearch, LayoutGrid, Rows3, LogOut, User, Download, ClipboardCopy,
 } from "lucide-react";
@@ -30,8 +30,6 @@ const condLabel = (t, c) => { if (!c) return c; const k = "cond_" + c; const v =
 
 /* ----------------------------- constants ----------------------------- */
 const UNDO_MS = 6000; // how long a deleted mug can be restored from its toast
-// Minimum top-1 probability for a photo match to skip the picker and auto-add.
-const AUTO_PROB = 0.6;
 const STATUS_VALUES = ["owned", "wishlist", "sold"];
 const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
 const CURRENCIES = ["SEK", "EUR", "USD", "GBP", "NOK", "DKK"];
@@ -687,15 +685,17 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
       try {
-        const { candidates, autoMargin, embedding, model } = await matchMug(small, { topK: 4 });
+        const { candidates, embedding, model } = await matchMug(small, { topK: 4 });
         if (candidates.length) {
-          const data = { embedding, model, candidates: candidates.map((c) => c.num) };
-          setMatches(candidates); setMatchData(data);
           const [best, second] = candidates;
-          // Only skip the picker when the match is genuinely confident: the
-          // calibrated logit gap AND a strong probability. Otherwise offer the
-          // top-4 so a wrong auto-add can't slip through.
-          if (autoMargin != null && best.logit - second.logit >= autoMargin && (best.prob ?? 0) >= AUTO_PROB) {
+          const margin = best.logit - second.logit;
+          const data = { embedding, model, candidates: candidates.map((c) => c.num) };
+          // If even the best candidate isn't clearly ahead, the photo probably
+          // isn't a mug — don't offer four random options.
+          if (margin < MIN_MARGIN) { setScreen("nomatch"); return; }
+          setMatches(candidates); setMatchData(data);
+          // Only skip the picker when the match is genuinely confident.
+          if (margin >= AUTO_MARGIN) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
             if (e) {
               logMatch(best, true, data, small);
@@ -808,7 +808,7 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
       <button className="big" onClick={() => { setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); }}>{t("cancel")}</button>
     </div>
   );
-  const footer = items.length ? reviewFooter : stage === "camera" ? null : stage === "match" ? matchFooter : closeFooter;
+  const footer = items.length ? reviewFooter : (stage === "camera" || stage === "nomatch") ? null : stage === "match" ? matchFooter : closeFooter;
   // Don't reveal the dialog until the camera is live (or has failed), so it
   // doesn't animate in around a black frame.
   const loading = stage === "camera" && !camReady;
@@ -882,6 +882,18 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
                 </div>
               );
             })}
+          </div>
+        </div>
+      ) : null}
+
+      {!items.length && !busy && screen === "nomatch" ? (
+        <div className="grid" style={{ gap: 14, justifyItems: "center", textAlign: "center" }}>
+          <div className="nomatch-icon"><SearchX size={40} /></div>
+          <div className="t-h3">{t("match_none_title")}</div>
+          <div className="help" style={{ maxWidth: 340 }}>{t("match_none_body")}</div>
+          <div className="row" style={{ gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <button className="primary big" onClick={() => { setPhotoUrl(""); setScreen("camera"); }}><Camera size={18} /> {t("scan_take_photo")}</button>
+            <button className="big" onClick={() => { setPhotoUrl(""); setScreen("browse"); }}><Search size={18} /> {t("add_search_catalog")}</button>
           </div>
         </div>
       ) : null}
