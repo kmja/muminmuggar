@@ -615,7 +615,7 @@ function CameraView({ onCapture, onReady }) {
 // The add dialog: browse the catalogue (newest shortlisted) and quick-add with
 // +/♥, shoot/choose a photo and match it, or review a shelf scan. `mode` decides
 // what the dialog resets to after an add: the camera or the catalogue.
-function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs, debug }) {
+function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
   const t = useT();
   const lang = useLang();
   const startScreen = mode === "camera" ? "camera" : "browse";
@@ -900,7 +900,7 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
         </div>
       ) : null}
 
-      {debug && diag && (screen === "match" || screen === "nomatch") ? <MatchMetrics diag={diag} /> : null}
+      {diag && (screen === "match" || screen === "nomatch") ? <MatchMetrics diag={diag} /> : null}
 
       {busy ? (
         <div className="grid" style={{ gap: 10, justifyItems: "center", textAlign: "center" }}>
@@ -1535,16 +1535,6 @@ export default function App() {
   const [theme, setTheme] = useState("system"); // system | light | dark
   const t = useMemo(() => makeT(lang), [lang]);
   useRipple(); // delegated press ripple for every control
-  // Match-diagnostics readout, toggled with ?debug=1 / ?debug=0 and remembered.
-  const [debug] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      const p = new URLSearchParams(window.location.search).get("debug");
-      if (p === "1") { localStorage.setItem("mugDebug", "1"); return true; }
-      if (p === "0") { localStorage.removeItem("mugDebug"); return false; }
-      return localStorage.getItem("mugDebug") === "1";
-    } catch { return false; }
-  });
 
   // Auth is optional: signed-in users own by Google account, everyone else by a
   // per-device id. NEXT_PUBLIC_DEV_OWNER is a local-only bypass for testing.
@@ -2036,7 +2026,7 @@ export default function App() {
       <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse}
         onCamera={startAddCamera} onFile={() => fileRef.current?.click()} />
       <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
-      <AddMugModal open={scanOpen} mode={addMode} initialPhoto={addPhoto} debug={debug} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
+      <AddMugModal open={scanOpen} mode={addMode} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reload} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />
