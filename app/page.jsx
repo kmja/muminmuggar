@@ -30,6 +30,8 @@ const condLabel = (t, c) => { if (!c) return c; const k = "cond_" + c; const v =
 
 /* ----------------------------- constants ----------------------------- */
 const UNDO_MS = 6000; // how long a deleted mug can be restored from its toast
+// Minimum top-1 probability for a photo match to skip the picker and auto-add.
+const AUTO_PROB = 0.6;
 const STATUS_VALUES = ["owned", "wishlist", "sold"];
 const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
 const CURRENCIES = ["SEK", "EUR", "USD", "GBP", "NOK", "DKK"];
@@ -566,13 +568,59 @@ function AddConfirmModal({ draft, onCancel, onConfirm, saving }) {
   );
 }
 
+/* ------------------------------ CameraView ---------------------------- */
+// Live camera preview with a capture button. Capturing grabs a frame as a JPEG
+// data URL and hands it straight to the matcher.
+function CameraView({ onCapture }) {
+  const t = useT();
+  const videoRef = useRef(null);
+  const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false, stream;
+    (async () => {
+      if (!navigator.mediaDevices?.getUserMedia) { setError(t("camera_unsupported")); return; }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+        if (cancelled) { stream.getTracks().forEach((x) => x.stop()); return; }
+        const v = videoRef.current;
+        if (v) { v.srcObject = stream; await v.play().catch(() => {}); setReady(true); }
+      } catch { if (!cancelled) setError(t("camera_denied")); }
+    })();
+    return () => { cancelled = true; stream?.getTracks().forEach((x) => x.stop()); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const capture = () => {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+    onCapture(c.toDataURL("image/jpeg", 0.9));
+  };
+  return (
+    <div className="vfwrap">
+      {error ? (
+        <div className="vfplaceholder"><Camera size={40} /><div className="help" style={{ marginTop: 8 }}>{error}</div></div>
+      ) : (
+        <>
+          <video ref={videoRef} className="viewfinder" autoPlay playsInline muted />
+          <button type="button" className="vfcapture" onClick={capture} disabled={!ready} aria-label={t("scan_take_photo")} title={t("scan_take_photo")} />
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------ AddMugModal --------------------------- */
 // The add dialog: browse the catalogue (newest shortlisted) and quick-add with
-// +/♥, match a photo handed over by the add menu, or review a shelf scan.
-function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
+// +/♥, shoot/choose a photo and match it, or review a shelf scan. `mode` decides
+// what the dialog resets to after an add: the camera or the catalogue.
+function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, onAddMany, onAddRequest, onQuickAdd, mugs }) {
   const t = useT();
   const lang = useLang();
-  const [screen, setScreen] = useState("browse"); // browse | match
+  const startScreen = mode === "camera" ? "camera" : "browse";
+  const [screen, setScreen] = useState("browse"); // camera | browse | match
   const [q, setQ] = useState("");
   const [added, setAdded] = useState(() => new Map()); // nameEn -> "owned" | "wishlist"
   const [pulsing, setPulsing] = useState(""); // nameEn whose ♥ is popping (wishlist quick-add)
@@ -585,11 +633,12 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
   const [photoUrl, setPhotoUrl] = useState("");
   const addingRef = useRef(false); // guards against double-tapping the quick-add heart
   const photoRef = useRef("");     // last initialPhoto we've started processing
+  const fileRef = useRef(null);    // "choose image" fallback on the camera screen
 
   // Reset on open.
   useEffect(() => {
-    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse"); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
-  }, [open]);
+    if (open) { setBusy(false); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); setQ(""); setAdded(new Map()); setPulsing(""); addingRef.current = false; }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   // Prefetch the on-device model as soon as the dialog opens, so it's ready by
   // the time a photo is taken (first use downloads ~30 MB, then it's cached).
   useEffect(() => { if (open) warmUp(); }, [open]);
@@ -610,7 +659,7 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
         ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
         : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
       // Keep the dialog open (the confirmation sits above it) so more can be added.
-      onAddOne(initial); setScreen("browse"); return;
+      onAddOne(initial); setScreen(startScreen); return;
     }
     setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
   };
@@ -640,9 +689,12 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
           const data = { embedding, model, candidates: candidates.map((c) => c.num) };
           setMatches(candidates); setMatchData(data);
           const [best, second] = candidates;
-          if (autoMargin != null && best.logit - second.logit >= autoMargin) {
+          // Only skip the picker when the match is genuinely confident: the
+          // calibrated logit gap AND a strong probability. Otherwise offer the
+          // top-4 so a wrong auto-add can't slip through.
+          if (autoMargin != null && best.logit - second.logit >= autoMargin && (best.prob ?? 0) >= AUTO_PROB) {
             const e = MASTER_CATALOG.find((x) => x.num === best.num);
-            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse"); return; }
+            if (e) { logMatch(best, true, data, small); onAddOne(catalogDraft(e)); setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen); return; }
           }
           setScreen("match");
           return;
@@ -656,10 +708,16 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
     const e = MASTER_CATALOG.find((x) => x.num === m.num);
     if (!e) return;
     logMatch(m, false, matchData);
-    // Add via the raised confirmation, then return to the catalogue so the
-    // dialog stays open for the next mug.
+    // Add via the raised confirmation, then reset to where the flow started
+    // (camera or catalogue) so the dialog stays open for the next mug.
     onAddOne(catalogDraft(e));
-    setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen("browse");
+    setMatches(null); setMatchData(null); setPhotoUrl(""); setScreen(startScreen);
+  };
+  // "Choose image" fallback on the camera screen.
+  const runFile = async (file) => {
+    if (!file) return;
+    const raw = await fileToDataUrl(file);
+    await processImage(await downscaleImage(raw, 1400, 0.85));
   };
   // A photo handed over by the add menu: process it once per new photo.
   useEffect(() => {
@@ -743,8 +801,15 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
   const stage = items.length ? "review" : busy ? "busy" : screen;
 
   return (
-    <Modal open={open} onClose={onClose} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : undefined} footer={footer}>
+    <Modal open={open} onClose={onClose} title={t("scan_title")} subtitle={stage === "browse" ? t("scan_subtitle") : stage === "camera" ? t("camera_subtitle") : undefined} footer={footer}>
       <div className="addstage" key={stage}>
+      {!items.length && !busy && screen === "camera" ? (
+        <div className="grid" style={{ gap: 12 }}>
+          <CameraView onCapture={processImage} />
+          <button type="button" className="big" style={{ justifyContent: "center" }} onClick={() => fileRef.current?.click()}><ImagePlus size={18} /> {t("scan_choose_image")}</button>
+          <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { runFile(e.target.files?.[0]); e.target.value = ""; }} />
+        </div>
+      ) : null}
       {!items.length && !busy && screen === "browse" ? (
         <div className="grid" style={{ gap: 12 }}>
           <div className="field searchfield"><Search size={17} className="searchicon" aria-hidden="true" />
@@ -807,7 +872,13 @@ function AddMugModal({ open, initialPhoto, onClose, onAddOne, onAddMany, onAddRe
         </div>
       ) : null}
 
-      {busy ? <div className="drop"><span className="spin" /> <div style={{ marginTop: 8 }}>{t("scan_looking")}</div>{!isReady() ? <div className="help" style={{ marginTop: 8 }}>{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}</div> : null}
+      {busy ? (
+        <div className="grid" style={{ gap: 10, justifyItems: "center", textAlign: "center" }}>
+          <div className="examine"><span className="examine-mug"><MugMark size={72} /></span></div>
+          <div className="t-h3">{t("scan_looking")}</div>
+          {!isReady() ? <div className="help">{modelPct > 0 ? t("match_loading_pct", { pct: Math.round(modelPct) }) : t("match_first_time")}</div> : null}
+        </div>
+      ) : null}
       {error ? <div className="err" style={{ marginTop: 10 }}>{error}</div> : null}
 
       {items.length && !busy ? (
@@ -1393,7 +1464,8 @@ export default function App() {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addAnchorRef = useRef(null);      // element the add menu points at
   const [addPhoto, setAddPhoto] = useState(""); // photo handed to the add dialog
-  const camRef = useRef(null), fileRef = useRef(null); // hidden capture/pick inputs
+  const [addMode, setAddMode] = useState("browse"); // what the add dialog resets to: camera | browse
+  const fileRef = useRef(null); // hidden image picker
   const [gapOpen, setGapOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -1605,8 +1677,9 @@ export default function App() {
 
   // The add menu springs from whichever trigger was tapped (FAB or header Add).
   const openAddMenu = (el) => { addAnchorRef.current = el; warmUp(); setAddMenuOpen(true); };
-  const startAddBrowse = () => { setAddPhoto(""); setScanOpen(true); };
-  const startAddPhoto = (dataUrl) => { setAddPhoto(dataUrl); setScanOpen(true); };
+  const startAddCamera = () => { setAddPhoto(""); setAddMode("camera"); setScanOpen(true); };
+  const startAddBrowse = () => { setAddPhoto(""); setAddMode("browse"); setScanOpen(true); };
+  const startAddPhoto = (dataUrl) => { setAddPhoto(dataUrl); setAddMode("camera"); setScanOpen(true); };
   const pickPhoto = async (file) => {
     if (!file) return;
     const raw = await fileToDataUrl(file);
@@ -1824,7 +1897,7 @@ export default function App() {
                     <div className="t-h1" style={{ marginTop: 12 }}>{t("empty_title")}</div>
                     <div className="sub" style={{ marginTop: 6 }}>{t("empty_sub")}</div>
                     <div className="emptyactions">
-                      <button className="primary accent big" onClick={() => camRef.current?.click()}><Camera size={18} /> {t("scan_take_photo")}</button>
+                      <button className="primary accent big" onClick={startAddCamera}><Camera size={18} /> {t("scan_take_photo")}</button>
                       <button className="ghost accent big" onClick={() => fileRef.current?.click()}><ImagePlus size={18} /> {t("scan_choose_image")}</button>
                       <button className="ghost accent big" onClick={startAddBrowse}><Search size={18} /> {t("add_search_catalog")}</button>
                     </div>
@@ -1853,10 +1926,9 @@ export default function App() {
       <MugForm open={formOpen} onClose={() => setFormOpen(false)} initial={formInitial} mugs={mugs} onSave={saveMug} saving={saving}
         onDelete={(m) => { setFormOpen(false); softDelete(m); }} />
       <AddMenu open={addMenuOpen} onOpenChange={setAddMenuOpen} anchorRef={addAnchorRef} onBrowse={startAddBrowse}
-        onCamera={() => camRef.current?.click()} onFile={() => fileRef.current?.click()} />
-      <input className="sr-only" ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+        onCamera={startAddCamera} onFile={() => fileRef.current?.click()} />
       <input className="sr-only" ref={fileRef} type="file" accept="image/*" onChange={(e) => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
-      <AddMugModal open={scanOpen} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
+      <AddMugModal open={scanOpen} mode={addMode} initialPhoto={addPhoto} onClose={() => { setScanOpen(false); setAddPhoto(""); }} mugs={mugs} onAddOne={requestAdd} onAddMany={addMany} onAddRequest={requestAdd} onQuickAdd={quickAdd} />
       <AddConfirmModal draft={pendingAdd} onCancel={() => finishAdd(null)} onConfirm={confirmAdd} saving={saving} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reload} />
       <GapFinder open={gapOpen} onClose={() => setGapOpen(false)} mugs={mugs} onAddWishlist={(d) => { addMany(d); setTab("wishlist"); }} />

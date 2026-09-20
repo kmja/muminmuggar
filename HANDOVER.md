@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.67.3** (keep in sync with `lib/version.js`)
+- **Current version:** **1.68.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -104,16 +104,22 @@ public/
   button is a fixed **FAB bottom-right**; there is no bottom nav.
 - **Add flow:** tapping the add **FAB** (or the desktop header `Add`) opens a
   Material-style **context menu** (`AddMenu`, Radix Popover anchored to the
-  trigger): Take photo · Choose image · Search the catalogue. A photo is
-  processed by the centred **add dialog** (`AddMugModal`); the catalogue opens
-  it on the browse stage. **`♥` (wishlist) skips the confirm** — the heart pops
-  and a toast confirms. **`+` (owned)** opens the raised **AddConfirmModal** —
-  grouped into **Förvärv** (acquisition date, defaulted to today; paid +
-  currency) and **Egenskaper** (condition, **"Etikett kvar"**, notes) — with
-  **Save** (primary, closes the add dialog), **Save and add more** (secondary,
-  keeps it open) and **Cancel** (tertiary). The add dialog's own action is a
-  single secondary **Close**; stages (browse/busy/match/review) cross-fade in.
-  The shelf-scan batch review keeps its Rescan / Add actions. (`vaul` removed.)
+  trigger): Take photo · Choose image · Search the catalogue. **Take photo** opens
+  the add dialog on a live **in-app viewfinder** (`CameraView`, `getUserMedia`)
+  with a capture button; capturing analyses the frame immediately — the **busy
+  stage** shows the "examining a mug" loader (`.examine`, slides in → turns back
+  and forth → slides out). A match is **auto-added only when confident**
+  (`autoMargin` gap **and** `best.prob ≥ AUTO_PROB` 0.6); otherwise the **top-4
+  picker** shows. **Choose image** hands a picked file to the same pipeline. The
+  dialog's `mode` (camera/catalogue) decides where it resets after an add, so the
+  camera flow returns to the viewfinder (cancel too), not the catalogue. **`♥`
+  (wishlist) skips the confirm** — the heart pops and a toast confirms. **`+`
+  (owned)** opens the raised **AddConfirmModal** — grouped into **Förvärv**
+  (acquisition date, defaulted to today; paid + currency) and **Egenskaper**
+  (condition, **"Etikett kvar"**, notes) — with **Save** (primary, closes the add
+  dialog), **Save and add more** (secondary, keeps it open) and **Cancel**
+  (tertiary). Stages (camera/browse/busy/match/review) cross-fade in. The
+  shelf-scan batch review keeps its Rescan / Add actions. (`vaul` removed.)
 - **Back gesture:** swiping in from the screen edge (or the Android back button)
   closes the top-most open dialog; with none open it falls through to the browser
   default. Implemented by `useBackToClose` (sentinel history entries).
@@ -324,6 +330,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.68.0** — Camera flow: in-app viewfinder dialog + capture,
+  immediate analysis with an "examining a mug" loader, the top-4 picker now shows
+  when confidence is low (`AUTO_PROB`), and the camera flow resets to the
+  viewfinder (not the catalogue) after add/cancel.
 - **2026-09-17 · v1.67.3** — Dialog scroll fix: `.modal` is now a flex column and
   the **body scrolls** (head/foot fixed), instead of scrolling the transformed
   `position:fixed` dialog itself — which didn't scroll on iOS Safari.

@@ -278,6 +278,30 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .bar > span{display:block;height:100%;background: var(--accent)}
 .sr-only{position:absolute;left:calc(-1 * var(--space-48));top:auto;width:1px;height:1px;overflow:hidden}
 .drop{border:1.5px dashed var(--border); border-radius:var(--radius-lg); padding:var(--space-24); text-align:center; color:var(--muted); background: var(--bg2)}
+/* In-dialog camera viewfinder. */
+.vfwrap{position:relative; border-radius:var(--radius-xl); overflow:hidden; background:#12101a; aspect-ratio:3/4; max-height:52vh; width:100%}
+.viewfinder{width:100%; height:100%; object-fit:cover; display:block; background:#12101a}
+.vfplaceholder{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); background:var(--lilac); padding:var(--space-20); text-align:center}
+.vfplaceholder svg{color:var(--accent); opacity:.6}
+.vfcapture{position:absolute; left:50%; bottom:var(--space-16); transform:translateX(-50%); width:var(--control-xl); height:var(--control-xl); padding:0;
+  border-radius:var(--radius-pill); background:transparent; border:3px solid rgba(255,255,255,.85); box-shadow:0 3px 12px rgba(0,0,0,.35)}
+.vfcapture::after{content:""; display:block; width:calc(var(--control-xl) - var(--space-16)); height:calc(var(--control-xl) - var(--space-16)); border-radius:var(--radius-pill); background:#fff; margin:0 auto}
+.vfcapture:hover{background:transparent}
+.vfcapture:active::after{background:var(--lilac)}
+.vfcapture:disabled{opacity:.5}
+/* "Examining a mug" loader: the mug slides in, is turned back and forth, then
+   slides out the other side. Loops while the photo is analysed. */
+.examine{perspective:700px; display:flex; align-items:center; justify-content:center; min-height:130px; color:var(--accent)}
+.examine-mug{display:block; animation:examine 2.6s var(--ease-out) infinite}
+@keyframes examine{
+  0%{transform:translateX(-150%) rotateY(0deg); opacity:0}
+  14%{transform:translateX(0) rotateY(0deg); opacity:1}
+  28%{transform:translateX(0) rotateY(38deg)}
+  46%{transform:translateX(0) rotateY(-38deg)}
+  64%{transform:translateX(0) rotateY(0deg)}
+  82%{transform:translateX(150%) rotateY(0deg); opacity:1}
+  100%{transform:translateX(150%) rotateY(0deg); opacity:0}
+}
 .scanrow{display:flex; gap:var(--space-14); align-items:flex-start; padding:var(--space-14); border:1px solid var(--border); border-radius:var(--radius-lg)}
 .scanthumb{width:var(--thumb-sm); height:var(--thumb-sm); flex:none; border-radius:var(--radius-md); overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; color:var(--accent)}
 /* On-device match candidates: a 2x2 grid of large product images. */

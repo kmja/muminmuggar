@@ -1,6 +1,6 @@
 {
   "name": "moomin-mug-collection",
-  "version": "1.67.3",
+  "version": "1.68.0",
   "private": true,
   "engines": {
     "node": "22.x"
