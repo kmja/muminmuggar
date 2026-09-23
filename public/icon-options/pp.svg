@@ -26,21 +26,19 @@
   <linearGradient id="cream" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="#fdf9f2"/><stop offset="1" stop-color="#ece0cf"/>
   </linearGradient>
+  <linearGradient id="creamSoft" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fdf9f2"/><stop offset="1" stop-color="#e3d4bd"/>
+  </linearGradient>
 </defs>
 <rect width="512" height="512" rx="112" fill="url(#tile)"/><rect width="512" height="512" rx="112" fill="url(#glow)"/>
 <g transform="translate(-38 0)">
-  <ellipse cx="256" cy="452" rx="100" ry="18" fill="#2a1a42" opacity="0.30" filter="url(#soft)"/>
-  <g filter="url(#shadow)">
-  <ellipse cx="256" cy="242" rx="97" ry="82" fill="url(#head)"/>
-  <path d="M222,206 C 206,184 190,152 191,128 C 192,112 206,107 215,119 C 228,142 240,176 248,206 Z" fill="url(#head)"/>
-  <path d="M290,206 C 306,184 322,152 321,128 C 320,112 306,107 297,119 C 284,142 272,176 264,206 Z" fill="url(#head)"/>
-  <path d="M228,200 C 216,182 205,156 206,136 C 207,126 216,124 222,134 C 232,154 240,178 244,200 Z" fill="url(#inner)"/>
-  <path d="M284,200 C 296,182 307,156 306,136 C 305,126 296,124 290,134 C 280,154 272,178 268,200 Z" fill="url(#inner)"/>
-  <ellipse cx="226" cy="206" rx="7" ry="9" fill="#3c2a5b"/><ellipse cx="286" cy="206" rx="7" ry="9" fill="#3c2a5b"/>
-  
-  <ellipse cx="256" cy="282" rx="88" ry="19" fill="url(#interior)"/>
-  <path d="M168,282 A88,19 0 0 0 344,282 L344,420 C344,440 333,452 322,452 L190,452 C179,452 168,440 168,420 Z" fill="url(#mug)"/>
-  <path d="M168,282 A88,19 0 0 1 344,282" fill="none" stroke="#ffffff" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round"/>
-  <path d="M346,320 C 394,320 402,334 402,359 C 402,384 394,398 346,398" fill="none" stroke="url(#mug)" stroke-width="26" stroke-linecap="round"/></g>
+  <ellipse cx="256" cy="420" rx="100" ry="18" fill="#2a1a42" opacity="0.30" filter="url(#soft)"/>
+  <g filter="url(#shadow)"><ellipse cx="256" cy="248" rx="88" ry="19" fill="#efe6f8" stroke="#4a3167" stroke-width="12"/>
+  <path d="M200,296 C 190,250 186,196 194,152 C 199,130 213,128 220,150 C 231,192 242,250 250,296 Z" fill="#ffffff" stroke="#4a3167" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M312,296 C 322,250 326,196 318,152 C 313,130 299,128 292,150 C 281,192 270,250 262,296 Z" fill="#ffffff" stroke="#4a3167" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M213,282 C 204,240 202,194 208,160" fill="none" stroke="#a489ca" stroke-width="7" stroke-linecap="round"/>
+  <path d="M299,282 C 308,240 310,194 304,160" fill="none" stroke="#a489ca" stroke-width="7" stroke-linecap="round"/><path d="M168,248 A88,19 0 0 0 344,248 L344,388 C344,408 333,420 322,420 L190,420 C179,420 168,408 168,388 Z" fill="#ffffff" stroke="#4a3167" stroke-width="12" stroke-linejoin="round"/>
+       <path d="M346,286 C 394,286 402,300 402,325 C 402,350 394,364 346,364" fill="none" stroke="#4a3167" stroke-width="42" stroke-linecap="round"/>
+       <path d="M346,286 C 394,286 402,300 402,325 C 402,350 394,364 346,364" fill="none" stroke="#ffffff" stroke-width="19" stroke-linecap="round"/></g>
 </g>
 </svg>

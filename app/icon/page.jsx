@@ -9,14 +9,15 @@ import css from "./icon.module.css";
 /* ------------------------------------------------------------------ */
 
 const OPTIONS = [
-  { id: "p3", label: "P3", desc: "Line-art · cream · hooked ears", recommended: true },
-  { id: "p2", label: "P2", desc: "Line-art · cream · leaf ears" },
-  { id: "p5", label: "P5", desc: "Line-art · cream · tall head" },
-  { id: "q3", label: "Q3", desc: "Line-art · cream · no face" },
-  { id: "q2", label: "Q2", desc: "Line-art · purple · hooked ears" },
-  { id: "q1", label: "Q1", desc: "Line-art · purple · leaf ears" },
-  { id: "p8", label: "P8", desc: "Soft 3D · purple · hooked ears" },
-  { id: "p6", label: "P6", desc: "Soft 3D · purple · leaf ears" },
+  { id: "lr", label: "Rounded", desc: "Line-art · cream · rounded ears", recommended: true },
+  { id: "lp", label: "Pointed", desc: "Line-art · cream · pointed ears" },
+  { id: "lt", label: "Tall", desc: "Line-art · cream · tall ears" },
+  { id: "lo", label: "Outward", desc: "Line-art · cream · ears leaning out" },
+  { id: "lw", label: "Wide", desc: "Line-art · cream · wide ears" },
+  { id: "pr", label: "Rounded", desc: "Line-art · purple · rounded ears" },
+  { id: "pp", label: "Pointed", desc: "Line-art · purple · pointed ears" },
+  { id: "sr", label: "Rounded", desc: "Soft 3D · purple · rounded ears" },
+  { id: "sp", label: "Pointed", desc: "Soft 3D · purple · pointed ears" },
   { id: "current", label: "Current", desc: "The icon shipped in the app today" },
 ];
 
@@ -36,7 +37,7 @@ const NEIGHBOURS = [
 ];
 
 export default function IconExplorer() {
-  const [sel, setSel] = useState("p3");
+  const [sel, setSel] = useState("lr");
 
   // The app shell locks body scrolling; let this page scroll.
   useEffect(() => {
