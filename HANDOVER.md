@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.75.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.76.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -47,6 +47,7 @@ app/
   providers.tsx       # next-auth SessionProvider + theme
   label/page.jsx      # on-site labelling tool
   type/page.jsx       # type-scale playground (dev tool, noindex)
+  icon/page.jsx       # app-icon explorer (dev tool, noindex)
   api/
     mugs/…            # CRUD (+ [id] PATCH/DELETE)
     identify, shelf-scan   # Gemini vision
@@ -297,6 +298,14 @@ public/
   `/api/health`, enable notifications, send a test push.
 - [ ] Consider showing the "etikett" flag on list rows too; further deal-row
   polish.
+- [ ] **Pick and ship a new app icon.** Candidate SVGs live in
+  `public/icon-options/` (`p2 p3 p5 q3 q1 q2 p8 p6 current`) and are browsable at
+  **`/icon`** (dev tool, noindex): it previews each as an iOS home-screen icon, an
+  Android adaptive icon (circle/squircle/rounded-square + safe zone) and in the app
+  header. `P3` (line-art, cream, hooked ears) is the current favourite. Once chosen:
+  render `icon-192/512.png`, `apple-touch-icon.png` (180), a full-bleed maskable
+  512 PNG and `favicon.ico` with `sharp`, and replace `public/icon.svg`; the header
+  brand (`app/page.jsx` `.brand`) has **no mark yet** — add the icon there too.
 
 ---
 
@@ -351,6 +360,11 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-23 · v1.76.0** — New **`/icon`** app-icon explorer (dev tool, noindex):
+  nine candidate marks in `public/icon-options/`, previewed as an iOS home-screen
+  icon, an Android adaptive icon (circle / squircle / rounded-square masks + safe
+  zone) and in the cream app header; pick one to preview it everywhere. Groundwork
+  for replacing the flat purple `icon.svg`.
 - **2026-09-17 · v1.75.0** — Live mug / not-mug trainer (`/train`) + a global gate:
   capture mugs and non-mugs on-device, train a logistic head over the DINOv2
   features, gate the picker by `P(mugg)`. Export → `npm run train:gate` bakes
