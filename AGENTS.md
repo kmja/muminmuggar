@@ -33,3 +33,7 @@
   `labels.jsonl` (`/api/labels/export`).
 - The app collects confirmed/corrected matches into the `match_feedback` table
   (`POST/GET /api/match-feedback`) to accumulate a real-photo dataset.
+- Mug / not-mug gate: `/train` captures mugs and non-mugs, embeds them on-device
+  and trains a logistic head (`lib/gate.js`); a local head gates the picker
+  immediately. Export the samples and run `npm run train:gate -- <file.jsonl>` to
+  bake `public/mug-gate.json`, the **global** head served to all users.

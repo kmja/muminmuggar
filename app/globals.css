@@ -317,6 +317,7 @@ input::placeholder, textarea::placeholder{color: color-mix(in srgb, var(--muted)
 .matchcard .mname{font-size:var(--fs-label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .matchcard .mmeta{font-size:var(--fs-caption);color:var(--muted)}
 .matchcard .mbadges{display:flex;flex-wrap:wrap;gap:var(--space-6);justify-content:center}
+.nomatch-icon{color:var(--muted); opacity:.7}
 /* Dev match-diagnostics readout (?debug=1). */
 .metrics{margin-top:var(--space-12); border:1px solid var(--border); border-radius:var(--radius-md); background:var(--bg2);
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:var(--fs-caption)}

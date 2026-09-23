@@ -1,6 +1,6 @@
 {
   "name": "moomin-mug-collection",
-  "version": "1.74.0",
+  "version": "1.75.0",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -12,7 +12,8 @@
     "gen-vapid": "node scripts/gen-vapid.mjs",
     "build:embeddings": "node scripts/build-mug-embeddings.mjs",
     "label": "node scripts/label-tool.mjs",
-    "eval:labels": "node scripts/eval-labels.mjs"
+    "eval:labels": "node scripts/eval-labels.mjs",
+    "train:gate": "node scripts/train-mug-gate.mjs"
   },
   "dependencies": {
     "@fontsource/jost": "^5.2.8",

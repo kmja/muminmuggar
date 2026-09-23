@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.74.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.75.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -182,6 +182,14 @@ public/
   (`lib/image-match.js`), top-4 picker, Gemini fallback. Rebuild with
   `npm run build:embeddings` after editing `lib/master-catalog.json` or
   `scripts/lib/augment.mjs`.
+- **Mug / not-mug gate (`lib/gate.js`):** the probe only ever saw positives, so it
+  has no notion of "not a mug" — every photo gets a top-4. A tiny logistic
+  regression over the same DINOv2 features fixes that. `/train` (noindex) captures
+  mugs vs. non-mugs on-device, computes the features, and trains a **local** head
+  (localStorage) that gates the picker immediately (`P(mugg) < 0.5` → "Ingen säker
+  träff"). It can **Export** a JSONL of `{y,v}`; `npm run train:gate -- <file>`
+  bakes `public/mug-gate.json`, a **global** head every client loads. Local
+  overrides global. `MatchMetrics` shows `P(mugg)`.
 - **Motion (`lib/motion.js` + the "Motion" section in `globals.css`):** every
   control dips fast (scale .92 + inset shadow) and springs back with a bounce,
   plus a ripple on press (`useRipple`, delegated `pointerdown`); list
@@ -343,6 +351,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-17 · v1.75.0** — Live mug / not-mug trainer (`/train`) + a global gate:
+  capture mugs and non-mugs on-device, train a logistic head over the DINOv2
+  features, gate the picker by `P(mugg)`. Export → `npm run train:gate` bakes
+  `public/mug-gate.json` for everyone.
 - **2026-09-17 · v1.74.0** — Reverted the confidence floor and the on-device
   background removal: both rejected good mug photos. The top-4 picker is always
   shown again (matching worked well that way); `AUTO_MARGIN` auto-add and the
