@@ -9,11 +9,11 @@ import css from "./icon.module.css";
 /* ------------------------------------------------------------------ */
 
 const OPTIONS = [
-  { id: "f1", label: "Flat · white", desc: "Flat two-tone · purple tile · white mug", recommended: true },
-  { id: "f2", label: "Flat · cream", desc: "Flat two-tone · purple tile · cream mug" },
-  { id: "o1", label: "Outline · cream", desc: "Bold outline · cream tile" },
-  { id: "o2", label: "Outline · purple", desc: "Bold outline · purple tile" },
-  { id: "o3", label: "Outline · open rim", desc: "Bold outline · cream tile · no rim fill" },
+  { id: "k1", label: "Cream", desc: "Line-art · cream tile · lilac rim", recommended: true },
+  { id: "k2", label: "Purple", desc: "Line-art · purple tile · cream mug" },
+  { id: "k5", label: "Cream · no fill", desc: "Line-art · cream tile · pure outline" },
+  { id: "k4", label: "Lilac", desc: "Line-art · lilac tile · white rim" },
+  { id: "k6", label: "Purple · light rim", desc: "Line-art · purple tile · light rim" },
   { id: "current", label: "Current", desc: "The icon shipped in the app today" },
 ];
 
@@ -33,7 +33,7 @@ const NEIGHBOURS = [
 ];
 
 export default function IconExplorer() {
-  const [sel, setSel] = useState("f1");
+  const [sel, setSel] = useState("k1");
 
   // The app shell locks body scrolling; let this page scroll.
   useEffect(() => {
