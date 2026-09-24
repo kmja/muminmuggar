@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.76.4** (keep in sync with `lib/version.js`)
+- **Current version:** **1.77.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -86,11 +86,17 @@ extension/            # Chrome/Edge MV3 add-on (one-click Mukify import)
   version.js
 scripts/
   build-mug-embeddings.mjs   # npm run build:embeddings
+  build-icons.mjs            # npm run build:icons — all app icons from assets/
   enrich-mukify.mjs          # regenerate lib/mug-details.json from Mukify
   gen-vapid.mjs, add-swedish-names.mjs, label-tool.mjs, eval-labels.mjs
   lib/augment.mjs, lib/model.mjs
+assets/
+  app-icon.png               # 1024 icon master (source of truth for build:icons)
 public/
   sw.js, manifest.json, mugs/*.webp (198 catalogue images), mug-embeddings.json
+  icon-192.png, icon-512.png (any), icon-maskable-512.png, apple-touch-icon.png
+app/favicon.ico              # browser tab (16/32/48)
+extension/icons/icon{16,48,128}.png
 ```
 
 ---
@@ -200,6 +206,17 @@ public/
   slide; stats count up and bars grow; dialogs scale/fade; filters expand.
   Everything is off under `prefers-reduced-motion`. FLIP is opt-in per element
   via `data-flip-key`; the delete ghost queries `[data-mug-id]`.
+- **App icon:** one master at `assets/app-icon.png` (1024, full-bleed, cream
+  `#f7f3eb` bg). `npm run build:icons` (`scripts/build-icons.mjs`) regenerates
+  every asset from it: `public/icon-192/512.png` (rounded, "any"),
+  `public/icon-maskable-512.png` (full-bleed, mug re-centred + scaled into the
+  safe zone), `public/apple-touch-icon.png` (180, full-bleed for iOS),
+  `app/favicon.ico` (16/32/48, hand-rolled ICO writer) and
+  `extension/icons/icon{16,48,128}.png`. `public/manifest.json` +
+  `app/layout.tsx` declare them; `public/sw.js` uses `icon-192.png` for
+  notifications. **Never edit the generated PNGs by hand** — change the master
+  and re-run. `/icon` (dev tool, noindex) previews the shipped icon on iOS /
+  Android masks / the header.
 
 ---
 
@@ -298,24 +315,8 @@ public/
   `/api/health`, enable notifications, send a test push.
 - [ ] Consider showing the "etikett" flag on list rows too; further deal-row
   polish.
-- [ ] **Pick and ship a new app icon.** Candidate SVGs live in
-  `public/icon-options/` (`r1` reference-faithful, `r2` mid, `r3` tall ears,
-  `r4` wide; plus `current`) and are browsable at **`/icon`** (dev tool, noindex):
-  it previews each as an iOS home-screen icon, an Android adaptive icon
-  (circle/squircle/rounded-square + safe zone) and in the app header.
-  **Design is settled — a replica of the reference icon the user supplied:**
-  a filled, 3D-perspective mug on a light-grey tile (`#f1f0f2`) — lilac body
-  (`#cdc2e0`→`#dad2ea` gradient), `#61507f` outline (11/512), a visible rim
-  ellipse (interior `#ded6ec`), a ring handle (thick purple stroke + lilac stroke
-  on top so the hole shows the tile), and cream (`#f7f4f1`) rounded ears rising
-  out of the opening. Draw order: rim → ears → handle → body. The **only** change
-  from the reference is that the ears peek out more; `r3` (tall) is the favourite.
-  Body is centred horizontally (handle extends right, as in the reference).
-  Once chosen: render `icon-192/512.png`, `apple-touch-icon.png` (180), a
-  full-bleed maskable 512 PNG and `favicon.ico` with `sharp`, and replace
-  `public/icon.svg`; the header brand (`app/page.jsx` `.brand`) has **no mark
-  yet** — add it there too. Scratch generator: `gen20.mjs` in the icon-iter temp
-  dir (not committed).
+- [ ] Optional: the header brand (`app/page.jsx` `.brand`) still shows only the
+  title — the app icon is not used as a mark there. Add it if wanted.
 
 ---
 
@@ -370,6 +371,14 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-24 · v1.77.0** — Shipped the new app icon from the user's image
+  (`assets/app-icon.png`). Added `npm run build:icons` (`scripts/build-icons.mjs`)
+  generating every asset: rounded `icon-192/512.png`, a proper full-bleed
+  **maskable** `icon-maskable-512.png` (mug re-centred + scaled into the safe
+  zone), full-bleed `apple-touch-icon.png`, a hand-rolled `app/favicon.ico`
+  (16/32/48) and the extension toolbar icons. Updated `public/manifest.json` and
+  `app/layout.tsx`; removed the old `icon.svg` + the `/icon` option SVGs and
+  repurposed `/icon` into a read-only preview of the shipped icon.
 - **2026-09-23 · v1.76.4** — Icon replaced with a replica of the reference the
   user supplied: filled 3D-perspective mug (lilac body, `#61507f` outline, rim
   ellipse, ring handle) with cream ears on a light-grey tile. `/icon` now offers

@@ -69,7 +69,8 @@ app/
     push/{vapid,subscribe}       # web-push
     cron/check-wishlist          # scheduled notifier (Vercel Cron)
 lib/  db · mugs · gemini · ebay · marketplaces · push · types
-public/  sw.js · manifest.json · icon.svg
+public/  sw.js · manifest.json · icon-192/512.png · icon-maskable-512.png · apple-touch-icon.png
+assets/  app-icon.png (icon master — npm run build:icons)
 ```
 
 ## Setup

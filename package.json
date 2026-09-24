@@ -1,6 +1,6 @@
 {
   "name": "moomin-mug-collection",
-  "version": "1.76.4",
+  "version": "1.77.0",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "gen-vapid": "node scripts/gen-vapid.mjs",
+    "build:icons": "node scripts/build-icons.mjs",
     "build:embeddings": "node scripts/build-mug-embeddings.mjs",
     "label": "node scripts/label-tool.mjs",
     "eval:labels": "node scripts/eval-labels.mjs",

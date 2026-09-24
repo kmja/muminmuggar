@@ -1,26 +1,28 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Plus, Sparkles, BarChart3, Bell, Check } from "lucide-react";
+import { useEffect } from "react";
+import { Plus, Sparkles, BarChart3, Bell } from "lucide-react";
 import css from "./icon.module.css";
 
 /* ------------------------------------------------------------------ */
-/* Icon explorer — compare candidate app icons, then see the chosen    */
-/* one as an iOS / Android launcher icon and in the app header.        */
+/* Where the app icon shows up. Read-only preview of the shipped       */
+/* assets — regenerate them from assets/app-icon.png with             */
+/* `npm run build:icons`.                                             */
 /* ------------------------------------------------------------------ */
 
-const OPTIONS = [
-  { id: "r3", label: "Tall ears", desc: "Reference style · ears peeking well out", recommended: true },
-  { id: "r2", label: "Mid ears", desc: "Reference style · ears peeking a little more" },
-  { id: "r4", label: "Wide ears", desc: "Reference style · wider, rounder ears" },
-  { id: "r1", label: "As reference", desc: "Reference style · ears barely peeking" },
-  { id: "current", label: "Current", desc: "The icon shipped in the app today" },
+const SHIPPED = [
+  { file: "public/icon-192.png", note: "PWA / Android “any” · rounded" },
+  { file: "public/icon-512.png", note: "PWA / Android “any” · rounded" },
+  { file: "public/icon-maskable-512.png", note: "PWA “maskable” · full-bleed, safe zone" },
+  { file: "public/apple-touch-icon.png", note: "iOS home screen · 180, full-bleed" },
+  { file: "app/favicon.ico", note: "Browser tab · 16 / 32 / 48" },
+  { file: "extension/icons/icon{16,48,128}.png", note: "Chrome / Edge toolbar" },
 ];
 
-const src = (id) => `/icon-options/${id}.svg`;
-
 const SIZES = [16, 24, 32, 48, 56, 96, 128, 180];
+const ANY = "/icon-512.png";
+const MASKABLE = "/icon-maskable-512.png";
+const APPLE = "/apple-touch-icon.png";
 
-// dummy neighbours for the home-screen mock
 const NEIGHBOURS = [
   { name: "Karta", from: "#7ed0a8", to: "#3f9d74" },
   { name: "Anteckningar", from: "#ffe08a", to: "#e0a92e" },
@@ -31,9 +33,7 @@ const NEIGHBOURS = [
   { name: "Inställningar", from: "#c9ccd2", to: "#8b9099" },
 ];
 
-export default function IconExplorer() {
-  const [sel, setSel] = useState("r3");
-
+export default function IconPreview() {
   // The app shell locks body scrolling; let this page scroll.
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -41,49 +41,18 @@ export default function IconExplorer() {
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  const chosen = OPTIONS.find((o) => o.id === sel) || OPTIONS[0];
-  const icon = src(sel);
-
   return (
     <div className={css.wrap}>
       <header className={css.head}>
         <div>
           <h1 className={css.title}>App icon</h1>
           <p className={css.sub}>
-            Candidate marks for Muminmuggar. Pick one below to preview it as an iOS and
-            Android launcher icon and inside the app header. The source SVGs live in{" "}
-            <code className={css.code}>public/icon-options/</code>.
+            The shipped icon, in the places it appears. Regenerate every asset from{" "}
+            <code className={css.code}>assets/app-icon.png</code> with{" "}
+            <code className={css.code}>npm run build:icons</code>.
           </p>
         </div>
       </header>
-
-      {/* ---------------------------- options ---------------------------- */}
-      <section className={css.panel}>
-        <div className={css.panelTitle}>Options</div>
-        <div className={css.options}>
-          {OPTIONS.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              className={css.opt + (o.id === sel ? " " + css.optOn : "")}
-              onClick={() => setSel(o.id)}
-              aria-pressed={o.id === sel}
-            >
-              <span className={css.optArt}>
-                <img src={src(o.id)} alt={`${o.label} icon`} />
-                {o.id === sel ? <span className={css.optCheck}><Check size={15} /></span> : null}
-              </span>
-              <span className={css.optMeta}>
-                <span className={css.optLabel}>
-                  {o.label}
-                  {o.recommended ? <em className={css.rec}>recommended</em> : null}
-                </span>
-                <span className={css.optDesc}>{o.desc}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
 
       {/* ------------------------- iOS home screen ------------------------ */}
       <section className={css.panel}>
@@ -95,7 +64,7 @@ export default function IconExplorer() {
               <div className={css.statusbar}><span>9:41</span><span>􀛨 􀙇 􀛪</span></div>
               <div className={css.appgrid}>
                 <div className={css.appcell}>
-                  <img className={css.iosIcon} src={icon} alt="" />
+                  <img className={css.iosIcon} src={APPLE} alt="" />
                   <span className={css.appName}>Muminmuggar</span>
                 </div>
                 {NEIGHBOURS.map((n) => (
@@ -106,18 +75,15 @@ export default function IconExplorer() {
                 ))}
               </div>
               <div className={css.dock}>
-                {[0, 1, 2, 3].map((i) => (
-                  <span key={i} className={css.dockIcon} />
-                ))}
+                {[0, 1, 2, 3].map((i) => <span key={i} className={css.dockIcon} />)}
               </div>
             </div>
           </div>
           <div className={css.notes}>
             <h3 className={css.noteTitle}>iOS</h3>
             <ul className={css.noteList}>
-              <li>Apple applies its own squircle mask and a subtle top gloss — supply a square, full-bleed 1024×1024 PNG with <b>no</b> rounded corners of its own.</li>
-              <li>Our tiles are pre-rounded at ~22%, which matches iOS closely, so the preview is representative.</li>
-              <li>Shipped via <code className={css.code}>apple-touch-icon.png</code> (180×180) and the web-app manifest.</li>
+              <li>Served as <code className={css.code}>apple-touch-icon.png</code> (180×180) and declared in <code className={css.code}>app/layout.tsx</code>.</li>
+              <li>Supplied full-bleed (no rounded corners) — iOS applies its own squircle mask and gloss.</li>
             </ul>
           </div>
         </div>
@@ -134,44 +100,38 @@ export default function IconExplorer() {
           ].map((m) => (
             <figure className={css.maskFig} key={m.name}>
               <span className={css.maskWrap}>
-                <img className={css.maskImg + " " + m.cls} src={icon} alt="" />
+                <img className={css.maskImg + " " + m.cls} src={MASKABLE} alt="" />
               </span>
-              <figcaption className={css.maskCap}>
-                <b>{m.name}</b>
-                <span>{m.hint}</span>
-              </figcaption>
+              <figcaption className={css.maskCap}><b>{m.name}</b><span>{m.hint}</span></figcaption>
             </figure>
           ))}
           <figure className={css.maskFig}>
             <span className={css.maskWrap + " " + css.safeWrap}>
-              <img className={css.maskImg + " " + css.maskCircle} src={icon} alt="" />
+              <img className={css.maskImg + " " + css.maskCircle} src={MASKABLE} alt="" />
               <span className={css.safeRing} />
             </span>
-            <figcaption className={css.maskCap}>
-              <b>Safe zone</b>
-              <span>content stays inside the dashed circle</span>
-            </figcaption>
+            <figcaption className={css.maskCap}><b>Safe zone</b><span>content inside the dashed circle</span></figcaption>
           </figure>
         </div>
         <p className={css.note}>
-          Android composites two 108dp layers and crops them to the device's mask. The
-          mark is well inside the safe zone, so it survives every mask. For the maskable
-          asset I'll export a full-bleed square (background to the edges, no pre-rounded
-          corners) so nothing shows through under aggressive masks.
+          Declared as <code className={css.code}>purpose: "maskable"</code> in{" "}
+          <code className={css.code}>public/manifest.json</code>. The maskable asset is
+          full-bleed with the mug re-centred and scaled into the safe zone, so it survives
+          every device mask.
         </p>
       </section>
 
       {/* --------------------------- app header --------------------------- */}
       <section className={css.panel}>
-        <div className={css.panelTitle}>In the app header</div>
+        <div className={css.panelTitle}>Browser tab &amp; app header</div>
         <div className={css.headerPreview}>
           <header className="top">
             <div className="topbar">
               <div className="brand">
-                <img className={css.brandIcon} src={icon} alt="" />
+                <img className={css.brandIcon} src="/icon-192.png" alt="" />
                 <div className="title">
                   <h1>Muminmuggar</h1>
-                  <span className="ver">v1.75.0</span>
+                  <span className="ver">v1.77.0</span>
                 </div>
               </div>
               <div className="actions">
@@ -187,8 +147,8 @@ export default function IconExplorer() {
           </header>
         </div>
         <p className={css.note}>
-          The brand currently shows only the title — this is the mark added to its left, at
-          40px with a ~11px corner radius. Tap targets and the wave are unchanged.
+          The browser tab uses <code className={css.code}>app/favicon.ico</code>. The header
+          brand still shows only the title — the mark is shown here as a preview, not wired in.
         </p>
       </section>
 
@@ -198,7 +158,7 @@ export default function IconExplorer() {
         <div className={css.sizeStrip}>
           {SIZES.map((s) => (
             <div className={css.sizeCell} key={s}>
-              <img src={icon} alt="" width={s} height={s} style={{ width: s, height: s }} />
+              <img src={ANY} alt="" width={s} height={s} style={{ width: s, height: s }} />
               <span className={css.sizeLabel}>{s}px</span>
             </div>
           ))}
@@ -209,9 +169,18 @@ export default function IconExplorer() {
         </div>
       </section>
 
-      <p className={css.footer}>
-        Selected: <b>{chosen.label}</b> — {chosen.desc} · <code className={css.code}>{icon}</code>
-      </p>
+      {/* ----------------------------- files ----------------------------- */}
+      <section className={css.panel}>
+        <div className={css.panelTitle}>Generated files</div>
+        <ul className={css.fileList}>
+          {SHIPPED.map((f) => (
+            <li key={f.file}>
+              <code className={css.code}>{f.file}</code>
+              <span>{f.note}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
