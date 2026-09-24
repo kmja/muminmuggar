@@ -9,15 +9,11 @@ import css from "./icon.module.css";
 /* ------------------------------------------------------------------ */
 
 const OPTIONS = [
-  { id: "lr", label: "Rounded", desc: "Line-art · cream · rounded ears", recommended: true },
-  { id: "lp", label: "Pointed", desc: "Line-art · cream · pointed ears" },
-  { id: "lt", label: "Tall", desc: "Line-art · cream · tall ears" },
-  { id: "lo", label: "Outward", desc: "Line-art · cream · ears leaning out" },
-  { id: "lw", label: "Wide", desc: "Line-art · cream · wide ears" },
-  { id: "pr", label: "Rounded", desc: "Line-art · purple · rounded ears" },
-  { id: "pp", label: "Pointed", desc: "Line-art · purple · pointed ears" },
-  { id: "sr", label: "Rounded", desc: "Soft 3D · purple · rounded ears" },
-  { id: "sp", label: "Pointed", desc: "Soft 3D · purple · pointed ears" },
+  { id: "f1", label: "Flat · white", desc: "Flat two-tone · purple tile · white mug", recommended: true },
+  { id: "f2", label: "Flat · cream", desc: "Flat two-tone · purple tile · cream mug" },
+  { id: "o1", label: "Outline · cream", desc: "Bold outline · cream tile" },
+  { id: "o2", label: "Outline · purple", desc: "Bold outline · purple tile" },
+  { id: "o3", label: "Outline · open rim", desc: "Bold outline · cream tile · no rim fill" },
   { id: "current", label: "Current", desc: "The icon shipped in the app today" },
 ];
 
@@ -37,7 +33,7 @@ const NEIGHBOURS = [
 ];
 
 export default function IconExplorer() {
-  const [sel, setSel] = useState("lr");
+  const [sel, setSel] = useState("f1");
 
   // The app shell locks body scrolling; let this page scroll.
   useEffect(() => {

@@ -24,21 +24,29 @@
   </filter>
   <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9"/></filter>
   <linearGradient id="cream" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#fdf9f2"/><stop offset="1" stop-color="#ece0cf"/>
+    <stop offset="0" stop-color="#fdf9f2"/><stop offset="1" stop-color="#eee2d0"/>
   </linearGradient>
-  <linearGradient id="creamSoft" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#fdf9f2"/><stop offset="1" stop-color="#e3d4bd"/>
+  <linearGradient id="lilac" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e6dcf6"/><stop offset="1" stop-color="#cbb8e6"/>
+  </linearGradient>
+  <linearGradient id="plum" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#6d5191"/><stop offset="1" stop-color="#3f2b5e"/>
+  </linearGradient>
+  <linearGradient id="mugW" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e1f6"/>
+  </linearGradient>
+  <linearGradient id="mugC" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fdf8ef"/><stop offset="1" stop-color="#e6d8c0"/>
+  </linearGradient>
+  <linearGradient id="mugL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d9c9ef"/><stop offset="1" stop-color="#b79fd8"/>
   </linearGradient>
 </defs>
-<rect width="512" height="512" rx="112" fill="url(#cream)"/>
+<rect width="512" height="512" rx="112" fill="url(#tile)"/><rect width="512" height="512" rx="112" fill="url(#glow)"/>
 <g transform="translate(-38 0)">
-  <ellipse cx="256" cy="420" rx="100" ry="18" fill="#2a1a42" opacity="0.30" filter="url(#soft)"/>
-  <g filter="url(#shadow)"><ellipse cx="256" cy="248" rx="88" ry="19" fill="#efe6f8" stroke="#4a3167" stroke-width="12"/>
-  <path d="M200,296 C 190,248 184,200 192,172 C 197,154 212,152 220,170 C 230,198 242,248 252,296 Z" fill="#ffffff" stroke="#4a3167" stroke-width="12" stroke-linejoin="round"/>
-  <path d="M312,296 C 322,248 328,200 320,172 C 315,154 300,152 292,170 C 282,198 270,248 260,296 Z" fill="#ffffff" stroke="#4a3167" stroke-width="12" stroke-linejoin="round"/>
-  <path d="M212,282 C 204,244 199,206 205,182" fill="none" stroke="#a489ca" stroke-width="7" stroke-linecap="round"/>
-  <path d="M300,282 C 308,244 313,206 307,182" fill="none" stroke="#a489ca" stroke-width="7" stroke-linecap="round"/><path d="M168,248 A88,19 0 0 0 344,248 L344,388 C344,408 333,420 322,420 L190,420 C179,420 168,408 168,388 Z" fill="#ffffff" stroke="#4a3167" stroke-width="12" stroke-linejoin="round"/>
-       <path d="M346,286 C 394,286 402,300 402,325 C 402,350 394,364 346,364" fill="none" stroke="#4a3167" stroke-width="42" stroke-linecap="round"/>
-       <path d="M346,286 C 394,286 402,300 402,325 C 402,350 394,364 346,364" fill="none" stroke="#ffffff" stroke-width="19" stroke-linecap="round"/></g>
-</g>
+  <ellipse cx="256" cy="248" rx="88" ry="19" fill="url(#plum)"/>
+  <path d="M204,296 C 194,250 190,204 198,180 C 202,164 216,162 224,178 C 234,206 244,252 252,296 Z" fill="url(#mugC)"/>
+  <path d="M308,296 C 318,250 322,204 314,180 C 310,164 296,162 288,178 C 278,206 268,252 260,296 Z" fill="url(#mugC)"/>
+  <path d="M346,286 C 394,286 402,300 402,325 C 402,350 394,364 346,364" fill="none" stroke="url(#mugC)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M168,248 A88,19 0 0 0 344,248 L344,388 C344,408 333,420 322,420 L190,420 C179,420 168,408 168,388 Z" fill="url(#mugC)"/></g>
 </svg>
