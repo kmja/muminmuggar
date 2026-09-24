@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="0" y1="165" x2="0" y2="424">
+      <stop offset="0" stop-color="#dad2ea"/><stop offset="1" stop-color="#cdc2e0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#f1f0f2"/>
+  <g stroke="#61507f" stroke-width="11" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="256" cy="165" rx="137" ry="39" fill="#ded6ec"/>
+    <path d="M198,238 C 186,196 182,152 194,130 C 202,117 220,119 228,136 C 239,164 248,202 253,238 Z" fill="#f7f4f1"/>
+    <path d="M314,238 C 326,196 330,152 318,130 C 310,117 292,119 284,136 C 273,164 264,202 259,238 Z" fill="#f7f4f1"/>
+    <path d="M396,244 C 436,240 446,264 446,300 C 446,336 436,360 396,356" fill="none" stroke-width="50"/>
+    <path d="M396,244 C 436,240 446,264 446,300 C 446,336 436,360 396,356" fill="none" stroke="url(#body)" stroke-width="32"/>
+    <path d="M119,165 A137,39 0 0 0 393,165 L393,362 C393,400 355,424 317,424 L195,424 C157,424 119,400 119,362 Z" fill="url(#body)"/>
+  </g>
+</svg>

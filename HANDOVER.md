@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.76.3** (keep in sync with `lib/version.js`)
+- **Current version:** **1.76.4** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -299,23 +299,23 @@ public/
 - [ ] Consider showing the "etikett" flag on list rows too; further deal-row
   polish.
 - [ ] **Pick and ship a new app icon.** Candidate SVGs live in
-  `public/icon-options/` (`k1` cream, `k2` purple, `k5` cream no-fill, `k4` lilac,
-  `k6` purple light-rim; plus `current`) and are browsable at **`/icon`** (dev
-  tool, noindex): it previews each as an iOS home-screen icon, an Android adaptive
-  icon (circle/squircle/rounded-square + safe zone) and in the app header.
-  **Style is settled — it mirrors the app's own illustration language**
-  (`MugMark` / `MugShelf` in `app/page.jsx`): unfilled **line-art**, ~5% stroke
-  (24/512), round caps/joins, `--accent` purple + `--foot` cream. The mug/ears are
-  filled with the **same `userSpaceOnUse` gradient as the tile** so they read as
-  unfilled while still occluding what's behind. Concept: a mug with a pair of
-  **rounded** ears rising out of the opening (no head/lid, no inner-ear line, no
-  shadows); draw order opening → ears → body. The mug is large and the whole mark
-  (body **+ handle**) is centred on (256,256). `k1` is the current favourite.
+  `public/icon-options/` (`r1` reference-faithful, `r2` mid, `r3` tall ears,
+  `r4` wide; plus `current`) and are browsable at **`/icon`** (dev tool, noindex):
+  it previews each as an iOS home-screen icon, an Android adaptive icon
+  (circle/squircle/rounded-square + safe zone) and in the app header.
+  **Design is settled — a replica of the reference icon the user supplied:**
+  a filled, 3D-perspective mug on a light-grey tile (`#f1f0f2`) — lilac body
+  (`#cdc2e0`→`#dad2ea` gradient), `#61507f` outline (11/512), a visible rim
+  ellipse (interior `#ded6ec`), a ring handle (thick purple stroke + lilac stroke
+  on top so the hole shows the tile), and cream (`#f7f4f1`) rounded ears rising
+  out of the opening. Draw order: rim → ears → handle → body. The **only** change
+  from the reference is that the ears peek out more; `r3` (tall) is the favourite.
+  Body is centred horizontally (handle extends right, as in the reference).
   Once chosen: render `icon-192/512.png`, `apple-touch-icon.png` (180), a
   full-bleed maskable 512 PNG and `favicon.ico` with `sharp`, and replace
   `public/icon.svg`; the header brand (`app/page.jsx` `.brand`) has **no mark
-  yet** — add it there too. The scratch generator is `gen17.mjs` in the icon-iter
-  temp dir (not committed).
+  yet** — add it there too. Scratch generator: `gen20.mjs` in the icon-iter temp
+  dir (not committed).
 
 ---
 
@@ -370,6 +370,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-23 · v1.76.4** — Icon replaced with a replica of the reference the
+  user supplied: filled 3D-perspective mug (lilac body, `#61507f` outline, rim
+  ellipse, ring handle) with cream ears on a light-grey tile. `/icon` now offers
+  `r1`–`r4`, varying only how far the ears peek (r3 = tall, favourite).
 - **2026-09-23 · v1.76.3** — Icon redrawn to match the app's own illustration
   language (`MugMark`/`MugShelf`): **unfilled line-art**, 5% stroke, round caps,
   `--accent`/`--foot` palette. Mug enlarged and the whole mark (body + handle)
