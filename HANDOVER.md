@@ -198,7 +198,11 @@ extension/icons/icon{16,48,128}.png
   bakes `public/mug-gate.json`, a **global** head every client loads. Local
   overrides global. `MatchMetrics` shows `P(mugg)`.
   - **`public/mug-gate.json` is now baked** (20 mugs / 23 not-mugs, dim 384,
-    100% held-out). Re-run `train:gate` with more exports to improve it.
+    100% — 5-fold CV). `train:gate` now reports a **stratified 5-fold CV**
+    accuracy (a single 20% holdout was only ~8 samples, too noisy) and then
+    trains the **shipped** model on **all** samples — previously it validated on
+    a 20% split and shipped a model trained on only the other 80%.
+    Re-run `train:gate` with more exports to improve it.
   - The fit is **synchronous** and blocks the main thread, so `/train` shows a
     spinner + a persistent state banner ("Tränad på den här enheten · träffsäkerhet
     X%", "Global modell inläst", or "Ingen modell än"), warns when new captures
@@ -378,6 +382,10 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-25 · v1.78.1** — `train:gate` now reports a **stratified 5-fold CV**
+  accuracy and trains the **shipped** model on **all** samples (it previously
+  held out a 20% split *and* shipped a model trained on only the other 80%). The
+  first gate scores 100% (43/43) out-of-fold. `public/mug-gate.json` re-baked.
 - **2026-09-25 · v1.78.0** — Baked the first **global** mug / not-mug gate
   (`public/mug-gate.json`) from 43 exported captures (20 mugs / 23 not-mugs,
   384-dim, 100% held-out accuracy) and made `/train` report what it's doing:

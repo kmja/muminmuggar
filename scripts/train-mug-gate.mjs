@@ -55,44 +55,54 @@ const neg = rows.length - pos;
 console.log(`Loaded ${rows.length} samples (${pos} mugs, ${neg} not-mugs, dim ${dim})`);
 if (pos < 8 || neg < 8) { console.error("Need at least 8 of each."); process.exit(1); }
 
-// ---- deterministic shuffle + 80/20 split ---------------------------------
+// ---- logistic regression -------------------------------------------------
+function fitLR(list) {
+  const w = new Float32Array(dim);
+  let b = 0;
+  for (let e = 0; e < EPOCHS; e++) {
+    const gw = new Float32Array(dim);
+    let gb = 0;
+    for (const r of list) {
+      let z = b;
+      for (let j = 0; j < dim; j++) z += w[j] * r.x[j];
+      const err = sigmoid(z) - r.y;
+      for (let j = 0; j < dim; j++) gw[j] += err * r.x[j];
+      gb += err;
+    }
+    const n = list.length;
+    for (let j = 0; j < dim; j++) w[j] -= LR * (gw[j] / n + L2 * w[j]);
+    b -= LR * (gb / n);
+  }
+  return { w, b };
+}
+const scoreWith = (m, r) => { let z = m.b; for (let j = 0; j < dim; j++) z += m.w[j] * r.x[j]; return z; };
+
+// ---- deterministic shuffle ----------------------------------------------
 let s = 1234567 >>> 0;
 const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
-for (let i = rows.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [rows[i], rows[j]] = [rows[j], rows[i]]; }
-const cut = Math.max(1, Math.floor(rows.length * 0.2));
-const val = rows.slice(0, cut), train = rows.slice(cut);
+const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-// ---- logistic regression -------------------------------------------------
-const w = new Float32Array(dim);
-let b = 0;
-for (let e = 0; e < EPOCHS; e++) {
-  const gw = new Float32Array(dim);
-  let gb = 0;
-  for (const r of train) {
-    let z = b;
-    for (let j = 0; j < dim; j++) z += w[j] * r.x[j];
-    const err = sigmoid(z) - r.y;
-    for (let j = 0; j < dim; j++) gw[j] += err * r.x[j];
-    gb += err;
-  }
-  const n = train.length;
-  for (let j = 0; j < dim; j++) w[j] -= LR * (gw[j] / n + L2 * w[j]);
-  b -= LR * (gb / n);
-}
-
-const score = (r) => { let z = b; for (let j = 0; j < dim; j++) z += w[j] * r.x[j]; return z; };
-function report(name, list) {
-  let tp = 0, tn = 0, fp = 0, fn = 0;
-  for (const r of list) {
-    const pred = score(r) > 0 ? 1 : 0;
+// ---- stratified K-fold CV for an honest accuracy estimate ---------------
+// (a single 20% holdout is only ~8 samples, far too noisy to report)
+const K = 5;
+const folds = Array.from({ length: K }, () => []);
+shuf(rows.filter((r) => r.y)).forEach((r, i) => folds[i % K].push(r));
+shuf(rows.filter((r) => !r.y)).forEach((r, i) => folds[i % K].push(r));
+let tp = 0, tn = 0, fp = 0, fn = 0, correct = 0;
+for (let k = 0; k < K; k++) {
+  const held = folds[k];
+  const model = fitLR(folds.filter((_, i) => i !== k).flat());
+  for (const r of held) {
+    const pred = scoreWith(model, r) > 0 ? 1 : 0;
+    if (pred === r.y) correct++;
     if (pred && r.y) tp++; else if (!pred && !r.y) tn++; else if (pred && !r.y) fp++; else fn++;
   }
-  const acc = list.length ? (tp + tn) / list.length : 0;
-  console.log(`${name}: acc ${(acc * 100).toFixed(1)}%  (${list.length} samples)  tp ${tp} tn ${tn} fp ${fp} fn ${fn}`);
-  return acc;
 }
-const valAcc = report("val", val);
-report("train", train);
+const cvAcc = correct / rows.length;
+console.log(`${K}-fold CV: acc ${(cvAcc * 100).toFixed(1)}%  (${correct}/${rows.length})  tp ${tp} tn ${tn} fp ${fp} fn ${fn}`);
+
+// ---- final model: train on ALL samples (CV already gave the estimate) ----
+const { w, b } = fitLR(rows);
 
 // ---- write the global gate -----------------------------------------------
 const payload = {
@@ -103,10 +113,11 @@ const payload = {
   threshold: THRESHOLD,
   pos,
   neg,
-  accuracy: +valAcc.toFixed(4),
+  accuracy: +cvAcc.toFixed(4),
+  cvFolds: K,
   source: "global",
   builtAt: new Date().toISOString(),
 };
 await writeFile(path.join(ROOT, "public/mug-gate.json"), JSON.stringify(payload));
 const bytes = (await readFile(path.join(ROOT, "public/mug-gate.json"))).length;
-console.log(`Wrote public/mug-gate.json — dim ${dim}, ${(bytes / 1024).toFixed(1)} KB, threshold ${THRESHOLD}`);
+console.log(`Wrote public/mug-gate.json — dim ${dim}, trained on all ${rows.length}, ${(bytes / 1024).toFixed(1)} KB, threshold ${THRESHOLD}`);
