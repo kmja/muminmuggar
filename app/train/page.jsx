@@ -35,6 +35,7 @@ export default function TrainPage() {
   const [label, setLabel] = useState(1); // 1 = mugg, 0 = inte mugg
   const [counts, setCounts] = useState({ pos: 0, neg: 0, total: 0 });
   const [busy, setBusy] = useState(false);
+  const [training, setTraining] = useState(false);
   const [msg, setMsg] = useState("");
   const [ready, setReady] = useState(false);
   const [pct, setPct] = useState(0);
@@ -93,15 +94,17 @@ export default function TrainPage() {
     save(raw);
   };
 
-  const train = () => {
-    setBusy(true);
+  const train = async () => {
+    setTraining(true); setMsg("");
+    // Yield a frame so the "Tränar…" state paints before the fit runs — the fit
+    // is synchronous and blocks the main thread, so without this it looks hung.
+    await new Promise((r) => setTimeout(r, 50));
     try {
       const res = trainLocal();
       if (res.error === "too-few") setMsg("Ta minst 8 bilder, både muggar och icke-muggar.");
       else if (res.error === "one-class") setMsg("Du behöver både mugg- och icke-mugg-bilder.");
-      else setMsg(`Tränad! Träffsäkerhet ${Math.round(res.valAcc * 100)}% (validering på ${res.valN} bilder, ${res.pos} muggar / ${res.neg} icke).`);
       setHead(getGate());
-    } finally { setBusy(false); }
+    } finally { setTraining(false); }
   };
   const exportAll = () => {
     if (!counts.total) { setMsg("Inga bilder att exportera."); return; }
@@ -117,6 +120,11 @@ export default function TrainPage() {
     clearSamples(); clearLocalHead();
     setCounts(sampleCounts()); setHead(getGate()); setMsg("Rensat.");
   };
+
+  const isLocal = head?.meta?.source === "local";
+  const acc = head?.meta?.accuracy;
+  const trainedN = (head?.meta?.pos ?? 0) + (head?.meta?.neg ?? 0);
+  const stale = isLocal && counts.total > trainedN;
 
   return (
     <main className={css.wrap}>
@@ -152,25 +160,39 @@ export default function TrainPage() {
       </div>
 
       <div className={css.actions}>
-        <button className="primary big" onClick={train} disabled={busy || counts.total < 8}><Sparkles size={16} /> Träna</button>
-        <button className="big" onClick={exportAll} disabled={!counts.total}><Download size={16} /> Exportera</button>
+        <button className="primary big" onClick={train} disabled={busy || training || counts.total < 8}>
+          {training ? <span className={css.spinner} aria-hidden="true" /> : <Sparkles size={16} />} {training ? "Tränar…" : "Träna"}
+        </button>
+        <button className="big" onClick={exportAll} disabled={!counts.total}><Download size={16} /> Exportera träningsdata</button>
         <button className="big" onClick={clear} disabled={!counts.total && !head}><Trash2 size={16} /> Rensa</button>
       </div>
 
       {msg ? <div className={css.msg}>{msg}</div> : null}
       {busy && !ready ? <div className={css.msg}>Laddar bildmodellen… {Math.round(pct)}%</div> : null}
 
-      <div className={css.status}>
-        {head ? (
-          <>
-            <div><strong>Modell:</strong> {head.meta?.source === "local" ? "lokal (denna enhet)" : "global"} · tröskel P(mugg) ≥ {gateThreshold().toFixed(2)}</div>
-            <div><strong>Träffsäkerhet:</strong> {head.meta?.accuracy != null ? Math.round(head.meta.accuracy * 100) + "%" : "—"} · {head.meta?.pos ?? "?"} muggar / {head.meta?.neg ?? "?"} icke</div>
-          </>
+      <div className={css.banner + (training ? " " + css.bannerBusy : isLocal ? " " + css.bannerOk : "")} role="status">
+        {training ? (
+          <><span className={css.spinner} aria-hidden="true" /> Tränar modellen…</>
+        ) : isLocal ? (
+          <><CheckCircle2 size={16} /> Tränad på den här enheten{acc != null ? ` · träffsäkerhet ${Math.round(acc * 100)}%` : ""} ({head.meta.pos} muggar / {head.meta.neg} icke)</>
+        ) : head ? (
+          <>Global modell inläst{acc != null ? ` · träffsäkerhet ${Math.round(acc * 100)}%` : ""}</>
         ) : (
-          <div><strong>Ingen modell än.</strong> Fota lite av varje och tryck Träna.</div>
+          <>Ingen modell än — fota lite av varje och tryck Träna.</>
         )}
+      </div>
+      {stale ? (
+        <div className={css.warn}>{counts.total - trainedN} nya bilder sedan träningen — tryck Träna igen för att ta med dem.</div>
+      ) : null}
+
+      <div className={css.status}>
+        <div>
+          <strong>Tröskel:</strong> P(mugg) ≥ {gateThreshold().toFixed(2)}
+          {head?.meta?.builtAt ? ` · byggd ${new Date(head.meta.builtAt).toLocaleString()}` : ""}
+        </div>
         <div className={css.note}>
-          En lokal modell gäller bara här. Exportera filen och be om att få den inbakad i <code>public/mug-gate.json</code> så får alla användare den.
+          En lokal modell gäller bara på den här enheten. <strong>Exportera träningsdata</strong> laddar ner bildvektorerna
+          (inte modellen) — skicka filen så bakas den in i <code>public/mug-gate.json</code> och gäller alla användare.
         </div>
       </div>
     </main>

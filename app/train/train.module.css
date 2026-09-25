@@ -24,3 +24,17 @@
 .status{margin-top:var(--space-18);padding:var(--space-14);border:1px solid var(--border);border-radius:var(--radius-lg);
   font-size:var(--fs-secondary);display:grid;gap:var(--space-6)}
 .note{margin-top:var(--space-6);color:var(--muted);font-size:var(--fs-caption);line-height:1.5}
+
+/* Persistent training state — the fit is synchronous, so this is what tells
+   the user whether it ran. */
+.banner{margin-top:var(--space-14);display:flex;align-items:center;gap:var(--space-8);
+  padding:var(--space-10) var(--space-12);border-radius:var(--radius-md);border:1px solid var(--border);
+  background:var(--bg2);font-size:var(--fs-secondary);color:var(--muted)}
+.bannerBusy{border-color:color-mix(in srgb, var(--accent) 45%, var(--border));background:var(--lilac);color:var(--accent-ink)}
+.bannerOk{border-color:color-mix(in srgb, var(--accent) 45%, var(--border));background:var(--lilac);color:var(--accent-ink);font-weight:var(--fw-medium)}
+.warn{margin-top:var(--space-8);font-size:var(--fs-caption);color:var(--gold)}
+.spinner{width:14px;height:14px;border-radius:var(--radius-pill);display:inline-block;flex:none;
+  border:2px solid color-mix(in srgb, var(--accent) 30%, transparent);border-top-color:var(--accent);
+  animation:train-spin .7s linear infinite}
+@keyframes train-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spinner{animation:none}}

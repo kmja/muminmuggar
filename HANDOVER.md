@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.77.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.78.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -197,6 +197,13 @@ extension/icons/icon{16,48,128}.png
   träff"). It can **Export** a JSONL of `{y,v}`; `npm run train:gate -- <file>`
   bakes `public/mug-gate.json`, a **global** head every client loads. Local
   overrides global. `MatchMetrics` shows `P(mugg)`.
+  - **`public/mug-gate.json` is now baked** (20 mugs / 23 not-mugs, dim 384,
+    100% held-out). Re-run `train:gate` with more exports to improve it.
+  - The fit is **synchronous** and blocks the main thread, so `/train` shows a
+    spinner + a persistent state banner ("Tränad på den här enheten · träffsäkerhet
+    X%", "Global modell inläst", or "Ingen modell än"), warns when new captures
+    arrived since training, and labels the button **"Exportera träningsdata"**
+    (it exports the *vectors*, not the model).
 - **Motion (`lib/motion.js` + the "Motion" section in `globals.css`):** every
   control dips fast (scale .92 + inset shadow) and springs back with a bounce,
   plus a ripple on press (`useRipple`, delegated `pointerdown`); list
@@ -371,6 +378,14 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-09-25 · v1.78.0** — Baked the first **global** mug / not-mug gate
+  (`public/mug-gate.json`) from 43 exported captures (20 mugs / 23 not-mugs,
+  384-dim, 100% held-out accuracy) and made `/train` report what it's doing:
+  a spinner + persistent state banner, a "new captures since training" warning,
+  the model's build time, and a clearer **"Exportera träningsdata"** label
+  (it exports the vectors, not the model). `lib/gate.js` now keeps `builtAt`
+  in the parsed head meta. The fit is synchronous, so `train()` yields a frame
+  before running so the spinner can paint.
 - **2026-09-24 · v1.77.0** — Shipped the new app icon from the user's image
   (`assets/app-icon.png`). Added `npm run build:icons` (`scripts/build-icons.mjs`)
   generating every asset: rounded `icon-192/512.png`, a proper full-bleed
