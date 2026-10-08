@@ -8,6 +8,8 @@ const nextConfig = {
     outputFileTracingIncludes: {
       "/api/shelf-scan": ["./public/mugs/**"],
       "/api/identify": ["./public/mugs/**"],
+      // Design-C recognition reads every catalogue reference image from disk.
+      "/api/recognize": ["./public/mugs/**"],
     },
   },
 };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deepseekConfigured, identifyMugsFromCatalog } from "@/lib/deepseek";
+import { deepseekConfigured, deepseekMode, identifyMugsFromCatalog, identifyMugsFromCatalogImages } from "@/lib/deepseek";
 import { resolveCandidate } from "@/lib/catalog";
 import { currentOwner, unauthorized } from "@/lib/session";
 
@@ -21,7 +21,9 @@ export async function POST(req: Request) {
     if (!deepseekConfigured()) {
       return NextResponse.json({ error: "DEEPSEEK_API_KEY is not set on the server." }, { status: 503 });
     }
-    const matches = await identifyMugsFromCatalog(imageDataUrl);
+    const matches = deepseekMode() === "text"
+      ? await identifyMugsFromCatalog(imageDataUrl)
+      : await identifyMugsFromCatalogImages(imageDataUrl);
     const drafts = matches.map((m) => {
       const cat = resolveCandidate(m.entry);
       return {

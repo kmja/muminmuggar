@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.80.1** (keep in sync with `lib/version.js`)
+- **Current version:** **1.81.0** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -51,7 +51,7 @@ app/
   api/
     mugs/…            # CRUD (+ [id] PATCH/DELETE)
     identify, shelf-scan   # Gemini vision
-    recognize              # DeepSeek design-A matcher (photo → catalogue num(s))
+    recognize              # DeepSeek recognition (vision = all ref images / text list)
     gaps, deals            # series catalogue / marketplace search
     catalog, catalog/list  # product-image catalogue
     mug-image, mug-details # image backfill / collector details
@@ -73,7 +73,7 @@ lib/
   session.ts, auth.ts # owner resolution (Google email or anon:device)
   push.ts             # web-push send + prune
   gemini.ts           # vision + grounded search (grounded search currently UNUSED)
-  deepseek.ts         # DeepSeek V4.1 Flash design-A matcher (photo + catalogue → nums)
+  deepseek.ts         # DeepSeek V4.1 Flash recognition (vision C / text A → catalogue nums)
   ebay.ts             # eBay Browse API (currently UNUSED)
   i18n.js             # sv (default) + en strings
   search.js           # Fuse.js wrapper (createSearch)
@@ -191,21 +191,28 @@ extension/icons/icon{16,48,128}.png
   (`lib/image-match.js`), top-4 picker, Gemini fallback. Rebuild with
   `npm run build:embeddings` after editing `lib/master-catalog.json` or
   `scripts/lib/augment.mjs`.
-- **DeepSeek recognition "design A" (experimental, off by default):** instead of
-  naming a mug and fuzzy-matching that name to the catalogue, `POST /api/recognize`
-  (`lib/deepseek.ts`) sends the photo **plus the whole catalogue as a numbered
-  list** to DeepSeek V4.1 Flash (`deepseek-flash`) and takes the catalogue `num(s)`
-  back directly — so the model always considers every entry (the fuzzy matcher's
-  failure mode is gone). It identifies **every** mug in the photo, so one endpoint
-  serves a single mug (→ add confirm) **and a shelf** (→ the batch review). The
-  catalogue sits in the **system message** as a stable, cacheable prefix. Enabled
-  for testing with `NEXT_PUBLIC_RECOGNITION_ENGINE=deepseek` **and**
+- **DeepSeek recognition (experimental, off by default):** instead of naming a mug
+  and fuzzy-matching that name to the catalogue, `POST /api/recognize`
+  (`lib/deepseek.ts`) has DeepSeek V4.1 Flash (`deepseek-flash`) return the
+  catalogue `num(s)` **directly** — so the fuzzy matcher's failure mode is gone. It
+  identifies **every** mug in the photo, so one endpoint serves a single mug (→ add
+  confirm) **and a shelf** (→ the batch review). Two designs, chosen by
+  `DEEPSEEK_MODE`:
+    - **`vision` (default, design C):** sends the photo **plus every catalogue
+      reference image** (read from `public/mugs`, cached per instance) and matches
+      visually — most accurate, ~$0.012/photo off-peak (~8.7 MB base64, 202 images,
+      ~78k input tokens). The references are a stable, cacheable prefix; order is
+      refs → photo.
+    - **`text` (design A):** sends the photo plus the catalogue as a numbered
+      **text list** instead — ~$0.0003/photo, but relies on the model's memory.
+  Enabled for testing with `NEXT_PUBLIC_RECOGNITION_ENGINE=deepseek` **and**
   `DEEPSEEK_API_KEY`; the client then routes every photo here via `processServer`
-  instead of the on-device matcher / Gemini shelf path. **Thinking mode is sent
+  instead of the on-device matcher / Gemini shelf path. `next.config.mjs` traces
+  `public/mugs/**` into `/api/recognize` for design C. **Thinking mode is sent
   `disabled`** (it's ON by default at `high`, and its `reasoning_content` counts
-  against `max_tokens`, which starves/truncates the JSON in `content` and makes
-  the call slow enough to drop the connection); the call also has a 45 s abort and
-  one retry for DeepSeek's occasional empty JSON `content`.
+  against `max_tokens`, which starves/truncates the JSON in `content` and makes the
+  call slow enough to drop the connection); the call also has a 50 s abort and one
+  retry for DeepSeek's occasional empty JSON `content`.
 - **Mug / not-mug gate (`lib/gate.js`):** the probe only ever saw positives, so it
   has no notion of "not a mug" — every photo gets a top-4. A tiny logistic
   regression over the same DINOv2 features fixes that. `/train` (noindex) captures
@@ -327,13 +334,13 @@ extension/icons/icon{16,48,128}.png
 
 ## 8. Open threads / TODO
 
-- [ ] **DeepSeek "design A" recognition:** test on Vercel with
-  `NEXT_PUBLIC_RECOGNITION_ENGINE=deepseek` + `DEEPSEEK_API_KEY`. Compare its
-  hits/misses against the on-device probe — especially photos where the on-device
-  top-4 misses the right mug — and test a **shelf** photo through the batch review.
-  If it wins, consider the two-stage pipeline (A's text recall → visual confirm of
-  its shortlist, "design B") or full-catalogue visual matching ("design C",
-  ~$0.012/photo uncached, ~$0.0003 cached).
+- [ ] **DeepSeek recognition accuracy:** design **C** (vision, all 201 reference
+  images + photo) is now the default (`DEEPSEEK_MODE=vision`); set
+  `DEEPSEEK_MODE=text` for design **A**. Test both on Vercel with
+  `NEXT_PUBLIC_RECOGNITION_ENGINE=deepseek` — especially photos where the on-device
+  top-4 misses. Once C's accuracy ceiling is known, scale back to the cheapest
+  design that holds up (A's text list, a **B**-style shortlist→visual-confirm
+  pipeline, or a **coarse → fine** two-stage over reference images).
 - [ ] **Catalog completeness:** identify real mugs missing from *both* our
   catalog and Mukify (Mukify isn't complete either). Fill the 6 unmatched:
   `194 Moomin's Day 2026`, `201 Harp`, `204/205 Moomin Arabia Fall 2025 (+II)`,
@@ -406,6 +413,13 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-10-08 · v1.81.0** — Added **design C** (full-catalogue visual matching):
+  `DEEPSEEK_MODE=vision` (now the default) sends the photo **plus every one of the
+  201 catalogue reference images** to DeepSeek and lets it match visually (~8.7 MB,
+  202 images, ~78k input tokens, ~$0.012/photo off-peak). `DEEPSEEK_MODE=text`
+  keeps design A (numbered text list). References are ordered before the photo as
+  a cacheable prefix and cached per instance; `next.config.mjs` now traces
+  `public/mugs/**` into `/api/recognize`.
 - **2026-10-08 · v1.80.1** — Fixed DeepSeek recognition errors ("could not parse
   DeepSeek's response" / "failed to fetch"). Root cause: DeepSeek V4.1 Flash has
   **thinking mode ON by default at `high`**, and its `reasoning_content` is billed
