@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deepseekConfigured, identifyMugFromCatalog } from "@/lib/deepseek";
+import { deepseekConfigured, identifyMugsFromCatalog } from "@/lib/deepseek";
 import { resolveCandidate } from "@/lib/catalog";
 import { currentOwner, unauthorized } from "@/lib/session";
 
@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Design-"A" recognition: DeepSeek V4.1 Flash picks the catalogue entry directly
- * (returns a `num`) instead of naming a mug for us to fuzzy-match. Single mugs
- * only — the shelf-scan route still handles multi-mug photos.
+ * Design-"A" recognition engine: DeepSeek V4.1 Flash picks the catalogue entry
+ * directly (returns a `num`) instead of naming a mug for us to fuzzy-match. One
+ * photo may contain a single mug or a shelf, so this returns a `drafts` array —
+ * the client routes both here when NEXT_PUBLIC_RECOGNITION_ENGINE=deepseek.
  */
 export async function POST(req: Request) {
   if (!(await currentOwner())) return unauthorized();
@@ -20,33 +21,35 @@ export async function POST(req: Request) {
     if (!deepseekConfigured()) {
       return NextResponse.json({ error: "DEEPSEEK_API_KEY is not set on the server." }, { status: 503 });
     }
-    const match = await identifyMugFromCatalog(imageDataUrl);
-    const cat = match.entry ? resolveCandidate(match.entry) : null;
-    return NextResponse.json({
-      draft: {
-        name: cat ? cat.nameEn : "",
+    const matches = await identifyMugsFromCatalog(imageDataUrl);
+    const drafts = matches.map((m) => {
+      const cat = resolveCandidate(m.entry);
+      return {
+        name: cat.nameEn,
         series: "Arabia Moomin",
         edition: "",
-        year: cat ? cat.year ?? "" : "",
+        year: cat.year ?? "",
         status: "owned",
         condition: null,
         conditionNotes: "",
         currency: process.env.DEFAULT_CURRENCY || "SEK",
         photoUrl: imageDataUrl,
-        estValueLow: cat ? cat.estLow : null,
-        estValueHigh: cat ? cat.estHigh : null,
+        estValueLow: cat.estLow,
+        estValueHigh: cat.estHigh,
         estValueCurrency: "SEK",
         notes: "",
         tags: [],
-        aiConfidence: match.confidence,
-        isMoominMug: !!cat,
-        // Resolved catalogue entry (or null → the UI asks for a manual pick).
+        aiConfidence: m.confidence,
+        isMoominMug: true,
+        position: m.position,
+        // Resolved catalogue entry (never null — unmatched mugs are omitted).
         catalog: cat,
         verified: false,
-        verifyReason: match.reason,
+        verifyReason: m.reason,
         engine: "deepseek",
-      },
+      };
     });
+    return NextResponse.json({ drafts });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

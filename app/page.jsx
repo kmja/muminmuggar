@@ -670,7 +670,10 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   // Server-side detection + verification (used when the on-device matcher can't
   // run, or for a shelf photo with several mugs).
   const processServer = async (small) => {
-    const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
+    // DeepSeek (design A) when the engine is forced, else the Gemini path. Both
+    // return a `drafts` array that may hold one mug or a whole shelf.
+    const path = FORCE_DEEPSEEK ? "/api/recognize" : "/api/shelf-scan";
+    const { drafts } = await api(path, { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
     if (!drafts.length) { setError(t("scan_no_mugs")); return; }
     if (drafts.length === 1) { applySingleDraft(drafts[0], small); return; }
     setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
@@ -695,13 +698,9 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const processImage = async (small) => {
     setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
-      // Design-A test path: the server picks the catalogue entry directly.
-      if (FORCE_DEEPSEEK) {
-        const { draft } = await api("/api/recognize", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
-        if (!draft.catalog) { setError(t("recog_nomatch")); return; }
-        applySingleDraft(draft, small);
-        return;
-      }
+      // Design-A test path: the server identifies every mug straight from the
+      // catalogue (a single mug or a whole shelf), then we render as usual.
+      if (FORCE_DEEPSEEK) { await processServer(small); return; }
       try {
         const { candidates, embedding, model, vec, diag: dg } = await matchMug(small, { topK: 4 });
         if (candidates.length) {

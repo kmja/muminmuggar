@@ -3,10 +3,11 @@ import masterCatalog from "./master-catalog.json";
 /**
  * DeepSeek V4.1 Flash recognition (design "A").
  *
- * Instead of having the model name a mug and then fuzzy-matching that name to our
+ * Instead of having the model name mugs and then fuzzy-matching those names to our
  * catalogue, we hand it the WHOLE catalogue as a numbered list and let it return
- * the catalogue `num` directly. This removes our fuzzy matcher (and its failure
- * mode) from the loop entirely: the model always considers every entry.
+ * the catalogue `num` for every mug it can see (one for a single-mug photo, many
+ * for a shelf). This removes our fuzzy matcher (and its failure mode) from the
+ * loop entirely: the model always considers every entry.
  *
  * The catalogue list lives in the system message so it is a stable prefix the
  * provider can cache (context caching bills repeat input at a fraction of the
@@ -39,26 +40,27 @@ const CATALOG_LIST = CATALOG.map((e) => {
 }).join("\n");
 
 const SYSTEM =
-  "You are an expert on Arabia Moomin mugs. Identify the photographed mug by selecting the exact entry from our catalogue.\n\n" +
+  "You are an expert on Arabia Moomin mugs. Identify every Moomin mug visible in the photograph by selecting the exact catalogue entry for each.\n\n" +
   "Rules:\n" +
-  "- Choose exactly ONE catalogue entry whose design matches the photo: artwork, characters, pose, colours, background and shape. Many entries share a character but differ in artwork — match the DESIGN, not just the character.\n" +
+  "- For EACH distinct mug in the photo (left-to-right, top-to-bottom), choose exactly ONE catalogue entry whose design matches: artwork, characters, pose, colours, background and shape. Many entries share a character but differ in artwork — match the DESIGN, not just the character.\n" +
   "- Only choose from the numbered entries below; never invent an entry.\n" +
-  "- If the item is not a Moomin mug, or you cannot confidently match any entry, use 0.\n\n" +
+  "- Give each mug a short position (e.g. \"top shelf, 2nd from left\").\n" +
+  "- If you cannot confidently match a mug, omit it. If the photo shows no Moomin mug, return an empty list.\n\n" +
   `Catalogue:\n${CATALOG_LIST}\n\n` +
-  'Respond with JSON only, exactly: {"num": <integer>, "confidence": <number 0..1>, "reason": "<short English reason>"}';
+  'Respond with JSON only, exactly: {"mugs": [{"num": <integer>, "position": "<string>", "confidence": <number 0..1>, "reason": "<short English reason>"}]}';
 
 const USER_TEXT =
-  "Identify this Moomin mug against the catalogue. Match the exact design. " +
-  "Return the catalogue number, or 0 if it is not a Moomin mug or none match. " +
-  'Respond with JSON only: {"num": <integer>, "confidence": <number 0..1>, "reason": "<short reason>"}';
+  "Identify every Moomin mug in this photo against the catalogue. Match each exact design. " +
+  'Respond with JSON only: {"mugs": [{"num": <integer>, "position": "<string>", "confidence": <number 0..1>, "reason": "<short reason>"}]}';
 
 export interface DeepSeekMatch {
-  /** Catalogue number, or 0 when the model found no match. */
+  /** Catalogue number (always a valid entry). */
   num: number;
+  /** Where the mug is in the photo, e.g. "top shelf, 2nd from left" (may be empty). */
+  position: string;
   confidence: number;
   reason: string;
-  /** The resolved catalogue entry, or null when `num` is 0 / unknown. */
-  entry: MasterEntry | null;
+  entry: MasterEntry;
 }
 
 export function deepseekConfigured(): boolean {
@@ -92,15 +94,11 @@ function parseJson<T>(text: string): T | null {
   }
 }
 
-/**
- * Ask DeepSeek V4.1 Flash to pick the catalogue entry directly. Throws when the
- * API key is missing or the request fails; returns `num: 0` when nothing matched.
- */
-export async function identifyMugFromCatalog(photoDataUrl: string): Promise<DeepSeekMatch> {
+async function callVision(imageDataUrl: string): Promise<string> {
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) throw new Error("DEEPSEEK_API_KEY is not set on the server.");
 
-  const { mime, data } = dataUrlParts(photoDataUrl);
+  const { mime, data } = dataUrlParts(imageDataUrl);
   const res = await fetch(`${baseUrl()}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
@@ -118,7 +116,7 @@ export async function identifyMugFromCatalog(photoDataUrl: string): Promise<Deep
       ],
       response_format: { type: "json_object" },
       temperature: 0,
-      max_tokens: 1200,
+      max_tokens: 2000, // headroom for thinking mode + several mugs
     }),
   });
 
@@ -134,12 +132,28 @@ export async function identifyMugFromCatalog(photoDataUrl: string): Promise<Deep
   }
 
   const json = await res.json();
-  const content: string = json?.choices?.[0]?.message?.content || "";
-  const obj = parseJson<{ num?: number | string; confidence?: number; reason?: string }>(content);
+  return json?.choices?.[0]?.message?.content || "";
+}
+
+/**
+ * Ask DeepSeek V4.1 Flash to identify every mug in the photo (single mug or a
+ * shelf) straight from the catalogue. Throws when the API key is missing or the
+ * request fails; returns `[]` when nothing matched.
+ */
+export async function identifyMugsFromCatalog(photoDataUrl: string): Promise<DeepSeekMatch[]> {
+  const content = await callVision(photoDataUrl);
+  const obj = parseJson<{ mugs?: Array<{ num?: number | string; position?: string; confidence?: number; reason?: string }> }>(content);
   if (!obj) throw new Error("Could not parse DeepSeek's response.");
 
-  const rawNum = Number(obj.num);
-  const entry = Number.isInteger(rawNum) && rawNum > 0 ? BY_NUM.get(rawNum) || null : null;
-  const confidence = Number.isFinite(Number(obj.confidence)) ? Math.max(0, Math.min(1, Number(obj.confidence))) : 0;
-  return { num: entry ? entry.num : 0, confidence, reason: String(obj.reason || ""), entry };
+  const out: DeepSeekMatch[] = [];
+  const seen = new Set<number>();
+  for (const m of obj.mugs || []) {
+    const num = Number(m.num);
+    const entry = Number.isInteger(num) ? BY_NUM.get(num) : undefined;
+    if (!entry || seen.has(entry.num)) continue; // skip unknown / duplicate entries
+    seen.add(entry.num);
+    const confidence = Number.isFinite(Number(m.confidence)) ? Math.max(0, Math.min(1, Number(m.confidence))) : 0;
+    out.push({ num: entry.num, position: String(m.position || ""), confidence, reason: String(m.reason || ""), entry });
+  }
+  return out;
 }
