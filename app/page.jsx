@@ -34,6 +34,11 @@ const UNDO_MS = 6000; // how long a deleted mug can be restored from its toast
 const STATUS_VALUES = ["owned", "wishlist", "sold"];
 const CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair", "Poor"];
 const CURRENCIES = ["SEK", "EUR", "USD", "GBP", "NOK", "DKK"];
+// Recognition engine. "deepseek" routes every photo through the server-side
+// DeepSeek catalogue matcher (design A — the model returns the catalogue number
+// directly) instead of the on-device probe. Set NEXT_PUBLIC_RECOGNITION_ENGINE
+// =deepseek in the environment to test/compare it. Anything else = on-device.
+const FORCE_DEEPSEEK = (process.env.NEXT_PUBLIC_RECOGNITION_ENGINE || "ondevice") === "deepseek";
 
 /* ----------------------------- helpers -------------------------------- */
 const normalizeText = (s) => (s || "").toString().trim().toLowerCase();
@@ -651,19 +656,23 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
     return () => clearInterval(id);
   }, [open]);
 
+  // Apply a single resolved draft: open the raised confirmation with the match
+  // (or a blank mug with the photo when nothing resolved).
+  const applySingleDraft = (d0, photo) => {
+    const e = d0.catalog;
+    const initial = e
+      ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : photo, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
+      : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: photo, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
+    // Keep the dialog open (the confirmation sits above it) so more can be added.
+    onAddOne(initial); setScreen(startScreen);
+  };
+
   // Server-side detection + verification (used when the on-device matcher can't
   // run, or for a shelf photo with several mugs).
   const processServer = async (small) => {
     const { drafts } = await api("/api/shelf-scan", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
     if (!drafts.length) { setError(t("scan_no_mugs")); return; }
-    if (drafts.length === 1) {
-      const d0 = drafts[0], e = d0.catalog;
-      const initial = e
-        ? { ...blankMug(), name: e.nameEn, series: "Arabia Moomin", year: e.year ?? "", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: reliableImg(e.image) ? e.image : small, estValueLow: e.estLow, estValueHigh: e.estHigh, estValueCurrency: "SEK", aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason }
-        : { ...blankMug(), name: "", series: "Arabia Moomin", condition: d0.condition || "Good", conditionNotes: d0.conditionNotes || "", photoUrl: small, aiConfidence: d0.aiConfidence, verifyReason: d0.verifyReason };
-      // Keep the dialog open (the confirmation sits above it) so more can be added.
-      onAddOne(initial); setScreen(startScreen); return;
-    }
+    if (drafts.length === 1) { applySingleDraft(drafts[0], small); return; }
     setItems(drafts.map((d) => ({ draft: d, checked: d.isMoominMug !== false && !!d.catalog, position: d.position || "", entry: d.catalog || null })));
   };
 
@@ -686,6 +695,13 @@ function AddMugModal({ open, mode = "browse", initialPhoto, onClose, onAddOne, o
   const processImage = async (small) => {
     setBusy(true); setError(""); setItems([]); setMatches(null); setMatchData(null); setPhotoUrl(small);
     try {
+      // Design-A test path: the server picks the catalogue entry directly.
+      if (FORCE_DEEPSEEK) {
+        const { draft } = await api("/api/recognize", { method: "POST", body: JSON.stringify({ imageDataUrl: small }) });
+        if (!draft.catalog) { setError(t("recog_nomatch")); return; }
+        applySingleDraft(draft, small);
+        return;
+      }
       try {
         const { candidates, embedding, model, vec, diag: dg } = await matchMug(small, { topK: 4 });
         if (candidates.length) {
