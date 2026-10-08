@@ -74,6 +74,9 @@ function baseUrl(): string {
   return (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com").replace(/\/+$/, "");
 }
 
+/** Abort the upstream call well before the serverless function's own limit. */
+const REQUEST_TIMEOUT_MS = 45_000;
+
 function dataUrlParts(dataUrl: string): { mime: string; data: string } {
   const m = /^data:([^;]+);base64,(.*)$/.exec(dataUrl || "");
   if (m) return { mime: m[1], data: m[2] };
@@ -94,31 +97,44 @@ function parseJson<T>(text: string): T | null {
   }
 }
 
-async function callVision(imageDataUrl: string): Promise<string> {
-  const key = process.env.DEEPSEEK_API_KEY;
-  if (!key) throw new Error("DEEPSEEK_API_KEY is not set on the server.");
-
+async function callVisionOnce(key: string, imageDataUrl: string): Promise<{ content: string; finishReason: string }> {
   const { mime, data } = dataUrlParts(imageDataUrl);
-  const res = await fetch(`${baseUrl()}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: model(),
-      messages: [
-        { role: "system", content: SYSTEM },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: USER_TEXT },
-            { type: "image_url", image_url: { url: `data:${mime};base64,${data}`, detail: "high" } },
-          ],
-        },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0,
-      max_tokens: 2000, // headroom for thinking mode + several mugs
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl()}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: model(),
+        messages: [
+          { role: "system", content: SYSTEM },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: USER_TEXT },
+              { type: "image_url", image_url: { url: `data:${mime};base64,${data}`, detail: "high" } },
+            ],
+          },
+        ],
+        response_format: { type: "json_object" },
+        // Recognition is a lookup, not a reasoning task. Thinking is ON by default
+        // at "high" effort, and its chain-of-thought (reasoning_content) counts
+        // against max_tokens — which crowds the JSON out of `content` (→ parse
+        // errors) and makes the call slow enough to time out. Turn it off.
+        thinking: { type: "disabled" },
+        temperature: 0,
+        max_tokens: 1200,
+      }),
+    });
+  } catch (e) {
+    if ((e as Error).name === "AbortError") throw new Error(`DeepSeek timed out after ${REQUEST_TIMEOUT_MS / 1000}s.`);
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     let msg = `DeepSeek ${res.status}`;
@@ -132,7 +148,20 @@ async function callVision(imageDataUrl: string): Promise<string> {
   }
 
   const json = await res.json();
-  return json?.choices?.[0]?.message?.content || "";
+  const choice = json?.choices?.[0];
+  return { content: choice?.message?.content || "", finishReason: choice?.finish_reason || "" };
+}
+
+async function callVision(imageDataUrl: string): Promise<string> {
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) throw new Error("DEEPSEEK_API_KEY is not set on the server.");
+  // JSON Output can occasionally come back empty; retry once (DeepSeek's advice).
+  let last: { content: string; finishReason: string } = { content: "", finishReason: "" };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    last = await callVisionOnce(key, imageDataUrl);
+    if (last.content.trim()) return last.content;
+  }
+  throw new Error(`DeepSeek returned empty content (finish_reason=${last.finishReason || "?"}).`);
 }
 
 /**
@@ -143,7 +172,7 @@ async function callVision(imageDataUrl: string): Promise<string> {
 export async function identifyMugsFromCatalog(photoDataUrl: string): Promise<DeepSeekMatch[]> {
   const content = await callVision(photoDataUrl);
   const obj = parseJson<{ mugs?: Array<{ num?: number | string; position?: string; confidence?: number; reason?: string }> }>(content);
-  if (!obj) throw new Error("Could not parse DeepSeek's response.");
+  if (!obj) throw new Error(`Could not parse DeepSeek's response: ${content.slice(0, 200) || "(empty)"}`);
 
   const out: DeepSeekMatch[] = [];
   const seen = new Set<number>();

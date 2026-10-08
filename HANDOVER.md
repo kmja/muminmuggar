@@ -13,7 +13,7 @@ collection, with push notifications when wishlisted mugs appear for sale.
 
 - **Repo:** `git@github.com:kmja/muminmuggar.git` (branch `main`, deploy = Vercel)
 - **Local path:** `/Users/karlandersson/Documents/Default Project`
-- **Current version:** **1.80.0** (keep in sync with `lib/version.js`)
+- **Current version:** **1.80.1** (keep in sync with `lib/version.js`)
 - **Stack:** Next.js 14 (App Router) · Postgres · Gemini (vision) · Tradera API ·
   Web Push (VAPID) · Vercel Cron
 - **`gh` CLI is NOT installed.** Git over SSH works; fetch/push work fine.
@@ -201,7 +201,11 @@ extension/icons/icon{16,48,128}.png
   catalogue sits in the **system message** as a stable, cacheable prefix. Enabled
   for testing with `NEXT_PUBLIC_RECOGNITION_ENGINE=deepseek` **and**
   `DEEPSEEK_API_KEY`; the client then routes every photo here via `processServer`
-  instead of the on-device matcher / Gemini shelf path.
+  instead of the on-device matcher / Gemini shelf path. **Thinking mode is sent
+  `disabled`** (it's ON by default at `high`, and its `reasoning_content` counts
+  against `max_tokens`, which starves/truncates the JSON in `content` and makes
+  the call slow enough to drop the connection); the call also has a 45 s abort and
+  one retry for DeepSeek's occasional empty JSON `content`.
 - **Mug / not-mug gate (`lib/gate.js`):** the probe only ever saw positives, so it
   has no notion of "not a mug" — every photo gets a top-4. A tiny logistic
   regression over the same DINOv2 features fixes that. `/train` (noindex) captures
@@ -402,6 +406,14 @@ any meaningful work:
 
 ### Recent work log
 
+- **2026-10-08 · v1.80.1** — Fixed DeepSeek recognition errors ("could not parse
+  DeepSeek's response" / "failed to fetch"). Root cause: DeepSeek V4.1 Flash has
+  **thinking mode ON by default at `high`**, and its `reasoning_content` is billed
+  against `max_tokens` — so the JSON in `content` was truncated/empty (parse
+  error) and the slow call dropped the connection (fetch error). Now sends
+  `thinking: {type:"disabled"}` (the docs' recommendation for classification),
+  aborts the upstream call after 45 s, retries once on empty content, and surfaces
+  `finish_reason` / a content snippet on failure.
 - **2026-10-08 · v1.80.0** — Put the **shelf scan on DeepSeek too**. `POST
   /api/recognize` now identifies **every** mug in the photo (returns a `drafts`
   array), so one DeepSeek endpoint serves both a single mug (add confirm) and a
